@@ -1,0 +1,18 @@
+{
+  "database": "Zotero",
+  "noteImportFolder": "FromZotero",
+  "pdfExportImageDPI": 120,
+  "pdfExportImageFormat": "png",
+  "pdfExportImageQuality": 90,
+  "citeFormats": [
+    {
+      "name": "Latex",
+      "format": "latex",
+      "command": "cite"
+    }
+  ],
+  "exportFormats": [],
+  "citeSuggestTemplate": "[[{{citekey}}]]",
+  "openNoteAfterImport": true,
+  "whichNotesToOpenAfterImport": "first-imported-note"
+}
