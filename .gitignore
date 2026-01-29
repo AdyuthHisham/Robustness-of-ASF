@@ -1,0 +1,68 @@
+# =====================================
+# Operating System files
+# =====================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+desktop.ini
+
+# =====================================
+# Python / Jupyter
+# =====================================
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.ipynb_checkpoints/
+
+# =====================================
+# Build / temp files
+# =====================================
+*.log
+*.aux
+*.out
+*.toc
+*.bak
+*.swp
+*.tmp
+
+# =====================================
+# Data / large files
+# =====================================
+# Avoid large datasets (KITTI, images, videos)
+data/
+datasets/
+*.zip
+*.tar
+*.tar.gz
+*.h5
+*.npy
+
+# =====================================
+# Environment / dependency folders
+# =====================================
+env/
+venv/
+*.egg-info/
+*.egg
+
+# =====================================
+# IDE / editor files
+# =====================================
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# =====================================
+# Exceptions (keep important docs)
+# =====================================
+# PDFs, papers, reports
+!*.pdf
+!*.bib
+!*.tex
+
