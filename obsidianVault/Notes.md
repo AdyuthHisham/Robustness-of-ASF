@@ -1,0 +1,1 @@
+- [ ] We can use the intrinsic parameters for the pipeline right? 
