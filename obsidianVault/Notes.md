@@ -1,1 +1,2 @@
 - [ ] We can use the intrinsic parameters for the pipeline right? 
+- [ ] Either I need a solution that works for all sensors or an adaptive system that changes the fusion algorithm based on sensors involved
