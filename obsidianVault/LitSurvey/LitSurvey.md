@@ -1,9 +1,22 @@
 # Notes
 - Calibration of Radar
 - Need to focus on computational time
+- **Read the discussions of the review papers for a better understanding**
+# Strategy
+1. Revised problem statements
+2. Top Surveys
+	1. Read taxonomy
+	2. Read comparison tables
+3. Build taxonomy figure
+4. Reading strategy
+	1. **First pass:**  Abstract - Method - Contributions - Conclusions
+		1. What does it solve?
+	2. **Second pass:** (For good papers) Calibration theory - Optimization methods - Assumptions / Limitations
+	3. **Third pass:** Implementation - Failure cases - Datasets
 
 # Topics
 - Temporal and Spatial fusion
+	- Temporal optimization can be divided into Discrete and Continuous. Difference?
 - Types of sensors and their subtypes (Ex. Camera - RGB, RGBD)
 	- Has to tackle newer stuff like 4D radar etc
 	- Their Pros and Cons

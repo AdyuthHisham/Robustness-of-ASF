@@ -1,5 +1,5 @@
 # Annotations  
-(2/2/2026, 3:12:45 PM)
+(2/5/2026, 10:36:18 AM)
 
 ([Li et al., 2023, p. 9949](zotero://select/library/items/PS2ECS24)) #review  
 #important  
@@ -21,7 +21,7 @@ READ REVIEWS FOR EACH METHOD
 
 [Go to annotation](zotero://open-pdf/library/items/S5XEU9H6?page=9955&annotation=6LGPBMFH) “feature based methods are suitable for scenes that provide sufficient features such as urban environments with rich geometric and semantic features.” ([Li et al., 2023, p. 9955](zotero://select/library/items/PS2ECS24)) #autocalib/method/featureBased
 
-[Go to annotation](zotero://open-pdf/library/items/S5XEU9H6?page=9955&annotation=ZTZVMIPF) “Ego-motion based methods can be performed for scenarios when both LiDAR and camera are moving during the calibration process, like the case that both sensors are mounted on a moving car.Correspondingly, ego-motion based methods should not be applied for scenarios when both sensors are static during the calibration process, like the applications of roadside sensing systems” ([Li et al., 2023, p. 9955](zotero://select/library/items/PS2ECS24)) #autocalib/methods/egoMotion
+[Go to annotation](zotero://open-pdf/library/items/S5XEU9H6?page=9955&annotation=ZTZVMIPF) “Ego-motion based methods can be performed for scenarios when both LiDAR and camera are moving during the calibration process, like the case that both sensors are mounted on a moving car.Correspondingly, ego-motion based methods should not be applied for scenarios when both sensors are static during the calibration process, like the applications of roadside sensing systems” ([Li et al., 2023, p. 9955](zotero://select/library/items/PS2ECS24)) #autocalib/method/egoMotion
 
 [Go to annotation](zotero://open-pdf/library/items/S5XEU9H6?page=9955&annotation=URN8MSPY) “the applications of learning based methods require large sets of training data and enough computing resources for online inference.” ([Li et al., 2023, p. 9955](zotero://select/library/items/PS2ECS24)) #autocalib/method/learningBased
 
@@ -64,7 +64,8 @@ READ REVIEWS FOR EACH METHOD
 
 [Go to annotation](zotero://open-pdf/library/items/S5XEU9H6?page=9961&annotation=2RK7LZHW) “Table 1 Summary of information theory based methods” ([Li et al., 2023, p. 9961](zotero://select/library/items/PS2ECS24)) #autocalib/method/informationTheory  
 #ReferPaper  
-#opensource
+#opensource  
+#table
 
 [Go to annotation](zotero://open-pdf/library/items/S5XEU9H6?page=9962&annotation=W3QI4QV6) “3.2.1 Feature extraction” ([Li et al., 2023, p. 9962](zotero://select/library/items/PS2ECS24)) #autocalib/method/featureBased  
 #ReferPaper
@@ -132,7 +133,8 @@ READ REVIEWS FOR EACH METHOD
 
 [Go to annotation](zotero://open-pdf/library/items/S5XEU9H6?page=9967&annotation=58LX5R4A) “Table 2 Summary of feature based methods” ([Li et al., 2023, p. 9967](zotero://select/library/items/PS2ECS24)) #autocalib/method/featureBased  
 #ReferPaper  
-#opensource
+#opensource  
+#table
 
 [Go to annotation](zotero://open-pdf/library/items/S5XEU9H6?page=9968&annotation=PIIVCY93) “As an alternative method for extracting feature points, Nieto et al. (2010) used the SIFT extractor automatically and matches the features by looking for the two closest features in the space of SIFT descriptors. As an alternative way to use semantic features, Zhu et al. (2020) applied semantic masks of vehicles in the image and constructs a height map to encourage LiDAR points to fall on the pixels labeled as vehicles. In this work, semantic segmentation is performed only in the image.” ([Li et al., 2023, p. 9968](zotero://select/library/items/PS2ECS24)) #autocalib/method/featureBased
 
@@ -189,7 +191,8 @@ READ REVIEWS FOR EACH METHOD
 [Go to annotation](zotero://open-pdf/library/items/S5XEU9H6?page=9972&annotation=PE2T3H8K) “3.3.2 3D structure estimation based methods Another way for LiDAR–camera calibration based on motion information is to estimate the 3D structure of the surrounding environment from images, one of the most commonly used methods is structure from motion (SfM) (Ullman 1979). SfM is a technique to estimate the 3D structure of a scene from 2D image sequences, that has been applied in many occasions, such as 3D modeling, augmented reality, visual SLAM, etc. 3D structure estimation based approaches use SfM to generate 3D point clouds from a set of images recorded by the camera on the moving vehicle, which converts the LiDAR–camera calibration problem into a registration task in the 3D domain. Swart et al. (2011) described an approach to register panoramic images and LiDAR point clouds. They generate a sparse 3D point cloud from images and match it to a dense 3D point cloud from LiDAR using a non-rigid ICP process. The results were then polished by adding SIFT interest points corresponding to the framework. Moussa et al. (2012) proposed a bundle block adjustment method to determine the accurate 3D–3D correspondences. Corsini et al. (2012) divided the calibration into coarse and fine-grained alignment procedures. After obtaining the intermediate results by applying the ICP algorithm to the LiDAR generated point clouds, they use a global refinement method based on mutual information to improve the accuracy of the fine 2D–3D alignment. Wang et al. (2018) used sequential scene information from the vehicle motion to obtain the initial extrinsic parameter. The method uses the SfM algorithm to calculate 3D points from 2D image sequences, and registers the SfM points with LiDAR points through the ICP algorithm to estimate the primary result. Then by projecting the 3D LiDAR points to the 2D image plane, they use feature points of edges with a combined optimization method to further promote the accuracy of the extrinsic parameter.” ([Li et al., 2023, p. 9972](zotero://select/library/items/PS2ECS24)) #autocalib/method/egoMotion/structureEstimation
 
 [Go to annotation](zotero://open-pdf/library/items/S5XEU9H6?page=9973&annotation=P8CYI65A) “Table 3 Summary of hand-eye based methods” ([Li et al., 2023, p. 9973](zotero://select/library/items/PS2ECS24)) #autocalib/method/egoMotion/handeye  
-#important
+#important  
+#table
 
 [Go to annotation](zotero://open-pdf/library/items/S5XEU9H6?page=9974&annotation=PCWWFGIT) “However, the ICP algorithm may fail when the density of SfM cloud points is very different from the LiDAR ones. To address this challenge, Li et al. (2018) designed an automatic registration method based on semantic features extracted from panoramic images and point clouds. They use GPS and IMU aiding the SfM algorithm to obtain rotation parameters, then extract parked vehicles from two modalities to estimate translation parameters by maximizing the overlapping area of corresponding target pairs. Nagy et al. (2019a) proposed an extrinsic calibration method with an object-level registration. First, they use SfM to generate point clouds from consecutive camera images that can be used for alignment and registration, then they introduce a target-level alignment between the generated and the LiDAR point clouds base on object detection results. Nagy et al. (2019b) introduced similar work and used semantic information in the point clouds registration stage. Later, Nagy and Benedek (2020) made an extension to their previous work mainly in terms of optimization for the registration stage. They manage to diminish the registration error using the point-level ICP method after the object-level registration step, then they introduce a curvebased non-rigid point cloud registration refinement step build on the non-uniform rational basis spline approximation.” ([Li et al., 2023, p. 9974](zotero://select/library/items/PS2ECS24)) #autocalib/method/egoMotion/structureEstimation
 
@@ -211,7 +214,8 @@ READ REVIEWS FOR EACH METHOD
 [Go to annotation](zotero://open-pdf/library/items/S5XEU9H6?page=9980&annotation=QEN2RNJQ) “Table 4 Comparison of automatic targetless LiDAR–camera calibration methods” ([Li et al., 2023, p. 9980](zotero://select/library/items/PS2ECS24)) #ReferPaper  
 #important  
 #review  
-#autocalib/method
+#autocalib/method  
+#table
 
 [Go to annotation](zotero://open-pdf/library/items/S5XEU9H6?page=9980&annotation=T68JSMTZ) “Strength” ([Li et al., 2023, p. 9980](zotero://select/library/items/PS2ECS24))
 

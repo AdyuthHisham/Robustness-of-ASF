@@ -3,11 +3,11 @@
 | Dates         | Week    | Task                                                    | Status   |
 | ------------- | ------- | ------------------------------------------------------- | -------- |
 | 26/01 - 30/01 | Week 0  | **Thesis Proposal**                                     | Complete |
-| 02/02 - 06/02 | Week 1  | *Lit Survey*                                            | Ongoing  |
+| 02/02 - 06/02 | Week 1  | *Lit Survey*                                            | Complete |
 | 09/02 - 13/02 | Week 2  | **Planning Report**, *Lit Survey*                       |          |
 | 16/02 - 20/02 | Week 3  | *Develop full testing environment*                      |          |
 | 23/02 - 27/02 | Week 4  | *Testing on environment* , *Manual Calibration testing* |          |
-| 02/03 - 06/03 | Week 5  | *Lit Survey*                                            |          |
+| 02/03 - 06/03 | Week 5  | *Deeper Lit Survey*                                     |          |
 | 09/03 - 13/03 | Week 6  | *Identify calibration methods*                          |          |
 | 16/03 - 20/03 | Week 7  | *Test calibration methods*                              |          |
 | 23/03 - 27/03 | Week 8  | *Metrics*                                               |          |

@@ -17,4 +17,10 @@
 - Found good number of papers to read
 - Keeping on reading
 ## Feb 04
-- 
+- Slowly read papers
+
+## Feb 05
+- Installed UV, Marimo (Jupyter notebook replacement), need to try out Polars (Pandas replacement)
+
+## Feb 06
+- Not much progress
