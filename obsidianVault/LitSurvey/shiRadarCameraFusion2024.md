@@ -16,7 +16,7 @@
 
 [Go to annotation](zotero://open-pdf/library/items/A4Y57J6Z?page=8&annotation=VQU4PJ7E) “1) Radar:” ([Shi et al., 2024, p. 8](zotero://select/library/items/2N6MSXPX)) #ReferPaper  
 #basicCalibration/radar  
-#theory
+#theory ^fdb9cd
 
 [Go to annotation](zotero://open-pdf/library/items/A4Y57J6Z?page=8&annotation=K9NVT34A) “2) Camera” ([Shi et al., 2024, p. 8](zotero://select/library/items/2N6MSXPX)) #ReferPaper  
 #basicCalibration/camera  
