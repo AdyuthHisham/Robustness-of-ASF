@@ -41,3 +41,8 @@
 ## Feb 16
 - Huggingface allows streaming
 - [Tutorial for Alvis](https://github.com/c3se/alvis-intro/tree/main)
+- RLCNet looks good but no code - Fundamentally does what I wanna do
+- UniLion has code
+## Feb 19
+- Alvis/Mimer has datasets but idk if they are outdated
+- Doing a beginner's guide to HPC given by chalmers
