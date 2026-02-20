@@ -46,3 +46,5 @@
 ## Feb 19
 - Alvis/Mimer has datasets but idk if they are outdated
 - Doing a beginner's guide to HPC given by chalmers
+## Feb 20
+- What is LSS (Lift-Splat-Shoot)?
