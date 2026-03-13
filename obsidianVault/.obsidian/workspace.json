@@ -4,11 +4,12 @@
     "type": "split",
     "children": [
       {
-        "id": "b85c94beec667735",
+        "id": "a5481b6af26319a5",
         "type": "tabs",
+        "dimension": 51.890034364261176,
         "children": [
           {
-            "id": "60583e933562fb06",
+            "id": "730ac1c8d7378e52",
             "type": "leaf",
             "state": {
               "type": "markdown",
@@ -22,17 +23,38 @@
             }
           },
           {
-            "id": "730ac1c8d7378e52",
+            "id": "996021bddbc4dc14",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Methodology - Automatic Multi-Sensor Calibration and Unified Perception.md",
-                "mode": "preview",
-                "source": true
+                "file": "Untitled.md",
+                "mode": "source",
+                "source": false
               },
               "icon": "lucide-file",
-              "title": "Methodology - Automatic Multi-Sensor Calibration and Unified Perception"
+              "title": "Untitled"
+            }
+          }
+        ]
+      },
+      {
+        "id": "b85c94beec667735",
+        "type": "tabs",
+        "dimension": 48.109965635738824,
+        "children": [
+          {
+            "id": "a32a8e44ff35dba1",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Literature Review - Automatic Multi-Sensor Calibration and Unified Perception.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Literature Review - Automatic Multi-Sensor Calibration and Unified Perception"
             }
           }
         ]
@@ -92,7 +114,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300
+    "width": 300,
+    "collapsed": true
   },
   "right": {
     "id": "09bf09362ada1f1e",
@@ -205,26 +228,31 @@
       "templates:Insert template": false,
       "command-palette:Open command palette": false,
       "bases:Create new base": false,
-      "table-editor-obsidian:Advanced Tables Toolbar": false
+      "table-editor-obsidian:Advanced Tables Toolbar": false,
+      "obsidian-kanban:Create new board": false
     }
   },
-  "active": "60583e933562fb06",
+  "active": "730ac1c8d7378e52",
   "lastOpenFiles": [
-    "Notes.md",
-    "Admin-ish/General.md",
-    "Admin-ish/Daily Notes.md",
     "Literature Review - Automatic Multi-Sensor Calibration and Unified Perception.md",
+    "Admin-ish/Daily Notes.md",
+    "Untitled.md",
+    "Task test.md",
+    "Untitled Kanban.md",
+    "Untitled.canvas",
     "Methodology - Automatic Multi-Sensor Calibration and Unified Perception.md",
+    "Admin-ish/General.md",
+    "Images/Pasted image 20260303160943.png",
+    "Images/Pasted image 20260303153441.png",
+    "Images/IMG_20260220_163239570_AE.jpg",
+    "Images/IMG_20260223_162122895_AE.jpg",
+    "Notes.md",
     "Images/Pasted image 20260216104841.png",
     "Images/Pasted image 20260216104846.png",
     "Images/Pasted image 20260211135353.png",
     "Images/Pasted image 20260211140836.png",
     "Images/screenshot-2026-02-11-114027.png",
     "Images/screenshot-2026-02-09-163152.png",
-    "Images/Pasted image 20260211142110.png",
-    "Images/Pasted image 20260211142104.png",
-    "Images/Pasted image 20260211141928.png",
-    "Images/Pasted image 20260211141910.png",
     "LitSurvey/lyuCameraLiDARIMU2025.md",
     "LitSurvey/shiRadarCameraFusion2024.md",
     "Images",
@@ -246,8 +274,6 @@
     "LitSurvey/liuBEVFusionMultiTaskMultiSensor2024.md",
     "LitSurvey/liDelvingSecretsBEV2026.md",
     "LitSurvey/kuznietsovMethodologyAnalysisInfluencing2025.md",
-    "LitSurvey/kongKaistavelabKRadar2026.md",
-    "LitSurvey/ibrahimExploringRadarCameraExtrinsic2024.md",
     "FromZotero",
     "LitSurvey",
     "Admin-ish"

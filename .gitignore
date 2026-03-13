@@ -71,3 +71,14 @@ venv/
 # =====================================
 alvis-intro/
 code/futr3d/
+test-bed/src/SFModels/*
+!test-bed/src/SFModels/
+#Ignore everything in datasets
+test-bed/src/Datasets
+#be picky about what i am saving in cetnerpoint
+test-bed/src/SFModels/CenterPoint/*
+#but keep
+!test-bed/src/SFModels/CenterPoint/
+!test-bed/src/SFModels/CenterPoint/Dockerfile
+!test-bed/src/SFModels/CenterPoint/docker_run.txt
+!test-bed/src/SFModels/CenterPoint/README.md
