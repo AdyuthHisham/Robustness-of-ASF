@@ -4,12 +4,19 @@ version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 #requires-python = ">=3.11,<3.13"
-requires-python = "<=3.10"
+requires-python = ">=3.10"
 dependencies = [
+    "hdbscan>=0.8.42",
     "marimo>=0.20.4",
     "numpy<2.0.0",
     "nuscenes-devkit>=1.2.0",
+    "pandas>=2.3.3",
+    "polars>=1.39.3",
+    "pyarrow>=23.0.1",
     "ruff>=0.15.5",
+    "sentence-transformers>=5.4.1",
+    "umap-learn>=0.5.12",
+    "visidata>=3.3",
 ]
 
 [dependency-groups]

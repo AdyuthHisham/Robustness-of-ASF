@@ -2,5 +2,8 @@
   "obsidian-zotero-desktop-connector",
   "table-editor-obsidian",
   "obsidian-kanban",
-  "dataview"
+  "dataview",
+  "advanced-canvas",
+  "obsidian-tasks-plugin",
+  "obsidian-excalidraw-plugin"
 ]

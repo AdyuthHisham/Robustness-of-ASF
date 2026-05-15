@@ -46,3 +46,6 @@ We provide two sample sequences to help researchers get started with the K-Radar
 #### Source(Streaming/MIMER)
 [Hugging face allows data streaming](https://huggingface.co/docs/datasets/en/stream)
 #### Docs
+
+## Metrics
+Need to test the performance of metrics in regular conditions and non-optimal conditions
