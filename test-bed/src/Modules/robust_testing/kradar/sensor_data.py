@@ -1,4 +1,4 @@
-import marimo  # noqa
+import marimo
 
 __generated_with = "0.23.8"
 app = marimo.App(width="medium")
@@ -6,7 +6,7 @@ app = marimo.App(width="medium")
 
 @app.cell
 def _():
-    import marimo as mo  # noqa
+    import marimo as mo
 
     return (mo,)
 
@@ -22,7 +22,7 @@ def _():
 @app.cell
 def _():
     KRADAR_REPO = "/home/adhish/Productivity/AMSCUP/repos/K-Radar"
-    return (KRADAR_REPO,)
+    return
 
 
 @app.cell

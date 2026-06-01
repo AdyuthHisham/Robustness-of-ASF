@@ -27,3 +27,8 @@ dev = [
     "pre-commit>=4.5.1",
     "uv>=0.10.7",
 ]
+
+[tool.ruff]
+exclude = [
+    "repos/K-Radar/**",
+]

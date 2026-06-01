@@ -57,7 +57,8 @@ venv/
 .idea/
 *.sublime-project
 *.sublime-workspace
-
+build/
+**/build/
 # =====================================
 # Exceptions (keep important docs)
 # =====================================
@@ -82,5 +83,3 @@ test-bed/src/SFModels/CenterPoint/*
 !test-bed/src/SFModels/CenterPoint/Dockerfile
 !test-bed/src/SFModels/CenterPoint/docker_run.txt
 !test-bed/src/SFModels/CenterPoint/README.md
-
-repos/
