@@ -13,6 +13,7 @@ dependencies = [
     "pandas>=2.3.3",
     "polars>=1.39.3",
     "pyarrow>=23.0.1",
+    "python-lsp-server>=1.14.0",
     "ruff>=0.15.5",
     "sentence-transformers>=5.4.1",
     "umap-learn>=0.5.12",

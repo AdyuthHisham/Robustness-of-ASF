@@ -11,17 +11,14 @@
             "id": "f8e69edafe54cac2",
             "type": "leaf",
             "state": {
-              "type": "canvas",
+              "type": "markdown",
               "state": {
-                "file": "Canvas.canvas",
-                "viewState": {
-                  "x": -60.57025379075293,
-                  "y": -688.5679888260855,
-                  "zoom": -0.6667420837614445
-                }
+                "file": "Literature Review - Automatic Multi-Sensor Calibration and Unified Perception.md",
+                "mode": "source",
+                "source": false
               },
-              "icon": "lucide-layout-dashboard",
-              "title": "Canvas"
+              "icon": "lucide-file",
+              "title": "Literature Review - Automatic Multi-Sensor Calibration and Unified Perception"
             }
           },
           {
@@ -230,11 +227,12 @@
   },
   "active": "f8e69edafe54cac2",
   "lastOpenFiles": [
+    "Admin-ish/Daily Notes.md",
+    "Canvas.canvas",
+    "lu245352209n.tmp",
     "lu117175a8b59.tmp",
     "Literature Review - Automatic Multi-Sensor Calibration and Unified Perception.md",
-    "Canvas.canvas",
     "lu11578iipr.tmp",
-    "Admin-ish/Daily Notes.md",
     "Untitled.md",
     "lu11578ihdy.tmp",
     "LitSurvey/LitSurvey.md",
@@ -274,8 +272,6 @@
     "LitSurvey/RobustnessAware3DObject.md",
     "LitSurvey/persicOnlineMultisensorCalibration2021.md",
     "LitSurvey/persicExtrinsic6DoFCalibration2019.md",
-    "LitSurvey/paekKRadar4DRadar2023.md",
-    "FromZotero",
-    "LitSurvey"
+    "LitSurvey/paekKRadar4DRadar2023.md"
   ]
 }

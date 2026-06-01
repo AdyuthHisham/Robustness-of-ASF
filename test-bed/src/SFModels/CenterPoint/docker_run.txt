@@ -1,1 +1,0 @@
-docker run --gpus all -it   --shm-size=8gb   -v /home/adhish/Productivity/AMSCUP/test-bed/src/SFModels/CenterPoint/:/workspace   -v /home/adhish/Productivity/AMSCUP/test-bed/src/Datasets:/workspace/datasets   centerpoint:latest
