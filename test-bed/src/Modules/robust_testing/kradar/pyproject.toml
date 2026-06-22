@@ -1,0 +1,30 @@
+[project]
+name = "kradar-visibility"
+version = "0.1.0"
+description = "K-Radar multi-sensor visibility analysis pipeline"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy>=1.26.4",
+    "polars>=1.39.3",
+    "pyarrow>=23.0.1",
+    "pytest>=9.1.1",
+    "scipy>=1.17.1",
+    "pyyaml>=6.0.3",
+    "opencv-python-headless>=4.11.0.86",
+    "pytest-json-report>=1.5.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/kradar_visibility"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+markers = [
+    "optional: tests that require extra data or are future scope",
+]

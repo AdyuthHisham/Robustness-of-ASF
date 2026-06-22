@@ -32,3 +32,9 @@ dev = [
 exclude = [
     "repos/K-Radar/**",
 ]
+
+[tool.uv.workspace]
+members = [
+    "src/Modules/robust_testing/kradar",
+    "src/Modules/robust_testing/kradar/kradar_visibility",
+]

@@ -1,0 +1,233 @@
+{
+  "version": "1",
+  "metadata": {
+    "marimo_version": "0.23.9",
+    "script_metadata_hash": null
+  },
+  "cells": [
+    {
+      "id": "Hbol",
+      "code_hash": "1d0db38904205bec4d6f6f6a1f6cec3e",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "MJUe",
+      "code_hash": "e1795a1724582d29485ae169be0e5495",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "vblA",
+      "code_hash": "fc2448b6a7edd1ab4c51df8acf376a94",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "bkHC",
+      "code_hash": "4529cdc2a07dfd264736b59bc2880f9e",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"paths\">Paths</h2>\n<span class=\"paragraph\"><code>GT_FOLDER</code>, <code>L1_FOLDER</code>, and <code>L2_FOLDER</code> may each point to either:</span>\n<ul>\n<li>A <strong>directory</strong> containing many files (the original behaviour), or</li>\n<li>A <strong>single file</strong> to process in isolation.</li>\n</ul>\n<span class=\"paragraph\">Both forms are handled automatically by <code>resolve_input_paths</code> in the\nprocessing cells below -- no other configuration changes are required.</span>\n<span class=\"paragraph\">Examples:</span>\n<div class=\"language-python codehilite\"><pre><span></span><code><span class=\"c1\"># Directory of ground-truth label files (original behaviour)</span>\n<span class=\"n\">GT_FOLDER</span> <span class=\"o\">=</span> <span class=\"s2\">&quot;/workspace/repos/K-Radar/data/1/info_label_rev2&quot;</span>\n\n<span class=\"c1\"># A single ground-truth label file</span>\n<span class=\"n\">GT_FOLDER</span> <span class=\"o\">=</span> <span class=\"s2\">&quot;/workspace/repos/K-Radar/data/1/info_label_rev2/00033.txt&quot;</span>\n\n<span class=\"c1\"># Directory of os1-128 LiDAR PCDs (original behaviour)</span>\n<span class=\"n\">L1_FOLDER</span> <span class=\"o\">=</span> <span class=\"s2\">&quot;/workspace/repos/K-Radar/data/1/os1-128&quot;</span>\n\n<span class=\"c1\"># A single os1-128 LiDAR PCD</span>\n<span class=\"n\">L1_FOLDER</span> <span class=\"o\">=</span> <span class=\"s2\">&quot;/workspace/repos/K-Radar/data/1/os1-128/os1-128_00033.pcd&quot;</span>\n\n<span class=\"c1\"># Directory of os2-64 LiDAR PCDs (original behaviour)</span>\n<span class=\"n\">L2_FOLDER</span> <span class=\"o\">=</span> <span class=\"s2\">&quot;/workspace/repos/K-Radar/data/1/os2-64&quot;</span>\n\n<span class=\"c1\"># A single os2-64 LiDAR PCD</span>\n<span class=\"n\">L2_FOLDER</span> <span class=\"o\">=</span> <span class=\"s2\">&quot;/workspace/repos/K-Radar/data/1/os2-64/os2-64_00033.pcd&quot;</span>\n\n<span class=\"c1\"># Directory of radar zyx cubes (used by the Radar section)</span>\n<span class=\"n\">RADAR_FOLDER</span> <span class=\"o\">=</span> <span class=\"s2\">&quot;/workspace/repos/K-Radar/data/1/radar_zyx_cube&quot;</span>\n\n<span class=\"c1\"># A single radar zyx cube (.mat)</span>\n<span class=\"n\">RADAR_FOLDER</span> <span class=\"o\">=</span> <span class=\"s2\">&quot;/workspace/repos/K-Radar/data/1/radar_zyx_cube/cube_00033.mat&quot;</span>\n\n<span class=\"c1\"># Camera image folders (used by the Camera section)</span>\n<span class=\"n\">CAM_FRONT_FOLDER</span>  <span class=\"o\">=</span> <span class=\"s2\">&quot;/workspace/repos/K-Radar/data/1/cam_front&quot;</span>\n<span class=\"n\">CAM_LEFT_FOLDER</span>   <span class=\"o\">=</span> <span class=\"s2\">&quot;/workspace/repos/K-Radar/data/1/cam_left&quot;</span>\n<span class=\"n\">CAM_RIGHT_FOLDER</span>  <span class=\"o\">=</span> <span class=\"s2\">&quot;/workspace/repos/K-Radar/data/1/cam_right&quot;</span>\n<span class=\"n\">CAM_REAR_FOLDER</span>   <span class=\"o\">=</span> <span class=\"s2\">&quot;/workspace/repos/K-Radar/data/1/cam_rear&quot;</span>\n\n<span class=\"c1\"># Camera calibration</span>\n<span class=\"n\">CAM_CALIB_COMMON_DIR</span> <span class=\"o\">=</span> <span class=\"s2\">&quot;/workspace/repos/K-Radar/resources/cam_calib/common&quot;</span>\n<span class=\"n\">CAM_CALIB_T_PARAMS</span>   <span class=\"o\">=</span> <span class=\"s2\">&quot;/workspace/repos/K-Radar/resources/cam_calib/T_params_seq/1.pkl&quot;</span>\n</code></pre></div></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "lEQa",
+      "code_hash": "dcd537811fcf7445c465cc4d7b0e222d",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "PKri",
+      "code_hash": "68f97f06d2fecf3512dba404835c0189",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"calibration\">Calibration</h2>\n<span class=\"paragraph\">LiDAR and Radar point clouds are reported in their own sensor frames,\neach offset from the vehicle's ego frame (the frame used by the GT\nannotations) by a fixed mounting translation. <code>SensorCalibrationOffset</code>\n(in <code>sensor_data_utils.py</code>) applies that translation so points line up\nwith the GT object boxes.</span>\n<span class=\"paragraph\"><code>KRADAR_LIDAR_OFFSET</code> and <code>KRADAR_RADAR_OFFSET</code> hold the K-Radar\nmounting offsets <code>(x, y, z)</code> in meters. Both LiDAR sensors (os1-128 and\nos2-64) share the same offset in this dataset.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Xref",
+      "code_hash": "8f91ea28e34f5fa9687d6e7544cdb5e5",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "SFPL",
+      "code_hash": "3b87e16f63e5df96516933c2172604d7",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "BYtC",
+      "code_hash": "71a047c8d1f825c712d7537943f70517",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "RGSE",
+      "code_hash": "db9caed86e46bb35a488b5e07bc2f11a",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h1 id=\"n-of-points-by-sensor\">N# of points by sensor</h1>\n<span class=\"paragraph\">The cell below implements the CPU pipeline. It accepts either a\ndirectory of <code>.pcd</code> files or a single <code>.pcd</code> file via\n<code>resolve_input_paths</code>, and uses <code>points_in_boxes(..., device=\"cpu\")</code>\n(a pure-NumPy implementation in <code>sensor_data_utils.py</code>) instead of the\nCUDA kernel <code>points_in_boxes_gpu</code>. No <code>.cuda()</code> / <code>.pin_memory()</code> calls\nare used anywhere in this pipeline.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Kclp",
+      "code_hash": "94cf926ec73bc1cd018e38e174e02fff",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"lidar\">Lidar</h2></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "emfo",
+      "code_hash": "3d1f72fe8ec62a9bfe850a3fa1bad6d0",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "Hstk",
+      "code_hash": "d4d38c6f31a4b49703be8565a7658c30",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "nWHF",
+      "code_hash": "d4e8f6f054b994f4c70bc1158aa83e4f",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "iLit",
+      "code_hash": "864669dd72af38e5a398fca2efb52aa3",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"radar\">Radar</h2></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "ZHCJ",
+      "code_hash": "44bf793c451c3b0cfb45719a84f9eb55",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "ROlb",
+      "code_hash": "0fed0d8124192118dfce7fc52abb047c",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "qnkX",
+      "code_hash": "e7abd8c79cca173e46ca4a3384e7e540",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "TqIu",
+      "code_hash": "66419f98c1f43f2f15dec3f7405100d1",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"radar-voxel-occupancy-analysis\">Radar Voxel Occupancy Analysis</h2>\n<span class=\"paragraph\">Instead of projecting the radar cube into a sparse point cloud and then\ntesting points-in-boxes, we operate directly on the dense <code>arr_zyx</code>\ntensor. This preserves zero-power voxels and enables aggregation of\nraw power statistics per object.</span>\n<span class=\"paragraph\">For every annotated object the following are computed:</span>\n<ul>\n<li><code>radar_voxel_count</code> \u2013 number of voxel centres inside the 3-D box.</li>\n<li><code>radar_mean_power</code> \u2013 mean power value (linear) of those voxels.</li>\n<li><code>radar_max_power</code> \u2013 peak power of those voxels.</li>\n<li><code>radar_high_power_voxel_count</code> \u2013 voxels whose power exceeds the\n  95th-percentile of the whole frame.</li>\n<li><code>radar_occupancy_score</code> \u2013 fraction of in-box voxels that are\n  \"high power\" (<code>high_power_voxel_count / max(voxel_count, 1)</code>).</li>\n</ul></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Vxnm",
+      "code_hash": "201731d59d80ca175cb28ca963924128",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "DnEU",
+      "code_hash": "2e2d6abd95ca7ef17306e50240a3d042",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "ulZA",
+      "code_hash": "46e7b2445b9b60426b298a0d2a438f67",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"camera-visibility-analysis\">Camera Visibility Analysis</h2>\n<span class=\"paragraph\">For each annotated object we determine whether (and how much of) it is\nvisible in each of the four K-Radar cameras:\n<code>cam_front</code>, <code>cam_left</code>, <code>cam_right</code>, <code>cam_rear</code>.</span>\n<h3 id=\"projection-chain\">Projection chain</h3>\n<span class=\"paragraph\">GT boxes are in the ego frame.  For each camera we have:</span>\n<ul>\n<li><strong>Extrinsics</strong> <code>R</code> (3\u00d73 rotation) and <code>t</code> (3,) translation that\n  transform a point from the ego frame to the camera frame:\n      <code>P_cam = R @ P_ego + t</code></li>\n<li><strong>Intrinsics</strong> <code>fx, fy, px, py</code> (focal lengths and principal point):\n      <code>u = fx * P_cam[0]/P_cam[2] + px</code>\n      <code>v = fy * P_cam[1]/P_cam[2] + py</code></li>\n</ul>\n<span class=\"paragraph\">A point is visible if <code>depth = P_cam[2] &gt; 0</code> and\n<code>0 &lt;= u &lt; W, 0 &lt;= v &lt; H</code>.</span>\n<h3 id=\"visibility-percentage\">Visibility percentage</h3>\n<span class=\"paragraph\">We sample \u2265500 uniformly distributed points inside each 3-D box, project\nthem into the camera, and report the fraction that satisfy the visibility\nconditions.  This is a Monte-Carlo approximation of the fraction of the\nobject volume that the camera can observe.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "ecfG",
+      "code_hash": "f54f06340d6ffb15c09090f32fbf2c95",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "Pvdt",
+      "code_hash": "28fb0720e0c1d7cc7f9e6b8df33f598f",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "ZBYS",
+      "code_hash": "cec5ba0a7154c146a9e0cdf2a8ffce6d",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "aLJB",
+      "code_hash": "4a663d095e618d52ed0dff37b5680e99",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"unified-multi-modal-observability\">Unified Multi-Modal Observability</h2>\n<span class=\"paragraph\"><code>compute_multimodal_observability</code> iterates over every annotated object\nand merges LiDAR, Radar, and Camera metrics into a single row per object.</span>\n<span class=\"paragraph\">The output Polars DataFrame is exported as both <code>.parquet</code> and <code>.csv</code>.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "nHfw",
+      "code_hash": "427ece7ee8aca79951e26f2012445160",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "xXTn",
+      "code_hash": "9e6a66de1e73755d38f388c2befbe279",
+      "outputs": [],
+      "console": []
+    }
+  ]
+}

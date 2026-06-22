@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.23.8"
+__generated_with = "0.23.9"
 app = marimo.App(width="medium")
 
 
@@ -21,7 +21,7 @@ def _():
 
 @app.cell
 def _():
-    KRADAR_REPO = "/home/adhish/Productivity/AMSCUP/repos/K-Radar"
+    #KRADAR_REPO = "/home/adhish/Productivity/AMSCUP/repos/K-Radar"
     return
 
 
@@ -30,19 +30,17 @@ def _():
     import numpy as np
     import torch
     import open3d as o3d
-    from pcdet.ops.roiaware_pool3d.roiaware_pool3d_utils import points_in_boxes_gpu
+    #from pcdet.ops.roiaware_pool3d.roiaware_pool3d_utils import points_in_boxes_gpu
     from concurrent.futures import ThreadPoolExecutor
 
-    return ThreadPoolExecutor, np, o3d, points_in_boxes_gpu, torch
+    return ThreadPoolExecutor, np, o3d, torch
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     ## Paths
-    """
-    )
+    """)
     return
 
 
@@ -60,11 +58,9 @@ def _():
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     # Parse info files
-    """
-    )
+    """)
     return
 
 
@@ -168,21 +164,17 @@ def _(GT_FOLDER, load_gt_folder, pl):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     # N# of points by sensor
-    """
-    )
+    """)
     return
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     ## Lidar
-    """
-    )
+    """)
     return
 
 
@@ -317,11 +309,9 @@ def _(objects_with_counts):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     ## Radar
-    """
-    )
+    """)
     return
 
 

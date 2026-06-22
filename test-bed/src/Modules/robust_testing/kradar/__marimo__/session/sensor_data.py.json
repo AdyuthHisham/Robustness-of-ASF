@@ -1,13 +1,13 @@
 {
   "version": "1",
   "metadata": {
-    "marimo_version": "0.23.8",
+    "marimo_version": "0.23.9",
     "script_metadata_hash": null
   },
   "cells": [
     {
       "id": "Hbol",
-      "code_hash": "7b59aa2064d262c8af46f1d6691c18eb",
+      "code_hash": "1d0db38904205bec4d6f6f6a1f6cec3e",
       "outputs": [],
       "console": []
     },
@@ -19,19 +19,19 @@
     },
     {
       "id": "vblA",
-      "code_hash": "e7a94c85e9d0e8bbc6b9ec1d05f87e7d",
+      "code_hash": "656bf37f20d9c7ce88473d0340252104",
       "outputs": [],
       "console": []
     },
     {
       "id": "bkHC",
-      "code_hash": "e5098bafbdf83508896621bfbdd0dfe5",
+      "code_hash": "5cf02192bde5ab83c93554f2f0cae2b4",
       "outputs": [],
       "console": []
     },
     {
       "id": "lEQa",
-      "code_hash": "2d2117707cc43b7f52aa65b355109531",
+      "code_hash": "e7c6ec07f450a91f1ebc8e9e6d55b7f7",
       "outputs": [
         {
           "type": "data",
@@ -50,7 +50,7 @@
     },
     {
       "id": "Xref",
-      "code_hash": "102fcbc73e472485d2bc72dea1a5e3de",
+      "code_hash": "c313370efc7746ba8e89a63a58a0a1e9",
       "outputs": [
         {
           "type": "data",
@@ -75,7 +75,7 @@
     },
     {
       "id": "RGSE",
-      "code_hash": "62f696c57ddd543f64db08fa1f20985e",
+      "code_hash": "8cb97bf0a0e304de399b5109ea56ab8b",
       "outputs": [
         {
           "type": "data",
@@ -88,7 +88,7 @@
     },
     {
       "id": "Kclp",
-      "code_hash": "aa03690b1f50f955918e52b263ca7e95",
+      "code_hash": "94cf926ec73bc1cd018e38e174e02fff",
       "outputs": [
         {
           "type": "data",
@@ -125,7 +125,7 @@
     },
     {
       "id": "ZHCJ",
-      "code_hash": "66c31a5c803f8e82a67f1984393f59db",
+      "code_hash": "864669dd72af38e5a398fca2efb52aa3",
       "outputs": [
         {
           "type": "data",
