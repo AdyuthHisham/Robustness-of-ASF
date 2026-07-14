@@ -129,9 +129,29 @@ def _(
         points = np.asarray(pcd.points, dtype=np.float32)
         return points  # No transform applied — dataset is pre-calibrated
 
-    def count_lidar_points_in_boxes(...):
-        # ... [same structure, uses _load_pcd_points without calibration] ...
-        return result
+    def count_lidar_points_in_boxes(pcd_path: Path, boxes: np.ndarray) -> int:
+        """Count LiDAR points within bounding boxes.
+    
+        Args:
+            pcd_path: Path to the PCD file
+            boxes: Nx6 numpy array of [xmin, xmax, ymin, ymax, zmin, zmax]
+    
+        Returns:
+            Number of points within any of the boxes
+        """
+        points = _load_pcd_points(pcd_path)
+        if points is None:
+            return 0
+    
+        count = 0
+        for box in boxes:
+            mask = (
+                (points[:, 0] >= box[0]) & (points[:, 0] <= box[1]) &
+                (points[:, 1] >= box[2]) & (points[:, 1] <= box[3]) &
+                (points[:, 2] >= box[4]) & (points[:, 2] <= box[5])
+            )
+            count += np.sum(mask)
+        return count
 
     return (count_lidar_points_in_boxes,)
 

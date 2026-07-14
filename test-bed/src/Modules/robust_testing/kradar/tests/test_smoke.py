@@ -1,27 +1,16 @@
 import numpy as np
-import scipy.io
 import pytest
-from pathlib import Path
 
 from kradar_visibility import (
     # Radar
-    radar_visibility, compute_radar_sparsity_score,
+    compute_radar_sparsity_score,
     # LiDAR
-    calculate_lidar_visibility, read_pcd_file,
-    # Calibration
-    load_camera_calibration, get_camera_params, get_T_radar2cam,
-    get_camera_intrinsics, CAMERA_MAP,
-    # Camera
-    calculate_visibility_score, calculate_camera_visibility,
+    calculate_lidar_visibility, load_camera_calibration, get_camera_params, calculate_visibility_score, calculate_camera_visibility,
     project_point_to_image,
     # Parser
-    parse_header, parse_object_line, parse_label_file,
+    parse_label_file,
     get_sequence_label_files, parse_description_txt,
-    HeaderInfo, ObjectAnnotation,
-    # Data loader
-    load_radar_cube, load_lidar_points, load_camera_image,
-    get_camera_image_path,
-    # Config
+    HeaderInfo, load_radar_cube, load_lidar_points, load_camera_image,
     ALLOWED_WEATHER,
 )
 
@@ -209,47 +198,46 @@ class TestMetrics:
         assert scores['front'] > 0
 
     def test_smk17_full_pipeline_two_sequences(self, dataset_root, smoke_sequence_ids, smoke_frame_limit, tmp_path):
-        """SMK-17: end-to-end pipeline.py run on 2 sequences / 20 frames -> parquet, no crash, all columns present."""
-        # For now, test that we can parse files and build a basic dataframe
-        import polars as pl
-        
-        rows = []
-        for seq_id in smoke_sequence_ids:
-            label_files = get_sequence_label_files(seq_id, dataset_root)
-            for label_file in label_files[:smoke_frame_limit]:
-                header, objects = parse_label_file(label_file)
-                for obj in objects:
-                    rows.append({
-                        'sequence_id': seq_id,
-                        'frame_idx': header.tesseract_idx,
-                        'timestamp': header.timestamp,
-                        'obj_tracking_id': obj.tracking_id,
-                        'obj_class': obj.obj_class,
-                        'obj_x': obj.x,
-                        'obj_y': obj.y,
-                        'obj_z': obj.z,
-                        'obj_theta': obj.theta,
-                        'obj_length': obj.length,
-                        'obj_width': obj.width,
-                        'obj_height': obj.height,
-                        'obj_distance_ego': obj.distance_ego,
-                        'sensor_identify': obj.sensor_identify,
-                    })
-        
-        df = pl.DataFrame(rows)
-        assert df.height > 0
-        expected_cols = ['sequence_id', 'frame_idx', 'obj_tracking_id', 'obj_class']
-        for col in expected_cols:
-            assert col in df.columns
-        
-        # Write to parquet
-        out_path = tmp_path / "smoke_output.parquet"
-        df.write_parquet(out_path)
-        assert out_path.exists()
-        
-        # Read back and verify
-        df_read = pl.read_parquet(out_path)
-        assert df_read.height == df.height
+            """SMK-17: end-to-end pipeline.py run on 2 sequences / 20 frames -> parquet, no crash, all columns present."""
+            from kradar_visibility.pipeline import run
+            import polars as pl
+
+            # Run the pipeline on the two sequences with frame limit
+            df = run(
+                sequence_ids=smoke_sequence_ids,
+                frame_limit=smoke_frame_limit,
+                dataset_root=dataset_root,
+                output_path=tmp_path / "smoke_output.parquet"
+            )
+
+            # Check that we got data
+            assert df.height > 0, "Pipeline produced no output"
+
+            # Check that expected columns are present (including those from phases 1-3)
+            expected_cols = [
+                'sequence_id', 'frame_idx', 'obj_tracking_id', 'obj_class',
+                'radar_visible', 'radar_sparsity_score',
+                'lidar64_visible', 'lidar64_points_count', 'lidar64_sparsity_score',
+                'lidar128_visible', 'lidar128_points_count', 'lidar128_sparsity_score',
+                'cam_front_visible', 'cam_front_visibility_score',
+                'cam_left_visible', 'cam_left_visibility_score',
+                'cam_right_visible', 'cam_right_visibility_score',
+                'cam_rear_visible', 'cam_rear_visibility_score',
+                'ghost_flag'  # New in phase 2
+            ]
+            for col in expected_cols:
+                assert col in df.columns, f"Missing expected column: {col}"
+
+            # Check that ghost flag is boolean
+            assert df['ghost_flag'].dtype == pl.Boolean, "ghost_flag column must be boolean"
+
+            # Optionally, check that the file was written
+            out_path = tmp_path / "smoke_output.parquet"
+            assert out_path.exists(), "Output Parquet file was not created"
+
+            # Read back and verify same shape
+            df_read = pl.read_parquet(out_path)
+            assert df_read.height == df.height, "Row count mismatch between returned DF and saved Parquet"
 
     def test_smk_frame_limit_uses_annotated_frames(self, dataset_root):
         """frame_limit=N must select N frames that have at least one object,

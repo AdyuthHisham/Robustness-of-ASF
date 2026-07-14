@@ -22,7 +22,7 @@ sensor_data_gpu.py) and the CPU notebook (sensor_data_cpu.py).
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Iterable, Sequence
+from typing import Sequence
 
 import numpy as np
 

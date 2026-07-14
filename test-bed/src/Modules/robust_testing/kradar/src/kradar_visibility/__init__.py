@@ -1,5 +1,5 @@
 from .radar_visibility import radar_visibility, compute_radar_sparsity_score
-from .lidar_visibility import calculate_lidar_visibility, read_pcd_file
+from .lidar_visibility import calculate_lidar_visibility
 from .calibration import (
     load_camera_calibration, get_camera_params, get_T_radar2cam,
     get_camera_intrinsics, CAMERA_MAP

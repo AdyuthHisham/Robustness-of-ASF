@@ -139,18 +139,20 @@ def get_sequence_label_files(sequence_id: str, dataset_root: Optional[Path] = No
 
 def parse_description_txt(sequence_id: str, dataset_root: Optional[Path] = None) -> dict:
     """Parse description.txt for a sequence.
-    
+
     Returns dict with keys: location, time, weather
     """
     if dataset_root is None:
         dataset_root = Path("/home/adhish/Productivity/AMSCUP/repos/K-Radar")
+    else:
+        dataset_root = Path(dataset_root)
     desc_path = dataset_root / "data" / sequence_id / "description.txt"
     if not desc_path.exists():
         return {}
-    
+
     with open(desc_path, 'r') as f:
         content = f.read().strip()
-    
+
     parts = content.split(',')
     result = {}
     if len(parts) >= 1:
@@ -159,5 +161,5 @@ def parse_description_txt(sequence_id: str, dataset_root: Optional[Path] = None)
         result['time'] = parts[1].strip()
     if len(parts) >= 3:
         result['weather'] = parts[2].strip()
-    
+
     return result

@@ -22,7 +22,6 @@ def _():
 @app.cell
 def _():
     import numpy as np
-    import torch
     import open3d as o3d
     from concurrent.futures import ThreadPoolExecutor
 

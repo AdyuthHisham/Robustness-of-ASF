@@ -1,5 +1,4 @@
 import pickle
-import numpy as np
 
 # Camera mapping: direction -> (cam_number, cam_key)
 # front: 1,2 | right: 3,4 | rear: 5,6 | left: 7,8
@@ -49,3 +48,12 @@ def get_camera_intrinsics(cam_number, seq=1):
             if cn == cam_number:
                 return calib_data[ck]['camera_intrinsics']
     raise ValueError(f"Camera number {cam_number} not found")
+
+def load_calibration(data_path):
+    """
+    Load calibration data for the K-Radar dataset.
+    This is a placeholder function for the web visualization tool.
+    In a real implementation, this would load the calibration data from the given path.
+    For now, we return an empty dictionary.
+    """
+    return {}

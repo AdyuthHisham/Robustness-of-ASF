@@ -187,7 +187,7 @@ def generate_verification_report(parquet_path: Path, report_path: Path):
             "tests/test_verify.py",
             "-v",
             "-m", "not optional",
-            f"--json-report",
+            "--json-report",
             f"--json-report-file={json_report_path}",
             "--tb=no",
             "-q",
@@ -214,7 +214,7 @@ def generate_verification_report(parquet_path: Path, report_path: Path):
         "",
         f"**Parquet:** `{parquet_path}`  ",
         f"**Generated:** {_now()}  ",
-        f"**Mode:** CPU-only / toy-scale  ",
+        "**Mode:** CPU-only / toy-scale  ",
         "",
         "| VER ID | Test | Status | Notes |",
         "|--------|------|--------|-------|",
@@ -236,7 +236,7 @@ def generate_verification_report(parquet_path: Path, report_path: Path):
             status = "❌ FAILED"
         elif outcome == "skipped":
             reason = t.get("setup", {}).get("longrepr", "") or t.get("call", {}).get("longrepr", "")
-            status = f"⏭️ SKIPPED"
+            status = "⏭️ SKIPPED"
         else:
             status = outcome.upper()
 
@@ -264,8 +264,8 @@ def generate_verification_report(parquet_path: Path, report_path: Path):
         "",
         "## Summary",
         "",
-        f"| | Count |",
-        f"|---|---|",
+        "| | Count |",
+        "|---|---|",
         f"| ✅ Passed  | {passed} |",
         f"| ❌ Failed  | {failed} |",
         f"| ⏭️ Skipped | {skipped} |",

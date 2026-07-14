@@ -13,6 +13,7 @@ Changes vs. original:
   ISSUE-07: Calibration load wrapped per-sequence; failures log a warning and
             disable camera metrics for that sequence rather than crashing.
   ISSUE-08: Guard added before pl.DataFrame() for the empty-rows case.
+  WEATHER-01: Parse description.txt for weather label and add to each row.
 """
 
 from pathlib import Path
@@ -23,19 +24,72 @@ import logging
 import numpy as np
 import polars as pl
 
-from .parser import parse_label_file, get_sequence_label_files
+from .parser import parse_label_file, get_sequence_label_files, parse_description_txt
 from .data_loader import load_radar_cube, load_lidar_points
 from .calibration import get_camera_params, load_camera_calibration
-from .radar_visibility import compute_radar_sparsity_score
-from .lidar_visibility import calculate_lidar_visibility
-from .camera_visibility import calculate_camera_visibility, project_point_to_image
+from .radar_visibility import compute_radar_sparsity_score, prepare_frame_radar, RADAR_GUARD_CELLS, RADAR_TRAINING_CELLS
+from .lidar_visibility import calculate_lidar_visibility, prepare_frame_lidar, OS2_64_CHANNEL_LUT, OS1_128_CHANNEL_LUT
+from .camera_visibility import (calculate_camera_visibility, project_point_to_image,
+                                prepare_frame_camera, camera_score, stereo_consistency)
 from .config import (
     RADAR_FOV_AZIMUTH_DEG, RADAR_FOV_ELEVATION_DEG, RADAR_MAX_RANGE_M,
     OS2_64_CHANNELS, OS2_64_VFOV_DEG, OS2_64_HRES_DEG,
     OS1_128_CHANNELS, OS1_128_VFOV_DEG, OS1_128_HRES_DEG,
+    CAM_HALF_WIDTH, CAM_HALF_HEIGHT,
+    DEPTH_MARGIN, DEPTH_SAMPLE_RADIUS
 )
 
 log = logging.getLogger(__name__)
+
+
+# ---------------------------------------------------------------------------
+# NEW PHASE 4: Per-frame precomputation functions (replaces generate_camera_depth_maps)
+# ---------------------------------------------------------------------------
+# The old generate_camera_depth_maps() is replaced by prepare_frame_camera()
+# from camera_visibility.py which handles all 4 cameras at once.
+# Kept for backward compatibility if any external code calls it.
+def generate_camera_depth_maps(points, cam_params_list, width, height):
+    """Legacy function - use prepare_frame_camera() instead."""
+    # Use the first camera in the list
+    intrinsics = cam_params_list[0]['camera_intrinsics'][:3, :3]
+    radar2camera = cam_params_list[0]['radar2camera']
+    
+    depth_map = np.zeros((height, width), dtype=np.float32)
+    
+    if points is None or len(points) == 0:
+        return depth_map
+    
+    # Transform all points to camera frame at once (vectorized)
+    pts_hom = np.hstack([points[:, :3], np.ones((len(points), 1))])
+    pts_cam = (radar2camera @ pts_hom.T).T
+    
+    # Keep only points in front of camera
+    valid = pts_cam[:, 2] > 0
+    if not np.any(valid):
+        return depth_map
+        
+    pts_cam = pts_cam[valid]
+    z_cam = pts_cam[:, 2]
+    x_cam = pts_cam[:, 0]
+    y_cam = pts_cam[:, 1]
+    
+    # Project to image
+    u = (intrinsics[0, 0] * x_cam / z_cam) + intrinsics[0, 2]
+    v = (intrinsics[1, 1] * y_cam / z_cam) + intrinsics[1, 2]
+    
+    u_int = np.round(u).astype(int)
+    v_int = np.round(v).astype(int)
+    
+    # Filter to image bounds
+    in_bounds = (u_int >= 0) & (u_int < width) & (v_int >= 0) & (v_int < height)
+    u_valid = u_int[in_bounds]
+    v_valid = v_int[in_bounds]
+    z_valid = z_cam[in_bounds]
+    
+    # Vectorized minimum reduction using np.minimum.at
+    np.minimum.at(depth_map, (v_valid, u_valid), z_valid)
+    
+    return depth_map
 
 # ---------------------------------------------------------------------------
 # Radar zyx_cube grid parameters
@@ -68,7 +122,6 @@ _LIDAR_RANGE = [0.0, 120.0]
 # ---------------------------------------------------------------------------
 # Internal helpers
 # ---------------------------------------------------------------------------
-
 def _world_to_voxel(x: float, y: float, z: float):
     """Convert world (meter) coords to radar zyx_cube integer voxel indices."""
     vx = int((x - RADAR_X_MIN) / (RADAR_X_MAX - RADAR_X_MIN) * (RADAR_GRID_X - 1))
@@ -158,9 +211,8 @@ def _assert_radar_cube_shape(cube: np.ndarray):
 # ---------------------------------------------------------------------------
 # Per-frame visibility computation
 # ---------------------------------------------------------------------------
-
 def compute_visibility_for_frame(sequence_id, header, objects, dataset_root,
-                                  calib_available: bool = True):
+                                  calib_available: bool = True, weather_label: str = "normal"):
     """Compute all visibility metrics for every object in one frame.
 
     Args:
@@ -170,6 +222,7 @@ def compute_visibility_for_frame(sequence_id, header, objects, dataset_root,
         dataset_root:      Path to K-Radar dataset root.
         calib_available:   Set to False when calibration failed to load for
                            this sequence; camera metrics will be zeroed out.
+        weather_label:     Weather label for the sequence (default: "normal").
 
     Returns:
         List of row dicts (one per object).
@@ -184,8 +237,70 @@ def compute_visibility_for_frame(sequence_id, header, objects, dataset_root,
     # ISSUE-04: validate radar cube shape once per frame (only when file exists)
     if radar_cube is not None:
         _assert_radar_cube_shape(radar_cube)
+    # Precompute radar dB and valid mask for the frame (if radar_cube exists)
+    if radar_cube is not None:
+        valid_mask = radar_cube > 0
+        cube_db = np.full(radar_cube.shape, -100.0, dtype=np.float64)
+        cube_db[valid_mask] = 10.0 * np.log10(radar_cube[valid_mask])
+    else:
+        valid_mask = None
+        cube_db = None
+
+    # Precompute noise floor value (global median) for the frame (if radar_cube exists)
+    if cube_db is not None and valid_mask is not None:
+        valid_values = cube_db[valid_mask]
+        if valid_values.size > 0:
+            noise_floor_val = float(np.median(valid_values))
+        else:
+            noise_floor_val = -100.0
+    else:
+        noise_floor_val = -100.0
 
     seq_int = int(sequence_id) if sequence_id.isdigit() else 1
+
+    # NEW PHASE 4: Per-frame precomputation for LiDAR and Camera
+    # LiDAR range images
+    os2_range_image, os2_sensor_origin = (None, None)
+    if os2_points is not None and len(os2_points) > 0:
+        os2_range_image, os2_sensor_origin = prepare_frame_lidar(
+            os2_points, OS2_64_CHANNELS, OS2_64_VFOV_DEG, OS2_64_HRES_DEG
+        )
+    
+    os1_range_image, os1_sensor_origin = (None, None)
+    if os1_points is not None and len(os1_points) > 0:
+        os1_range_image, os1_sensor_origin = prepare_frame_lidar(
+            os1_points, OS1_128_CHANNELS, OS1_128_VFOV_DEG, OS1_128_HRES_DEG
+        )
+    
+    # Camera depth maps for all 4 cameras
+    camera_depth_maps = {}
+    if calib_available and os1_points is not None and len(os1_points) > 0:
+        try:
+            # Get camera intrinsics and extrinsics for all 4 directions
+            camera_intrinsics_list = []
+            camera_extrinsics_list = []
+            for direction in ['front', 'left', 'right', 'rear']:
+                params_list = get_camera_params(direction, seq=seq_int)
+                camera_intrinsics_list.append(params_list[0]['camera_intrinsics'])
+                camera_extrinsics_list.append(params_list[0]['radar2camera'])
+            
+            # Identity for LiDAR to radar (they share the same frame in K-Radar)
+            lidar_extrinsics = np.eye(4)
+            
+            depth_maps = prepare_frame_camera(
+                os1_points[:, :3],  # only xyz
+                lidar_extrinsics,
+                camera_intrinsics_list,
+                camera_extrinsics_list,
+                CAM_HALF_WIDTH,
+                CAM_HALF_HEIGHT
+            )
+            
+            for i, direction in enumerate(['front', 'left', 'right', 'rear']):
+                camera_depth_maps[direction] = depth_maps[i]
+        except Exception as exc:
+            log.debug("Failed to generate camera depth maps: %s", exc)
+            camera_depth_maps = {}
 
     for obj in objects:
         # ------------------------------------------------------------------ #
@@ -202,7 +317,7 @@ def compute_visibility_for_frame(sequence_id, header, objects, dataset_root,
                 if (bbox['z_max'] > bbox['z_min'] and
                         bbox['y_max'] > bbox['y_min'] and
                         bbox['x_max'] > bbox['x_min']):
-                    radar_score = float(compute_radar_sparsity_score(radar_cube, bbox))
+                    radar_score = float(compute_radar_sparsity_score(radar_cube, bbox, noise_floor_db=None, noise_floor_val=noise_floor_val, cube_db=cube_db, valid_mask=valid_mask))
             except Exception as exc:
                 log.debug("radar score failed for obj %s: %s", obj.tracking_id, exc)
                 radar_score = 0.0
@@ -211,6 +326,7 @@ def compute_visibility_for_frame(sequence_id, header, objects, dataset_root,
         # LiDAR                                                                #
         # ISSUE-01: call calculate_lidar_visibility once per cloud, read       #
         #           only [0][0], [1][0], [2][0] from each result.              #
+        # NEW: Pass precomputed range images for occlusion-aware scoring       #
         # ------------------------------------------------------------------ #
         bbox_list = [_bbox_list_from_annotation(obj)]
 
@@ -223,6 +339,8 @@ def compute_visibility_for_frame(sequence_id, header, objects, dataset_root,
                     os2_points, bbox_list,
                     fov=_LIDAR_FOV, range_limit=_LIDAR_RANGE,
                     expected_density=_EXPECTED_OS2,
+                    range_image=os2_range_image,
+                    sensor_origin=os2_sensor_origin,
                 )
                 lidar64_visible = bool(vis[0])
                 lidar64_points = int(cnt[0])
@@ -239,12 +357,21 @@ def compute_visibility_for_frame(sequence_id, header, objects, dataset_root,
                     os1_points, bbox_list,
                     fov=_LIDAR_FOV, range_limit=_LIDAR_RANGE,
                     expected_density=_EXPECTED_OS1,
+                    range_image=os1_range_image,
+                    sensor_origin=os1_sensor_origin,
                 )
                 lidar128_visible = bool(vis[0])
                 lidar128_points = int(cnt[0])
                 lidar128_score = float(sco[0])
             except Exception as exc:
                 log.debug("lidar128 failed for obj %s: %s", obj.tracking_id, exc)
+
+        # For legacy 'L' label, map to lidar64_visible OR lidar128_visible
+        if obj.sensor_identify == 'L':
+            lidar64_original = lidar64_visible
+            lidar128_original = lidar128_visible
+            lidar64_visible = lidar64_original or lidar128_original
+            lidar128_visible = lidar64_original or lidar128_original
 
         # ------------------------------------------------------------------ #
         # Camera                                                               #
@@ -267,7 +394,8 @@ def compute_visibility_for_frame(sequence_id, header, objects, dataset_root,
         if calib_available:
             corners = _obj_corners(obj)
             try:
-                cam_scores = calculate_camera_visibility(corners, seq=seq_int)
+                # NEW: Pass precomputed depth maps for occlusion testing
+                cam_scores = calculate_camera_visibility(corners, seq=seq_int, depth_maps=camera_depth_maps)
             except Exception as exc:
                 log.debug("camera visibility failed for obj %s: %s", obj.tracking_id, exc)
 
@@ -374,6 +502,8 @@ def compute_visibility_for_frame(sequence_id, header, objects, dataset_root,
             'cam_rear_visibility_score': cam_scores['rear'],
             'num_sensors_visible': num_sensors_visible,
             'primary_sensor': primary_sensor,
+            'weather': weather_label,
+            'ghost_flag': radar_visible and not lidar64_visible and not lidar128_visible and not (cam_front_visible or cam_left_visible or cam_right_visible or cam_rear_visible),
         })
 
     return rows
@@ -382,7 +512,6 @@ def compute_visibility_for_frame(sequence_id, header, objects, dataset_root,
 # ---------------------------------------------------------------------------
 # Public entry point
 # ---------------------------------------------------------------------------
-
 def run(
     sequence_ids: List[str],
     frame_limit: Optional[int] = None,
@@ -417,6 +546,20 @@ def run(
                         "Camera metrics will be zeroed.", seq_id, exc)
             calib_available = False
 
+        # WEATHER-01: Parse description.txt for weather label
+        weather_info = parse_description_txt(seq_id, dataset_root)
+        weather_raw = weather_info.get('weather', '').strip()
+        # Validate against ALLOWED_WEATHER; fallback to "normal" if missing/invalid
+        from .config import ALLOWED_WEATHER
+        if weather_raw and weather_raw in ALLOWED_WEATHER:
+            weather_label = weather_raw
+        else:
+            if weather_raw:
+                log.warning(f"Weather '{weather_raw}' not in ALLOWED_WEATHER for sequence {seq_id}; using 'normal'")
+            else:
+                log.warning(f"No weather found in description.txt for sequence {seq_id}; using 'normal'")
+            weather_label = "normal"
+
         label_files = get_sequence_label_files(seq_id, dataset_root)
         if frame_limit:
             annotated = []
@@ -437,6 +580,7 @@ def run(
                 rows = compute_visibility_for_frame(
                     seq_id, header, objects, dataset_root,
                     calib_available=calib_available,
+                    weather_label=weather_label,
                 )
                 all_rows.extend(rows)
             except Exception as exc:

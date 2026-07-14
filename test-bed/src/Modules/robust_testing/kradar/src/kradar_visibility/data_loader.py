@@ -1,6 +1,6 @@
 """Lazy data loaders for all sensor types."""
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Optional
 import numpy as np
 import scipy.io
 import cv2

@@ -15,9 +15,9 @@
               "state": {
                 "file": "Canvas.canvas",
                 "viewState": {
-                  "x": 3625,
-                  "y": -191,
-                  "zoom": 0
+                  "x": 4196.900622120403,
+                  "y": -1920,
+                  "zoom": -0.5540446136191663
                 }
               },
               "icon": "lucide-layout-dashboard",
@@ -203,12 +203,12 @@
             "state": {
               "type": "advanced-tables-toolbar",
               "state": {},
-              "icon": "lucide-ghost",
-              "title": "advanced-tables-toolbar"
+              "icon": "spreadsheet",
+              "title": "Advanced Tables"
             }
           }
         ],
-        "currentTab": 5
+        "currentTab": 2
       }
     ],
     "direction": "horizontal",
@@ -232,8 +232,9 @@
   "active": "f8e69edafe54cac2",
   "lastOpenFiles": [
     "Literature Review - Automatic Multi-Sensor Calibration and Unified Perception.md",
-    "Admin-ish/Daily Notes.md",
+    "Methodology - Automatic Multi-Sensor Calibration and Unified Perception.md",
     "Canvas.canvas",
+    "Admin-ish/Daily Notes.md",
     "lu245352209n.tmp",
     "lu117175a8b59.tmp",
     "lu11578iipr.tmp",
@@ -256,7 +257,6 @@
     "Images/Pasted image 20260323135145.png",
     "Images/Pasted image 20260323134322.png",
     "Images/Pasted image 20260323114038.png",
-    "Methodology - Automatic Multi-Sensor Calibration and Unified Perception.md",
     "Images/Pasted image 20260323110827.png",
     "Images/Pasted image 20260323110815.png",
     "Task test.md",

@@ -13,6 +13,9 @@ dependencies = [
     "pyyaml>=6.0.3",
     "opencv-python-headless>=4.11.0.86",
     "pytest-json-report>=1.5.0",
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.30.0",
+    "opencv-python>=4.11.0.86",
 ]
 
 [build-system]
@@ -27,4 +30,12 @@ testpaths = ["tests"]
 python_files = ["test_*.py"]
 markers = [
     "optional: tests that require extra data or are future scope",
+]
+
+[dependency-groups]
+dev = [
+    "black>=26.5.1",
+    "mypy>=2.1.0",
+    "pre-commit>=4.5.1",
+    "ruff>=0.15.5",
 ]

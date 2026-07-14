@@ -1,0 +1,215 @@
+{
+  "main": {
+    "id": "832bdb4c3e336857",
+    "type": "split",
+    "children": [
+      {
+        "id": "c8509015630b3ec2",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "bcc5bd69e8fccc4b",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "00_MOC.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "00_MOC"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "3d45617b7988e180",
+    "type": "split",
+    "children": [
+      {
+        "id": "5d0d5f00dfeff78e",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "027471fbf8456163",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "e25bb5a74e0ae580",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "40fb2b4e2b644359",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "22e7f65c256e89a2",
+    "type": "split",
+    "children": [
+      {
+        "id": "fb3f49529362d12e",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "317c1bdcb9415bd8",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "00_MOC.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks for 00_MOC"
+            }
+          },
+          {
+            "id": "ac023f83ebb7ecd1",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "00_MOC.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links from 00_MOC"
+            }
+          },
+          {
+            "id": "945ffec6b152d704",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "b5b3eec6141bf3ed",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "All properties"
+            }
+          },
+          {
+            "id": "af2a4a96e2d03105",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "00_MOC.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline of 00_MOC"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false
+    }
+  },
+  "active": "bcc5bd69e8fccc4b",
+  "lastOpenFiles": [
+    "08 Resources.md",
+    "00_MOC.md",
+    "10_Archive/Building_From_Source.md",
+    "07_Writing/Aggregated_Data__AMSCUP.md",
+    "06_Results/Figure_Inventory_and_LaTeX_Inclusion_Suggestions.md",
+    "06_Results/06 Results.md",
+    "05_Implementation/Refined_SOULmd_Files__Unified_Perception_Framework_Dev_Team.md",
+    "05_Implementation/LibCrypt_Patcher.md",
+    "05_Implementation/Hermes_Multi-Agent_Workplan.md",
+    "03_Theory/Annotations_1.md",
+    "03_Theory/Weionlinelidarcameraextrinsic2024.md",
+    "03_Theory/phase_2.md",
+    "03_Theory/BSD_3-Clause_License_1.md",
+    "03_Theory/BSD_3-Clause_License.md",
+    "03_Theory/Annotations.md",
+    "03_Theory/03 Theory.md",
+    "03_Theory/0_Problem_Statement.md",
+    "02_Literature/Visibility_Calculation_Methods_Literature_Review_and_Analysis_1.md",
+    "02_Literature/Visibility_Calculation_Methods_Literature_Review_and_Analysis.md",
+    "02_Literature/Usual_Questions.md",
+    "02_Literature/tasks.md",
+    "02_Literature/Sensor_Visibility__Identification_Metrics_for_K-Radar_3.md",
+    "02_Literature/Sensor_Visibility__Identification_Metrics_for_K-Radar_2.md",
+    "02_Literature/Sensor_Visibility__Identification_Metrics_for_K-Radar_1.md",
+    "02_Literature/Sensor_Visibility__Identification_Metrics_for_K-Radar.md",
+    "02_Literature/QA_Report_for_task_t_c872701f_QA_review_aggregated_datamd_completeness.md"
+  ]
+}
