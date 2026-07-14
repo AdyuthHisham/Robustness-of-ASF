@@ -83,3 +83,111 @@ test-bed/src/SFModels/CenterPoint/*
 !test-bed/src/SFModels/CenterPoint/Dockerfile
 !test-bed/src/SFModels/CenterPoint/docker_run.txt
 !test-bed/src/SFModels/CenterPoint/README.md
+
+# -----------------------
+# OS generated files
+# -----------------------
+.DS_Store
+Thumbs.db
+
+# -----------------------
+# Images (ignore all except maybe keep SVG)
+# -----------------------
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.bmp
+*.tiff
+*.webp
+
+# Uncomment if you also want to ignore SVGs
+# *.svg
+
+# -----------------------
+# Documents (ignore docs except Markdown)
+# -----------------------
+*.pdf
+*.doc
+*.docx
+*.ppt
+*.pptx
+*.xls
+*.xlsx
+*.odt
+*.ods
+
+# Keep Markdown files
+!*.md
+
+# -----------------------
+# LaTeX temporary files
+# -----------------------
+*.aux
+*.log
+*.out
+*.toc
+*.synctex.gz
+*.fls
+*.fdb_latexmk
+
+# -----------------------
+# Python
+# -----------------------
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+.venv/
+venv/
+env/
+
+# -----------------------
+# Jupyter
+# -----------------------
+.ipynb_checkpoints/
+
+# -----------------------
+# C/C++ build files
+# -----------------------
+build/
+cmake-build-*/
+*.o
+*.obj
+*.so
+*.dll
+*.exe
+
+# -----------------------
+# IDE/editor files
+# -----------------------
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# -----------------------
+# Logs and temporary files
+# -----------------------
+*.log
+*.tmp
+*.temp
+*.cache
+
+# -----------------------
+# Data (optional)
+# -----------------------
+*.csv
+*.json
+*.zip
+*.tar
+*.gz
+
+# -----------------------
+# Environment/secrets
+# -----------------------
+.env
+.env.*
+*.key
+*.pem
