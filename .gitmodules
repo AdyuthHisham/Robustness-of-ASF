@@ -4,3 +4,6 @@
 [submodule "repos/AMSCUP_PLUS"]
 	path = repos/AMSCUP_PLUS
 	url = https://github.com/AdyuthHisham/AMSCUP_PLUS.git
+[submodule "repos/K-Radar"]
+	path = repos/K-Radar
+	url = git@github.com:AdyuthHisham/K-Radar.git
