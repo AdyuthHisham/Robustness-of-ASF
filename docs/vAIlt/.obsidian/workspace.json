@@ -183,8 +183,9 @@
       "bases:Create new base": false
     }
   },
-  "active": "bcc5bd69e8fccc4b",
+  "active": "027471fbf8456163",
   "lastOpenFiles": [
+    "noise-injection-implementation-report.md",
     "noise-injection-design-verification.md",
     "kradar-effects-verification.md",
     "Daily/2026-07-21.md",
@@ -210,7 +211,6 @@
     "02_Literature/Visibility_Calculation_Methods_Literature_Review_and_Analysis_1.md",
     "02_Literature/Visibility_Calculation_Methods_Literature_Review_and_Analysis.md",
     "02_Literature/Usual_Questions.md",
-    "02_Literature/tasks.md",
-    "02_Literature/Sensor_Visibility__Identification_Metrics_for_K-Radar_3.md"
+    "02_Literature/tasks.md"
   ]
 }

@@ -69,7 +69,7 @@
 
 ## Test Suite Results (Live Pytest Run)
 
-### `tests/test_smoke.py` — Synthetic tests
+### `tests/test_smoke.py` — All tested smoke cases
 ```
 TestProjection::test_smk05_08_projection_smoke[xyz0-front-True]   PASSED
 TestProjection::test_smk05_08_projection_smoke[xyz1-rear-True]    PASSED
@@ -88,7 +88,7 @@ TestLoading::test_smk11_os2_64_pointcloud                            PASSED
 TestLoading::test_smk12_os1_128_denser_than_os2_64                   PASSED
 TestLoading::test_smk13_camera_images_load                           PASSED
 ```
-**Note:** SMK-17 (full pipeline 2 sequences) was excluded — it times out (>360s on CPU). SMK-frame-limit and SMK-all-sequences also excluded for timeout reasons.
+**Note:** SMK-17 (full pipeline 2 sequences) was excluded — it times out (>360s on CPU). SMK-frame-limit and SMK-all-sequences also excluded for timeout reasons. Total: **16 smoke tests passed** (SMK-01 through SMK-16).
 
 ### `tests/test_verify.py`
 ```
@@ -134,10 +134,12 @@ Breakdown:
 - `/home/adhish/Productivity/AMSCUP/test-bed/src/Modules/robust_testing/kradar/scripts/validate_precomputation.py.bak` — **cleanup needed**
 - The .backup files the user asked about (config.py.backup, config.py.backup2, lidar_visibility.py.backup, pipeline.py.backup) — **none found (already cleaned)**
 
-### Dead code / unused imports (pipeline.py)
+### Dead code / unused imports (pipeline.py lines 30–33)
 - `prepare_frame_radar` (line 30) — imported but never called
 - `RADAR_GUARD_CELLS` (line 30) — imported but never used in pipeline
 - `RADAR_TRAINING_CELLS` (line 30) — imported but never used in pipeline
+- `OS2_64_CHANNEL_LUT` (line 31) — imported but never used in pipeline
+- `OS1_128_CHANNEL_LUT` (line 31) — imported but never used in pipeline
 - `camera_score` (line 33) — imported but never called directly (used via `calculate_camera_visibility`)
 - `stereo_consistency` (line 33) — imported but never called
 
@@ -163,11 +165,11 @@ Breakdown:
 |-----------|--------|
 | Camera scores include occlusion_discount by default | **PASS** — `calculate_visibility_score()` applies depth-buffer occlusion when depth_map provided |
 | Stereo consistency optional | **NOT TESTED** — `stereo_consistency()` exists but never called from pipeline |
-| All smoke tests pass | **PARTIAL** — 14 synthetic smoke tests pass; SMK-17 (full pipeline) times out; data-loading tests pass |
+| All smoke tests pass | **PARTIAL** — 16 smoke tests pass (SMK-01..16); SMK-17 (full pipeline) times out; frame-limit and all-sequences tests timeout |
 | Output schema matches new columns | **FAIL** — `config.py` OUTPUT_SCHEMA missing `ghost_flag`, `weather` |
 | Radar scores in [0,1] | **FAIL** — max is 62 billion, CFAR not wired |
 | Existing parquet is up-to-date | **FAIL** — stale, missing all new columns |
-| No dead code imports | **FAIL** — 5 unused imports in pipeline.py |
+| No dead code imports | **FAIL** — 7 unused imports in pipeline.py lines 30–33 |
 
 **Blocking issues:**
 1. Radar CFAR noise floor exists in code but is NEVER wired into the pipeline — pipeline.py:274 explicitly passes `noise_floor_db=None`. This causes radar scores up to 62 billion, making the column useless.
