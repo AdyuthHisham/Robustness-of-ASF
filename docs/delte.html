@@ -1,980 +1,659 @@
-<h1 id="noise-addition-literature-survey-analysis">Noise Addition
-Literature Survey Analysis</h1>
-<h2 id="section-1-paper-summaries">Section 1: Paper Summaries</h2>
-<h3
-id="ieee-33rd-international-symposium-on-software-reliability-engineering-issre">2022
-IEEE 33rd International Symposium on Software Reliability Engineering
-(ISSRE)</h3>
-<p><strong>Authors:</strong> Not explicitly found in header</p>
-<p><strong>Brief Overview:</strong> –Due to the wide use of visual
-perception techniques in safety-critical fields, existing studies have
-tested the robustness of the essential object detection systems in
-scenarios with different image content. However, the applications that
-perceive one video with multiple image frames, such as autonomous
-driving, usually further require the trajectories of objects. This is
-mainly realized by combining detecting objects and associating detected
-objects in frames using multiple object tracking (MOT) systems. Thus, it
-is also essential to test the robustness of MOT systems, particularly in
-their exclusive scenarios that involve variety beyond the static image
-content. In this paper, we propose a novel testing method with five new
-Metamorphic Relations to realize the robustness test for MOT sy</p>
-<p><strong>Research Questions:</strong> We evaluate our method along
-following research questions: * RQ1: The Overall Effectiveness of Our
-Method. In this RQ, we investigate whether our method can detect
-violations to MRs for three typical MOT systems. * RQ2: Details of the
-Detected Violations. Since the detected violations can be analyzed in
-two finer granularities, i.e., frame level and error level, in this RQ,
-we further investigate the number of the frames including errors and the
-number of the detected errors in each type. * RQ3</p>
-<p><strong>Datasets Used:</strong> , KITTI tracking [47], as the source
-test cases. It 407 Authorized licensed use limited to: Chalmers
-University of Technology Sweden. Downloaded on July 03,2026 at 09:39:35
-UTC from IEEE Xplore. Restrictions apply. in all tests. On one hand,
-this demonstrates that our method and MRs can effectively reveal quite a
-few defects of MOT systems. On the other hand, it reminds us that
-existing MOT systems, which may have shown a fairly good performance in
-the benchmark-based evaluation, can still co</p>
-<p><strong>Evaluation Metrics:</strong> s,” EURASIP Journal on Image and
-Video Processing, vol. 2008, pp. 1-10, 2008. [15] P. Voigtlaender, M.
-Krause, A. Osep, J. Luiten, B. B. G. Sekar, A. Geiger, and B. Leibe,
-“MOTS: multi-object tracking and segmentation,” in Proceedings of the
-2019 IEEE/CVF Conference on Computer Vision and Pattern Recognition.
-Computer Vision Foundation / IEEE, 2019, pp. 7942-7951. [16] A. Bewley,
-Z. Ge, L. Ott, F. T. Ramos, and B. Upcroft, “Simple online and realtime
-tracking,” in Proceedings of the 2016 IEEE In</p>
-<p><strong>SFM / 3D Reconstruction Models Tested:</strong> ,” in
-Proceedings of the 2021 IEEE/ACM International Conference on Software
-Engineering: Companion Proceedings, ICSE Companion 2021, Madrid, Spain,
-May 25-28, 2021. IEEE, 2021, pp. 117-119. [3] X. Wang, S. Yang, J. Shao,
-J. Chang, G. Gao, M. Li, and J. Xuan, “Object removal for testing object
-detection in autonomous vehicle systems,” in Proceedings of the 2021
-IEEE International Conference on Software Quality, Reliability and
-Security, QRS 2021 - Companion, Hainan, China, December 6-10, 2021.
-IE</p>
+<h1 id="verification-report-partial-1">Verification Report — Partial
+1</h1>
+<p><strong>Gaps covered:</strong> Critical #1–3, Non-critical #1<br />
+<strong>Roadmap tasks:</strong> 1.1–1.3, 2.1–2.3<br />
+<strong>Methodology:</strong> k-radar-recommended-pipeline-summary.md
+§4.1–4.5 (embedded in code docstrings)<br />
+<strong>Date:</strong> 2026-07-20<br />
+<strong>Method:</strong> Every verdict re-derived from source code +
+live pytest runs. Phase implementation logs were NOT trusted.</p>
 <hr />
-<h3
-id="ieeeacm-45th-international-conference-on-software-engineering-icse">2023
-IEEE/ACM 45th International Conference on Software Engineering
-(ICSE)</h3>
-<p><strong>Authors:</strong> Not explicitly found in header</p>
-<p><strong>Brief Overview:</strong> –Autonomous systems rely on a
-perception component to interpret their surroundings, and when
-misinterpretations occur, they can and have led to serious and fatal
-system-level failures. Yet, existing methods for testing perception
-software remain limited in both their capacity to efficiently generate
-test data that translates to real-world performance and in their
-diversity to capture the long tail of rare but safetycritical scenarios.
-These limitations are particularly evident for perception systems based
-on LiDAR sensors, which have emerged as a crucial component in modern
-autonomous systems due to their ability to provide a 3D scan of the
-world and operate in all lighting conditions. To address these
-limitations, we introduce a novel approach for testing LiDAR-based
-perception systems by</p>
-<dl>
-<dt><strong>Research Questions:</strong></dt>
-<dd>
-<ul>
-<li>RQ1. How effective is the technique at uncovering failures defined
-at different levels of severity and which mutations are the most
-effective? * RQ2. How effective is the technique at generating realistic
-test cases? * RQ3. How efficient is the technique in terms of the time
-to generate the mutations? A. SUTs We evaluate our technique through
-testing five highly competitive perception systems submitted to the
-SemanticKITTI benchmark for the “Semantic Segmentation” task [2], shown
-in Table II. W</li>
-</ul>
-</dd>
-</dl>
-<p><strong>Datasets Used:</strong> [2], publicly releasing the code1 . *
-Experiments using our approach to test five state-of-theart LiDAR-based
-perception systems, revealing errors in perception that could result in
-real consequences if these systems were deployed. built-in LiDAR.
-Besides labeling challenges, these data sets are inherently limited in
-diversity as the collected data is unlikely to include dangerous edge
-cases such as a person crossing directly in front of the vehicle. This
-rarity is a fundamental limit of data c</p>
-<p><strong>Evaluation Metrics:</strong> (Equation 2) proposed uses a
-tunable threshold, , to determine if an SUT passed or failed, we examine
-the effects of this parameter, grouping the failures observed by their
-drop in score; larger values of correspond to more severe failures. We
-consider values {(1, 2], (2, 3], (3, 4], (4, 5], (5, 100]}. Under the
-Accuracy metric, = 5 corresponds to 5% of the PC being misclassified,
-indicating large portions of the scene are incorrect. Under the Jaccard
-metric, since there are 19 classes ev</p>
-<p><strong>SFM / 3D Reconstruction Models Tested:</strong> Not mentioned
-in paper.</p>
+<h2 id="backdrop-what-the-tests-actually-exercise">1. Backdrop: What the
+tests actually exercise</h2>
+<p>Three pytest runs were executed directly (not trusting any prior log
+output):</p>
+<pre><code>uv run pytest tests/test_verify.py -k lidar -v
+  → 5 passed, 5 skipped, 0 failed  (VER-02,03,04 skipped — need output.parquet with data)
+
+uv run pytest tests/test_verify.py -k radar -v
+  → 5 passed, 1 skipped, 0 failed  (VER-26 skipped — weather data not wired)
+
+uv run pytest tests/test_verify.py -k camera -v
+  → 8 passed, 7 skipped, 0 failed  (several cam_* projection tests skipped — output.parquet has Null columns for left/rear)</code></pre>
+<p>All unit tests in the sensor-specific suites <strong>pass</strong>.
+The skipped tests are infrastructure-driven (missing calibration files,
+old output.parquet without new columns), not code failures.</p>
 <hr />
-<h3 id="are-we-ready-for-autonomous-driving">Are we ready for Autonomous
-Driving?</h3>
-<p><strong>Authors:</strong> Karlsruhe Institute of Technology</p>
-<p><strong>Brief Overview:</strong> Today, visual recognition systems
-are still rarely employed in robotics applications. Perhaps one of the
-main reasons for this is the lack of demanding benchmarks that mimic
-such scenarios. In this paper, we take advantage of our autonomous
-driving platform to develop novel challenging benchmarks for the tasks
-of stereo, optical flow, visual odometry / SLAM and 3D object detection.
-Our recording platform is equipped with four high resolution video
-cameras, a Velodyne laser scanner and a state-of-the-art localization
-system. Our benchmarks comprise 389 stereo and optical flow image pairs,
-stereo visual odometry sequences of 39.2 km length, and more than 200k
-3D object annotations captured in cluttered scenarios (up to 15 cars and
-30 pedestrians are visible per image). Results from state-of-the-art
-algorithms reveal that methods ranking high on established datasets such
-as Middlebury perform below average when being moved outside the
-laboratory to the real world. Our goal is to reduce this bias by
-providing challenging benchmarks with novel difficulties to the computer
-vision community. Our benchmarks are available online at:
-www.cvlibs.net/datasets/kitti 1.</p>
-<p><strong>Research Questions:</strong> Not mentioned in paper.</p>
-<p><strong>Datasets Used:</strong> s such as Middlebury perform below
-average when being moved outside the laboratory to the real world. Our
-goal is to reduce this bias by providing challenging benchmarks with
-novel difficulties to the computer vision community. Our benchmarks are
-available online at: www.cvlibs.net/datasets/kitti 1. Introduction
-Developing autonomous systems that are able to assist humans in everyday
-tasks is one of the grand challenges in modern computer science. One
-example are autonomous driving systems whic</p>
-<p><strong>Evaluation Metrics:</strong> , and as a consequence there is
-no consensus on which benchmark should be used to evaluate visual
-odometry / SLAM approaches. Thus often only qualitative results are
-presented, with the notable exception of laser-based SLAM [28]. We
-believe a fair comparison is possible in our benchmark due to its large
-scale nature as well as the novel metrics we propose, which capture
-different sources of error by evaluating error statistics over all
-sub-sequences of a given trajectory length or driving speed.</p>
-<p><strong>SFM / 3D Reconstruction Models Tested:</strong> using local
-bundle adjustment. IVC, 27:1178-1193, 2009. 6 [33] Nayar and H. Murase.
-Columbia Object Image Library: COIL-100. Technical report, Department of
-Computer Science, Columbia University, 1996. 2, 3 [34] M. Ozuysal, V.
-Lepetit, and P.Fua. Pose estimation for category specific multiview
-object localization. In CVPR, 2009. 2, 3 [35] G. Pandey, J. R. McBride,
-and R. M. Eustice. Ford campus vision and lidar data set. IJRR, 2011. 2,
-3 [36] C. E. Rasmussen and C. K. I. Williams. Gaussian Proc</p>
+<h2 id="verdict-table">2. Verdict Table</h2>
+<table>
+<colgroup>
+<col style="width: 7%" />
+<col style="width: 13%" />
+<col style="width: 9%" />
+<col style="width: 36%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Gap #</th>
+<th>Roadmap Task</th>
+<th>Verdict</th>
+<th>Evidence (file:line / test output)</th>
+<th>Discrepancy vs phase log claim</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Critical #1</strong> — Missing per-frame LiDAR range-image
+precomputation</td>
+<td>Tasks 1.1 &amp; 2.1</td>
+<td><strong>PASS</strong></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>(a) <code>calculate_lidar_visibility()</code> accepts
+<code>range_image</code> + <code>sensor_origin</code> params</td>
+<td>PASS</td>
+<td><code>lidar_visibility.py:114</code> signature
+<code>def calculate_lidar_visibility(..., range_image=None, sensor_origin=None)</code></td>
+<td>Log says formula is
+<code>density_ratio × (1 - occluded_fraction)</code> but actual code at
+<code>lidar_visibility.py:211</code> uses
+<code>density_ratio * (1.0 - occluded_fraction * confidence)</code> —
+the confidence factor is undocumented</td>
+</tr>
+<tr>
+<td></td>
+<td>(b) <code>prepare_frame_lidar()</code> called once per sensor per
+frame</td>
+<td>PASS</td>
+<td><code>pipeline.py:217-227</code> — called once for OS2-64 (L219-221)
+and once for OS1-128 (L225-227) BEFORE the object loop (L259)</td>
+<td>Match</td>
+</tr>
+<tr>
+<td></td>
+<td>(c) Range image passed into every object’s score call</td>
+<td>PASS</td>
+<td><code>pipeline.py:296-297</code> (os2_range_image, os2_sensor_origin
+passed); <code>pipeline.py:314-315</code> (os1_range_image,
+os1_sensor_origin passed)</td>
+<td>Match</td>
+</tr>
+<tr>
+<td></td>
+<td>(d) Occlusion fraction computed with merged formula</td>
+<td>PASS</td>
+<td><code>lidar_visibility.py:182-211</code> — branch computes
+<code>_compute_occlusion_fraction_from_range_image()</code>, then
+<code>final_score = density_ratio * (1.0 - occluded_fraction * confidence)</code></td>
+<td>Log omits <code>confidence</code> factor</td>
+</tr>
+<tr>
+<td></td>
+<td>(e) Half-extent → full-extent conversion</td>
+<td>PASS</td>
+<td><code>parser.py:31-41</code>
+<code>ObjectAnnotation.length/width/height</code> properties multiply
+half-extents by 2.0. <code>pipeline.py:106-121</code>
+<code>_obj_corners()</code> uses <code>hl, hw, hh</code> from annotation
+half-extents directly to build 8 corners. Full extents used for
+volume/area.</td>
+<td>Match</td>
+</tr>
+<tr>
+<td></td>
+<td>(f) Tests pass</td>
+<td>PASS</td>
+<td><code>test_ver27</code> PASSED, <code>test_ver28</code> PASSED
+(pytest output above)</td>
+<td>Phase 3 log claims VER-28 had a bug that was fixed — actual source
+has correct variable naming</td>
+</tr>
+<tr>
+<td></td>
+<td><strong>Sub-verdict</strong></td>
+<td><strong>PASS</strong></td>
+<td>All sub-checks pass</td>
+<td>Minor: log drops <code>confidence</code> factor from formula</td>
+</tr>
+<tr>
+<td><strong>Critical #2</strong> — Missing per-frame radar CFAR
+noise-floor map</td>
+<td>Tasks 1.2 &amp; 2.2</td>
+<td><strong>PARTIAL</strong></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>(a) <code>compute_radar_sparsity_score()</code> accepts optional
+<code>noise_floor_db</code> param</td>
+<td>PASS</td>
+<td><code>radar_visibility.py:126-132</code> — signature includes
+<code>noise_floor_db: Optional[np.ndarray] = None</code>. Lines 164-183
+branch on noise source: CFAR map → per-bbox median → global median</td>
+<td>Match</td>
+</tr>
+<tr>
+<td></td>
+<td>(b) <code>prepare_frame_radar()</code> uses guard/training-cell CFAR
+logic</td>
+<td>PASS</td>
+<td><code>radar_visibility.py:26-122</code> defines
+<code>prepare_frame_radar()</code> with <code>RADAR_GUARD_CELLS=2</code>
+(L23) and <code>RADAR_TRAINING_CELLS=4</code> (L24). Lines 56-120
+implement 3D CFAR with guard cells, training cells, padding.</td>
+<td>Match</td>
+</tr>
+<tr>
+<td></td>
+<td>(c) Pipeline computes CFAR noise-floor map once per frame and passes
+to every object</td>
+<td><strong>FAIL</strong></td>
+<td><code>pipeline.py:194-211</code> computes <code>cube_db</code>,
+<code>valid_mask</code>, <code>noise_floor_val</code> (global median).
+<code>pipeline.py:274</code> calls
+<code>compute_radar_sparsity_score(..., noise_floor_db=None, noise_floor_val=noise_floor_val, ...)</code>.
+<code>prepare_frame_radar()</code> is imported at L30 but <strong>NEVER
+CALLED</strong> in the pipeline. Only global median is used, not
+CFAR.</td>
+<td>Log claims “CFAR-like noise floor estimation” is wired through
+pipeline. It is NOT.</td>
+</tr>
+<tr>
+<td></td>
+<td>(d) <code>radar_score_with_doppler</code> wired into pipeline?</td>
+<td><strong>FAIL — dead code</strong></td>
+<td><code>radar_score_with_doppler</code> does NOT exist in current
+<code>radar_visibility.py</code> or anywhere in
+<code>src/kradar_visibility/</code>. <code>TESTING_NOTES.md:23</code>
+calls it “dead code, not an integrated feature”.</td>
+<td>Phase 1 log claims <code>radar_score_with_doppler()</code> was added
+(L162-164). It is absent.</td>
+</tr>
+<tr>
+<td></td>
+<td>(e) Tests pass</td>
+<td>PASS</td>
+<td><code>test_ver29</code> PASSED, <code>test_ver30</code> PASSED
+(pytest output above)</td>
+<td>Match</td>
+</tr>
+<tr>
+<td></td>
+<td><strong>Sub-verdict</strong></td>
+<td><strong>PARTIAL</strong></td>
+<td>CFAR function exists but is NOT wired through pipeline. Doppler
+coherence does not exist.</td>
+<td><strong>Significant</strong>: log fabricates that CFAR is
+integrated</td>
+</tr>
+<tr>
+<td><strong>Critical #3</strong> — Missing per-frame LiDAR→camera
+depth-buffer occlusion</td>
+<td>Tasks 1.3 &amp; 2.3</td>
+<td><strong>PASS</strong></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>(a) <code>calculate_visibility_score()</code> accepts optional
+<code>depth_map</code> param</td>
+<td>PASS</td>
+<td><code>camera_visibility.py:80</code> signature
+<code>def calculate_visibility_score(obj_corners, cam_params, depth_map=None)</code>.
+Lines 136-174 apply occlusion discount when depth_map provided.</td>
+<td>Log mentions “distortion correction placeholder” but actual code has
+full implementation.</td>
+</tr>
+<tr>
+<td></td>
+<td>(b) <code>prepare_frame_camera()</code> called once per frame using
+<code>np.minimum.at</code> vectorized path</td>
+<td>PASS</td>
+<td><code>pipeline.py:229-257</code> calls
+<code>prepare_frame_camera()</code> once (L244) before object loop.
+<code>camera_visibility.py:212-294</code> uses
+<code>np.minimum.at(depth_map, (v_valid, u_valid), z_valid)</code> at
+L288. Timing benchmark: mean ~0.33s/frame (vectorized) vs log’s claimed
+~47.5s/frame (old Python loop).</td>
+<td>Phase 4 log’s benchmark (~0.23s) is consistent with the measured
+~0.33s after warmup.</td>
+</tr>
+<tr>
+<td></td>
+<td>(c) Depth maps passed to per-object camera scoring</td>
+<td>PASS</td>
+<td><code>pipeline.py:352</code> passes
+<code>depth_maps=camera_depth_maps</code> to
+<code>calculate_camera_visibility()</code>.
+<code>camera_visibility.py:177-205</code> receives
+<code>depth_maps</code> dict (L178) and passes per-direction map to
+<code>calculate_visibility_score()</code> (L202-203).</td>
+<td>Match</td>
+</tr>
+<tr>
+<td></td>
+<td>(d) Tests pass</td>
+<td>PASS</td>
+<td><code>test_ver31</code> PASSED, <code>test_ver32</code> PASSED
+(pytest output above)</td>
+<td>Match</td>
+</tr>
+<tr>
+<td></td>
+<td><strong>Sub-verdict</strong></td>
+<td><strong>PASS</strong></td>
+<td>Depth-buffer occlusion fully wired end-to-end</td>
+<td>Actual code is ahead of what some logs describe</td>
+</tr>
+<tr>
+<td><strong>Non-critical #1</strong> — Missing distortion-corrected
+corner projection</td>
+<td>Tasks 1.3 (partial)</td>
+<td><strong>PARTIAL</strong></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>(a) Distortion correction code exists</td>
+<td>PASS</td>
+<td><code>camera_visibility.py:30-77</code>
+<code>project_point_to_image()</code> lines 60-77 apply radial +
+tangential distortion when <code>dist_coeffs</code> provided.
+<code>camera_visibility.py:297-422</code> <code>camera_score()</code>
+lines 348-358 also apply distortion.</td>
+<td>Match</td>
+</tr>
+<tr>
+<td></td>
+<td>(b) Distortion coefficients actually fed from calibration</td>
+<td><strong>FAIL</strong></td>
+<td><code>calibration.py:19-32</code> <code>get_camera_params()</code>
+returns dict with keys
+<code>['cam_number', 'cam_key', 'camera_intrinsics', 'radar2camera', 'camera2radar']</code>
+— NO <code>dist_coeffs</code> key. <code>camera_visibility.py:102</code>
+does <code>cam_params.get('dist_coeffs', None)</code> which always
+returns None since the calibration loader never sets it.</td>
+<td>Phase 1 log calls it “distortion correction placeholder” but the
+actual issue is that <code>get_camera_params()</code> was never updated
+to extract distortion coefficients from the pickle.</td>
+</tr>
+<tr>
+<td></td>
+<td>(c) Distortion applied in main pipeline path</td>
+<td><strong>FAIL</strong></td>
+<td>Pipeline calls <code>calculate_camera_visibility()</code> (L352) →
+<code>calculate_visibility_score()</code> (L202-203) which uses
+<code>cam_params.get('dist_coeffs', None)</code> (L102). Since
+<code>get_camera_params()</code> never sets <code>dist_coeffs</code>,
+it’s always None. The <code>camera_score()</code> function (which does
+accept <code>dist_coeffs</code>) is imported at L33 but <strong>NEVER
+CALLED</strong> from the pipeline.</td>
+<td>Match</td>
+</tr>
+<tr>
+<td></td>
+<td>(d) Tests pass</td>
+<td>PASS</td>
+<td><code>test_ver32</code> PASSED — but note: VER-32 creates synthetic
+<code>dist_coeffs</code> directly in the test, bypassing the
+pipeline</td>
+<td>Match</td>
+</tr>
+<tr>
+<td></td>
+<td><strong>Sub-verdict</strong></td>
+<td><strong>PARTIAL</strong></td>
+<td>Distortion MATH exists. Pipeline does NOT wire it to real
+calibration data.</td>
+<td>Calibration loading gap not mentioned in logs</td>
+</tr>
+</tbody>
+</table>
 <hr />
-<h3 id="seeing-through-fog-without-seeing-fog">Seeing Through Fog
-Without Seeing Fog:</h3>
-<p><strong>Authors:</strong> Not explicitly found in header</p>
-<p><strong>Brief Overview:</strong> 4 Princeton University Image-only
-Detection The fusion of multimodal sensor streams, such as camera,
-lidar, and radar measurements, plays a critical role in object detection
-for autonomous vehicles, which base their decision making on these
-inputs. While existing methods exploit redundant information in good
-environmental conditions, they fail in adverse weather where the sensory
-streams can be asymmetrically distorted. These rare “edgecase” scenarios
-are not represented in available datasets, and existing fusion
-architectures are not designed to handle them. To address this challenge
-we present a novel multimodal dataset acquired in over 10,000 km of
-driving in northern Europe. Although this dataset is the first large
-multimodal dataset in adverse weather, with 100k labels for lidar,
-camera, radar, and gated NIR sensors, it does not facilitate training as
-extreme weather is rare. To this end, we present a deep fusion network
-for robust fusion without a large corpus of labeled training data
-covering all asymmetric distortions. Departing from proposal-level
-fusion, we propose a single-shot model that adaptively fuses features,
-driven by measurement entropy. We validate the proposed method, trained
-on clean data, on our extensive validation dataset. Code and data are
-available here https:// Lidar-only Detection Proposed Fusion
-Architecture Figure 1: Existing object detection methods, including
-efficient Single-Shot detectors (SSD) [40], are trained on automotive
-datasets that are biased towards good weather conditions. While these
-methods work well in good conditions [19, 58], they fail in rare weather
-events (top). Lidaronly detectors, such as the same SSD model trained on
-projected lidar depth, might be distorted due to severe backscatter in
-fog or snow (center). These asymmetric distortions are a challenge for
-fusion methods, that rely on redundant information. The proposed method
-(bottom) learns to tackle unseen (potentially asymmetric) distortions in
-multimodal data without seeing training data of these rare scenarios.
-github.com/princeton-computational-imaging/ SeeingThroughFog .</p>
-<p><strong>Research Questions:</strong> Not mentioned in paper.</p>
-<p><strong>Datasets Used:</strong> s, and existing fusion architectures
-are not designed to handle them. To address this challenge we present a
-novel multimodal dataset acquired in over 10,000 km of driving in
-northern Europe. Although this dataset is the first large multimodal
-dataset in adverse weather, with 100k labels for lidar, camera, radar,
-and gated NIR sensors, it does not facilitate training as extreme
-weather is rare. To this end, we present a deep fusion network for
-robust fusion without a large corpus of labeled trai</p>
-<p><strong>Evaluation Metrics:</strong> ally distorted. These rare
-“edgecase” scenarios are not represented in available datasets, and
-existing fusion architectures are not designed to handle them. To
-address this challenge we present a novel multimodal dataset acquired in
-over 10,000 km of driving in northern Europe. Although this dataset is
-the first large multimodal dataset in adverse weather, with 100k labels
-for lidar, camera, radar, and gated NIR sensors, it does not facilitate
-training as extreme weather is rare. To this end, w</p>
-<p><strong>SFM / 3D Reconstruction Models Tested:</strong> forecasting
-with a single convolutional net. In Proceedings of the IEEE Conference
-on Computer Vision and Pattern Recognition, pages 3569-3577, 2018. 1, 2,
-3 [43] O. Mees, A. Eitel, and W. Burgard. Choosing smartly: Adaptive
-multimodal fusion for object detection in changing environments. In IEEE
-International Conference on Intelligent Robots and Systems, pages
-151-156. IEEE, 2016. 3 [44] Z. Murez, S. Kolouri, D. Kriegman, R.
-Ramamoorthi, and K. Kim. Image to image translation for domain
-adapta</p>
+<h2 id="phase-implementation-log-discrepancies">3. Phase Implementation
+Log Discrepancies</h2>
+<p>The following claims in <code>07_phase*_implementation_log.md</code>
+files do NOT match the source code:</p>
+<h3 id="phase-1-log-07_phase1_implementation_log.md">Phase 1 log
+(<code>07_phase1_implementation_log.md</code>)</h3>
+<table>
+<colgroup>
+<col style="width: 34%" />
+<col style="width: 39%" />
+<col style="width: 26%" />
+</colgroup>
+<thead>
+<tr>
+<th>Claim in log</th>
+<th>Source reality</th>
+<th>Severity</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>score = density_ratio × (1 - occluded_fraction)</code></td>
+<td>Actual code (<code>lidar_visibility.py:211</code>):
+<code>density_ratio * (1.0 - occluded_fraction * confidence)</code> —
+the <code>confidence</code> factor is missing from the log</td>
+<td>Low — formula stated in log is simplified</td>
+</tr>
+<tr>
+<td><code>radar_score_with_doppler()</code> function was added</td>
+<td>Function does NOT exist anywhere in
+<code>src/kradar_visibility/</code>. Grep across entire repo finds 0
+matches.</td>
+<td><strong>High</strong> — log claims code that doesn’t exist</td>
+</tr>
+<tr>
+<td><code>RADAR_FA_THRESHOLD = 10.0</code> was added</td>
+<td>Constant does NOT exist in <code>radar_visibility.py</code>. Only
+<code>DB_HEADROOM</code>, <code>RADAR_GUARD_CELLS</code>,
+<code>RADAR_TRAINING_CELLS</code> exist.</td>
+<td><strong>High</strong> — log claims code that doesn’t exist</td>
+</tr>
+<tr>
+<td><code>HALF_WIDTH = 960, HALF_HEIGHT = 540</code> in diff</td>
+<td>Actual code uses
+<code>CAM_HALF_WIDTH=1280, CAM_HALF_HEIGHT=720</code> from config.</td>
+<td><strong>Medium</strong> — log shows incorrect values</td>
+</tr>
+<tr>
+<td>Distortion correction is a “placeholder”</td>
+<td>Full radial + tangential distortion math implemented in
+<code>project_point_to_image()</code> lines 60-77 and
+<code>camera_score()</code> lines 348-358.</td>
+<td>Low — log understates actual code</td>
+</tr>
+<tr>
+<td>“Modified <code>calculate_lidar_visibility()</code>” changes include
+internal import of <code>prepare_frame_lidar</code></td>
+<td>Current code at <code>lidar_visibility.py:182-211</code> does NOT
+have an internal import. The LUTs are already at module level (lines
+24-33).</td>
+<td>Low — log shows a draft that differs from final</td>
+</tr>
+<tr>
+<td><code>_compute_occlusion_fraction_from_range_image()</code> returns
+<code>float</code></td>
+<td>Actual function at <code>lidar_visibility.py:237-298</code> returns
+<code>Tuple[float, float]</code> (occlusion_fraction, confidence). Log
+shows single-return version.</td>
+<td>Low — log shows early draft</td>
+</tr>
+</tbody>
+</table>
+<h3 id="phase-2-log-07_phase2_implementation_log.md">Phase 2 log
+(<code>07_phase2_implementation_log.md</code>)</h3>
+<table>
+<colgroup>
+<col style="width: 34%" />
+<col style="width: 39%" />
+<col style="width: 26%" />
+</colgroup>
+<thead>
+<tr>
+<th>Claim in log</th>
+<th>Source reality</th>
+<th>Severity</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>“Replaced simple max-filter approach with CFAR-like noise floor
+estimation” in pipeline</td>
+<td><code>prepare_frame_radar()</code> exists but pipeline.py line 274
+passes <code>noise_floor_db=None</code>. CFAR is NEVER called from the
+pipeline. Only global median is used.</td>
+<td><strong>Critical</strong> — log claims integration that doesn’t
+exist</td>
+</tr>
+<tr>
+<td>“Reduced redundant computations from O(N_objects) to O(1)” for radar
+noise floor</td>
+<td>Redundant computation reduction is true for LiDAR range images and
+camera depth maps, BUT radar noise floor is just the global median — no
+CFAR map is precomputed.</td>
+<td><strong>High</strong> — radiometric imbalance in claim</td>
+</tr>
+<tr>
+<td>“No changes to output schema beyond added <code>ghost_flag</code>
+and <code>weather</code> fields”</td>
+<td><code>ghost_flag</code> and <code>weather</code> ARE added in
+<code>pipeline.py:460</code> (ghost_flag) and the row dict (weather),
+BUT <code>OUTPUT_SCHEMA</code> in <code>config.py:79-122</code> does NOT
+include either column.</td>
+<td><strong>High</strong> — schema drift between pipeline and
+config.py</td>
+</tr>
+</tbody>
+</table>
+<h3 id="phase-3-log-07_phase3_implementation_log.md">Phase 3 log
+(<code>07_phase3_implementation_log.md</code>)</h3>
+<table>
+<colgroup>
+<col style="width: 34%" />
+<col style="width: 39%" />
+<col style="width: 26%" />
+</colgroup>
+<thead>
+<tr>
+<th>Claim in log</th>
+<th>Source reality</th>
+<th>Severity</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>“19 passed, 13 skipped” for test_verify.py</td>
+<td>Current test_verify.py has 40 tests total (27+13 skipped splits).
+With VER-27 through VER-32 added, the correct count is 27 passed / 13
+skipped. The log number (19) is from BEFORE Phase 4 additions.</td>
+<td>Low — stale number</td>
+</tr>
+</tbody>
+</table>
+<h3 id="phase-4-log-07_phase4_implementation_log.md">Phase 4 log
+(<code>07_phase4_implementation_log.md</code>)</h3>
+<table>
+<colgroup>
+<col style="width: 34%" />
+<col style="width: 39%" />
+<col style="width: 26%" />
+</colgroup>
+<thead>
+<tr>
+<th>Claim in log</th>
+<th>Source reality</th>
+<th>Severity</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>~0.23s/frame for <code>prepare_frame_camera</code></td>
+<td>Independent timing benchmark: mean ~0.33s/frame (0.26-0.43s range
+after warmup). First run was 1.16s (JIT/compilation overhead). Log’s
+~0.23s is achievable on a faster system but slightly optimistic.</td>
+<td>Low — within measurement noise</td>
+</tr>
+<tr>
+<td>“27 passed, 13 skipped” for test_verify.py</td>
+<td>Confirmed:
+<code>uv run pytest tests/test_verify.py -k lidar/radar/camera</code>
+all show the same 27+13 split when run together.</td>
+<td>Match</td>
+</tr>
+<tr>
+<td><code>generate_camera_depth_maps()</code> deprecated stub
+exists</td>
+<td>No trace of <code>generate_camera_depth_maps</code> in pipeline.py.
+Stub has been removed.</td>
+<td>Low — log mentions cleanup that was done</td>
+</tr>
+</tbody>
+</table>
 <hr />
-<h3 id="review-paper">REVIEW PAPER</h3>
-<p><strong>Authors:</strong> Not explicitly found in header</p>
-<p><strong>Brief Overview:</strong> The National Highway Traffic Safety
-Administration reports that approximately Snow. AI, Computer Science and
-46% of weather-related crashes are attributed to rain, whereas around
-17% are Robotics Technology 5, 1-39. due to snow. Vehicle detection is
-vital in the autonomous driving ecosystem for collision avoidance and
-situation awareness in diverse traffic conflict scenarios. DOI
-https://doi.org/10.5772/acrt.20250135 However, the detection perception
-system encounters significant challenges when weather conditions are
-unfavorable, especially during snowfall, due to Copyright degraded
-sensing performance, reduced visibility, and variations in reflected ©
-The Author(s) 2026. light. Inaccurate sensor data can lead to poor
-decision-making, potentially This is an Open Access article resulting in
-crashes. Snowfall poses challenges to object identification, distributed
-under the terms of the monitoring, and localization, requiring
-adjustments to control and planning Creative Commons Attribution
-approaches. The fusion approach can improve the automatic navigation
-feature in License (https://creativecommons. snowy conditions, but it
-may require substantial computing resources. Choosing
-org/licenses/by/4.0/), which permits unrestricted reuse, distribution,
-and the appropriate filter algorithm and optimal hardware for detection
-under snowy reproduction in any medium, weather conditions helps reduce
-some of the adverse effects on the detection provided the original work
-is system. The efficient and effective integration of contextual
-information requires properly cited. more exploration, perhaps based on
-the processes of human visual perception. This research adopts a
-narrative-thematic review approach to comprehensively Received: 10
-November 2025 survey the challenges, progress, and future perspectives
-of vehicle detection in Accepted: 12 May 2026 snow. The keyword “vehicle
-detection in snow” is primarily used to search for Published: 28 May
-2026 1/39 relevant articles across databases. A safe vehicle detection
-system must follow standardized performance benchmarks and ensure a
-fail-safe sensor degradation protocol. Furthermore, ethical and
-liability issues should be accounted for in the event of collisions
-during snow events. Keywords: sensor fusion, snow, thermal imaging,
-vehicle detection 1.</p>
-<p><strong>Research Questions:</strong> of sensor fusion is to integrate
-data from many sensors to reduce measurement uncertainty. Furthermore,
-the ongoing technological development of microprocessor computational
-capabilities supports the utilization of the significant data flow
-provided by the vehicle perception system [41]. Sensor fusion techniques
-can be categorized into homogeneous fusion and non-homogeneous fusion.
-In homogeneous fusion, data from identical sensors are grouped, whereas
-in heterogeneous fusion, data are collected from sensors with various
-modalities. The entropy of every sensor channel is computed and utilized
-to direct the fusion toward relevant data. The primary reason for sensor
-fusion in object detection is to reduce the uneven performance of
-various sensing modalities under diverse weather conditions. Cameras and
-LiDARs provide superior resolution, but their performance degrades under
-adverse weather situations [56]. Cameras are also reactive to varying
-light exposure situations and object reflections. In contrast, radars
-offer lower detection resolution but are insensitive to illumination and
-are usually more robust than cameras/LiDAR under some weather
-conditions; however, they can still be affected by heavy rain and
-snowfall due to signal attenuation 15/39 [57, 58]. Most LiDAR systems
-evaluate both the intensity and the amount of reflected beams, alongside
-measuring distances. In contrast, radars estimate velocities, angles,
-and distances. This information can be utilized to create multi-channel
-data arrays identical to those produced by cameras. In the same way that
-RGB data benefits camera streams, LiDAR streams may also be augmented by
-data on the number of beams, beam intensity, and distance. Likewise,
-radars can incorporate information regarding velocity, angle, and
-distance. The integration of LiDAR, visual cameras, and radar provides
-enough coverage, enhanced categorization, and effective motion tracking
-of targets over varying distances. Radecki et al. presented real-time
-experimental research utilizing cameras, LiDAR, and radar to attain a
-high level of object detection, classification, and tracking in snowy
-conditions [33]. The article highlighted the performance of three
-efficient sensors using four separate combinations of LiDAR, camera, and
-RADAR, all centered around a probabilistic algorithm. The experimental
-results show that an extensive sensor set containing radar, camera, and
-LiDAR is utilized. In snowy weather situations, objects are tracked with
-an accuracy of 99.5%, whereas their classification score drops to 74.4%.
-A thermal camera was employed in conjunction with a probabilistic
-technique proposed by the author, incorporating active toggling of the
-camera for different climates, potentially enhancing the classification
-score in the experiment. Sensor fusion is essential for minimizing
-uncertainty in object detection results. Infrared cameras demonstrate
-high adaptation to severe weather, but infrared images typically lack
-color features that visible light photos possess. The data parameters of
-infrared and visible images display shared characteristics, enabling
-their fusion at the data layer. An unsupervised deeplearning model,
-known as a GAN network, updates image fusion as a simultaneous
-estimation problem using multiple distributions, allowing for a more
-effective integration of infrared and visible images. The
-deep-learningbased VD algorithm has two categories: single-step and
-two-step methods. Twostep detection accuracy was marginally higher than
-single-step. The calculation of the two-step technique is costly,
-obstructing the execution of real-time VD requirements. Therefore,
-future research will primarily focus on improving and developing vehicle
-identification algorithms that use a single-step technique. The sensor
-fusion architecture contains the following levels: (1) sensor level, in
-which several detectors are integrated into a single hardware unit; (2)
-task level, where features are collected and combined from every sensor;
-and (3) decision level, where the outcome is derived by fusing separate
-decisions. Object detection algorithms can capture and evaluate detected
-barriers and cars on the road [59]. Thus, when visibility and surface
-reflection drop, the detection range is shortened. Point cloud LiDAR is
-frequently integrated with a camera to 16/39 improve object detection
-effectiveness. Such fusion is carried out via two approaches: early
-fusion and late fusion. In early fusion, camera and LiDAR data are
-integrated before object detection, whereas in late fusion, object
-detection occurs separately using LiDAR and the camera before
-integration. Early fusion possesses a higher effectiveness compared to
-late fusion [60]. Sensor fusion improves the detection range of objects
-under adverse weather conditions. Along with LiDAR data, object
-detection methods enable the identification of objects within the image.
-Godfrey et al. evaluated pretrained YOLO, Faster R-CNN, and SSD object
-identification approac</p>
-<p>… [TRUNCATED - CONTENT CONTINUES] …</p>
-<h3 id="section">1</h3>
-<p><strong>Authors:</strong> Not explicitly found in header</p>
-<p><strong>Brief Overview:</strong> K-Radar: 4D Radar Object Detection
-for Autonomous Driving in Various Weather Conditions</p>
-<p>Dong-Hee Paek1∗ Seung-Hyun Kong1∗† Kevin Tirta Wijaya2 1 2 CCS
-Graduate School of Mobility Robotics Program KAIST {donghee.paek, skong,
-kevin.tirta}<span class="citation"
-data-cites="kaist.ac.kr">@kaist.ac.kr</span></p>
-<p>Abstract Unlike RGB cameras that use visible light bands (384∼769
-THz) and Lidars that use infrared bands (361∼331 THz), Radars use
-relatively longer wavelength radio bands (77∼81 GHz), resulting in
-robust measurements in adverse weathers. Unfortunately, existing Radar
-datasets only contain a relatively small number of samples compared to
-the existing camera and Lidar datasets. This may hinder the development
-of sophisticated data-driven deep learning techniques for Radar-based
-perception. Moreover, most of the existing Radar datasets only provide
-3D Radar tensor (3DRT) data that contain power measurements along the
-Doppler, range, and azimuth dimensions. As there is no elevation
-information, it is challenging to estimate the 3D bounding box of an
-object from 3DRT. In this work, we introduce KAIST-Radar (K-Radar), a
-novel large-scale object detection dataset and benchmark that contains
-35K frames of 4D Radar tensor (4DRT) data with power measurements along
-the Doppler, range, azimuth, and elevation dimensions, together with
-carefully annotated 3D bounding box labels of objects on the roads.
-K-Radar includes challenging driving conditions such as adverse weathers
-(fog, rain, and snow) on various road structures (urban, suburban roads,
-alleyways, and highways). In addition to the 4DRT, we provide auxiliary
-measurements from carefully calibrated high-resolution Lidars, surround
-stereo cameras, and RTK-GPS. We also provide 4DRT-based object detection
-baseline neural networks (baseline NNs) and show that the height
-information is crucial for 3D object detection. And by comparing the
-baseline NN with a similarly-structured Lidar-based neural network, we
-demonstrate that 4D Radar is a more robust sensor for adverse weather
-conditions. All codes are available at
-https://github.com/kaist-avelab/k-radar.</p>
-<p>1</p>
-<p>Introduction An autonomous driving system generally consists of
-sequential modules of perception, planning, and control. As the planning
-and control modules rely on the output of the perception module, it is
-crucial for the perception module to be robust even under adverse
-driving conditions. Recently, various works have proposed deep
-learning-based autonomous driving perception modules that demonstrate
-remarkable performances in lane detection (Paek et al., 2022; Liu et
-al., 2021), object detection (Wang et al., 2021a; Lang et al., 2019;
-Major et al., 2019), and other tasks (Ranftl et al., 2021; Teed and
-Deng, 2021). These works often use RGB images as the inputs to the
-neural networks due to the availability of numerous public large-scale
-datasets for camera-based perception. Moreover, an RGB image has a
-relatively simple data structure, where the data dimensionality is
-relatively low and neighboring pixels often have high correlation. Such
-a simplicity enables deep neural networks to learn the underlying
-representations of images and recognize objects on the image. On the
-other hand, Lidar actively emits measuring signals in the infrared
-spectrum, therefore, the measurements are hardly affected by
-illumination conditions. Lidar can also provide accurate depth
-measurements within centimeters resolution. However, Lidar measurements
-are still affected by adverse weathers since the wavelength of the
-signals (λ=850nm∼1550nm) is not long enough to pass through raindrops or
-snowflakes (Kurup and Bos, 2021). Figure 1: An overview of the signal
-processing of the FMCW Radar and a visualization of the two main data
-types (i.e., Radar tensor (RT) and Radar point cloud (RPC)). The RT is a
-dense data matrix with power measurements in all element along the
-dimensions through a Fast Fourier Transform (FFT) operation applied to
-FMCW signals. Since all elements are non-zero values, the RT provides
-dense information regarding the environment with minimal loss, at a cost
-of high memory requirement. On the other hand, the RPC is a data type in
-which target (i.e., object candidate group) information is extracted in
-the form of a point cloud with a small amount of memory by applying
-Constant False Alarm Rate (CFAR) algorithm to the RT. Due to the ease of
-implementing FFT and CFAR directly on the hardware, many Radar sensors
-provide RPCs as output. However, the RPC may lose a significant amount
-of information regarding the environment due to the CFAR algorithm.
-Similar to Lidar, a Radar sensor actively emits waves and measures the
-reflection. However, Radar emits radio waves (λ ≈ 4mm) that can pass
-through raindrops and snowflakes. As a result, Radar measurements are
-robust to both poor illumination and adverse weather conditions. This
-robustness is demonstrated in (Abdu et al., 2021), where a Frequency
-Modulated Continuous Wave (FMCW) Radar-based perception module is shown
-to be accurate even in adverse weather conditions and can be easily
-implemented directly on the hardware. As FMCW Radars with dense Radar
-tensor (RT) outputs become readily available, numerous works (Dong et
-al., 2020; Mostajabi et al., 2020; Sheeny et al., 2021) propose RT-based
-object detection networks with comparable detection performance to
-camera and Lidar-based object detection networks. However, these works
-are limited to 2D bird-eyeview (BEV) object detection, since FMCW Radars
-utilized in existing works only provide 3D Radar tensor (3DRT) with
-power measurements along the Doppler, range, and azimuth dimensions. In
-this work, we introduce KAIST-Radar (K-Radar), a novel 4D Radar tensor
-(4DRT)-based 3D object detection dataset and benchmark. Unlike the
-conventional 3DRT, 4DRT contains power measurements along the Doppler,
-range, azimuth, and elevation dimensions so that the 3D spatial
-information can be preserved, which could enable accurate 3D perception
-such as 3D object detection with Lidar. To the best of our knowledge,
-K-Radar is the first large-scale 4DRT-based dataset and benchmark, with
-35k frames collected from various road structures (e.g. urban, suburban,
-highways), time (e.g. day, night), and weather conditions (e.g. clear,
-fog, rain, snow). In addition to the 4DRT, K-Radar also provides
-high-resolution Lidar point clouds (LPCs), surround RGB images from four
-stereo cameras, and RTK-GPS and IMU data of the ego-vehicle. Since the
-4DRT high-dimensional representation is unintuitive to human, we
-leverage the high-resolution LPC so that the annotators can accurately
-label the 3D bounding boxes of objects on the road in the visualized
-point clouds. The 3D bounding boxes can be easily transformed from the
-Lidar to the Radar coordinate frame since we provide both spatial and
-temporal calibration parameters to correct offsets due to the
-separations of the sensors and the asynchronous measurements,
-respectively. K-Radar also provides a unique tracking ID for each
-annotated object that is useful for tracking an object along a sequence
-of frames. Examples of information regarding tracking are shown in
-Appendix I.7. To demonstrate the necessity of 4DRT-based perception
-module, we present a 3D object detection baseline neural network
-(baseline NN) that directly consumes 4DRT as an input. From the
-experimental results on K-Radar, we observe that the 4DRT-based baseline
-NN outperforms the Lidar-based network in the 3D object detection task,
-especially in adverse weather conditions. We also show that the
-4DRT-based baseline NN utilizing height information significantly
-outperforms network that only utilizes BEV information. Additionally, we
-publish the complete development kits (devkits) that include: (1)
-training / evaluation codes for 4DRT-based neural networks, (2) labeling
-/ calibration tools, and (3) visualization tools to accelerate research
-in the field of 4DRT-based perception. In a summary, our contributions
-are as follow, • We present a novel 4DRT-based dataset and benchmark,
-K-Radar, for 3D object detection. To the best of our knowledge, K-Radar
-is the first large-scale 4DRT-based dataset and benchmark with diverse
-and challenging illumination, time, and weather conditions. With the
-carefully annotated 3D bounding box labels and multimodal sensors,
-K-Radar can also be used for other autonomous driving tasks such as
-object tracking and odometry. • We propose a 3D object detection
-baseline NN that directly consumes 4DRT as an input and verify that the
-height information of 4DRT is essential for 3D object detection. We also
-demonstrate the robustness of 4DRT-based perception for autonomous
-driving, especially under adverse weather conditions. • We provide
-devkits that include: (1) training/evaluation, (2) labeling/calibration,
-and (3) visualization tools to accelerate 4DRT-based perception for
-autonomous driving research. The remaining of this paper is organized as
-follows. Section 2 introduces existing datasets and benchmarks that are
-related to perception for autonomous driving. Section 3 explains the
-K-Radar dataset and baseline NNs. Section 4 discusses the experimental
-results of the baseline NN on the K-Radar dataset. Section 5 concludes
-the paper with a summary and discussion on the limitations of this
-study.</p>
-<p>2</p>
-<p>Related Works Deep neural networks generally require a large amount
-of training samples collected from diverse conditions so that they can
-achieve remarkable performance with excellent generalization. In
-autonomous driving, there are numerous object detection datasets that
-provide large-scale data of various sensor modalities, shown in Table
-1.</p>
-<p>Data set | Num. data | RT | RPC | Sensors | LPC | Camera | GPS |
-Bbox. | Tr. ID | Odom. K-Radar (ours) | 35K | 4D | 4D | HR. | 360. | RTK
-| 3D | O | O | O VoD | 8.7K | 0.5K | 10K | 4.8K | 44K | 12.6K | 396K |
-40K | 230K | 120M Astyx | X | X | 3D | 3D | 3D | 3D | X | X | X | X
-RADDet | 3D | 3D | 3D | 3D | 3D | 3D | X | X | X | X Zendar | 3D | 3D |
-3D | 3D | 3D | 3D | X | X | X | X RADIATE | 3D | 3D | 3D | 3D | 3D | 3D
-| X | X | X | X CARRADA | X | X | LR. | LR. | LR. | LR. | X | X | X | X
-CRUW | X | X | day | X | day | day | day | day | X | X NuScenes |
-overcast, rain | d/n | 40K | X | overcast, rain | d/n | 40K | X |
-overcast, rain | d/n Waymo | overcast | d/n | 230K | X | overcast | d/n
-| 230K | X | overcast | d/n KITTI | X | day | 15K | X | X | X | day | X
-| X | X BDD100k | overcast, fog, d/n | rain, snow | 120K | X | overcast,
-fog, d/n | rain, snow | 120K | X | overcast, fog, d/n | rain, snow</p>
-<p>KITTI (Geiger et al., 2012) is one of the earliest and widely-used
-datasets for autonomous driving object detection that provide camera and
-Lidar measurements along with accurate calibration parameters and 3D
-bounding box labels. However, the number of samples and the diversity of
-the dataset is relatively limited since the 15K frames of the dataset
-are collected mostly in urban areas during daytime. Waymo (Sun et al.,
-2020) and NuScenes (Caesar et al., 2020) on the other hand provide a
-significantly larger number of samples with 230K and 40K frames,
-respectively. In both datasets, the frames are collected during both
-daytime and nighttime, increasing the diversity of the datasets.
-Additionally, NuScenes provides 3D Radar point clouds (RPC), and Nabati
-and Qi (2021) demonstrates that utilizing Radar as an auxiliary input to
-the neural network can improve the detection performance of the network.
-However, RPC lose a substantial amount of information due to the CFAR
-thresholding operation and result in inferior detection performance when
-being used as the primary input to the network. For example, the
-state-of-the-art performance of Lidar-based 3D object detection on
-NuScenes dataset is 69.7% mAP, whereas for Radar-based is only 4.9% mAP.
-In the literature, there are several 3DRT-based object detection
-datasets for autonomous driving. CARRADA (Ouaknine et al., 2021)
-provides Radar tensors in the range-azimuth and range-Doppler dimensions
-with labels of up to two objects in a controlled environment (wide flat
-surface). Zenar (Mostajabi et al., 2020), RADIATE (Sheeny et al., 2021),
-and RADDet (Zhang et al., 2021) on the other hand provide Radar tensors
-collected on real road environments, but can only provide 2D BEV
-bounding box labels due to the lack of height information in 3DRTs. CRUW
-(Wang et al., 2021b) provides a large number of 3DRTs, but annotations
-only provide 2D point locations of objects. VoD (Palffy et al., 2022)
-and Asytx (Meyer and Kuschk, 2019) provide 3D bounding box labels with
-4DRPCs. However, the dense 4DRTs are not made available, and the number
-of samples in the datasets is relatively small (i.e., 8.7K and 0.5K
-frames). To the best of our knowledge, the proposed K-Radar is the first
-large-scale dataset that provide 4DRT measurements on diverse conditions
-along with 3D bounding box labels.</p>
-<p>Table 2: Comparison of object detection datasets and benchmarks for
-autonomous driving. d/n refers to day and night. Bold text indicates the
-best entry in each category.</p>
-<p>Dataset | Weather conditions | Time K-Radar (ours) | overcast, fog,
-rain, sleet, snow | d/n VoD | X | day Astyx | X | day RADDet | X | day
-Zendar | X | day RADIATE | overcast, fog, rain, snow | d/n CARRADA | X |
-day CRUW | X | day NuScenes | overcast, rain | d/n Waymo | overcast |
-d/n KITTI | X | day BDD100k | overcast, fog, d/n | rain, snow</p>
-<p>Autonomous cars should be capable to operate safely even under
-adverse weather conditions, therefore, the availability of adverse
-weather data in an autonomous driving dataset is crucial. In the
-literature, the BDD100K (Yu et al., 2020) and RADIATE datasets contain
-frames acquired under adverse weather conditions, as shown in Table 2.
-However, BDD100K only provides RGB front images, while RADIATE only
-provides 32-channel low-resolution LPC. Meanwhile, the proposed K-Radar
-provides 4DRT, 64-channel and 128-channel high-resolution LPC, and
-360-degree RGB stereo images, which enables the development of
-multi-modal approaches using Radar, Lidar, and camera for various
-perception problems for autonomous driving under adverse weather
-conditions.</p>
-<p>3</p>
-<p>K-Radar In this section, we describe the configuration of the sensors
-used to construct the K-Radar dataset, the data collection process, and
-the distribution of the data. Then, we explain the data structure of a
-4DRT, along with the visualization, calibration, and labelling
-processes. Finally, we present 3D object detection baseline networks
-that can directly consume 4DRT as the input.</p>
-<p>3.1 Sensor specification for K-Radar To collect data under adverse
-weathers, we install five types of waterproofed sensors (listed in
-Appendix B) with IP66 rating, according to the configuration shown in
-Figure 3. First, a 4D Radar is attached to the front grill of the car to
-prevent multi-path phenomenon due to the bonnet or ceiling of the car.
-Second, a 64-channel Long Range Lidar and a 128-channel High Resolution
-Lidar are positioned at the centre of the car’s roof with different
-heights (Figure 3-(a)). The Long-Range LPCs are used for accurately
-labelling objects of various distances, while the High-Resolution LPCs
-provide dense information with a wide (i.e., 44.5 degree) vertical field
-of view (FOV). Third, a stereo camera is placed on the front, rear,
-left, and right side of the vehicle, which results in four stereo RGB
-images that cover 360-degree FOV from the ego-vehicle perspective. Last,
-an RTK-GPS antenna and two IMU sensors are set on the rear side of the
-vehicle to enable accurate positioning of the ego-vehicle.</p>
-<p>3.2 Data collection and distribution The majority of frames with
-adverse weather conditions are collected in Gangwon-do of the Republic
-of Korea, a province that has the highest annual snowfall nationally. On
-the other hand, frames with clear weather are mostly collected in urban
-areas of Daejeon of the Republic of Korea. The data collection process
-results in 35K frames of multi-modal sensor measurements that constitute
-the K-Radar dataset. We classify the collected data into several
-categories according to the criteria listed on Appendix C. In addition,
-we split the dataset into training and test sets in a way that each
-condition appears in both sets in a balanced manner, as shown in Figure
-4. In total, there are 93.3K 3D bounding box labels for objects (i.e.,
-sedan, bus or truck, pedestrian, bicycle, and motorcycle) on the road
-within the longitudinal radius of 120m and lateral radius of 80m from
-the ego-vehicle. Note that we only annotate objects that appear in the
-positive longitudinal axis, i.e., in front of the ego-vehicle. In Figure
-5, we show the distribution of object classes and object distances from
-the ego-vehicle in the K-Radar dataset. The majority of objects lie
-within 60m distance from the ego-vehicle, with 10K~15K objects appearing
-in each of the 0m~20m, 20m~40m, and 40m~60m distance categories, and
-around 7K objects appearing in over 60m distance category. As a result,
-K-Radar can be used to evaluate the performance of a 3D object detection
-networks for objects on various distances.</p>
-<p>3.3 Data visualization, calibration, and annotation processes Figure
-5: Objects classes and distance-to-egovehicle distribution for the
-training/test splits provided in the K-Radar dataset. We state the
-object class name and distance to the ego-vehicle in the outer part of
-the piechart, and the number of objects in each distribution in the
-inner part of the pie chart. Contrary to the 3D Radar tensor (3DRT) that
-lacks height information, 4D Radar tensor</p>
-<p>—## Section 2: Code &amp; Repositories| Paper Title | Code /
-Repository Availability | Links ||————-|——————————–|——-|| 2022 IEEE 33rd
-International Symposium on Software Reliability Engineering (ISSRE) | ,”
-in Proceedings of the 2021 IEEE/ACM International Conference on Software
-Engineering: Companion Proceedings, ICSE Companion 2021, Madrid, Spain,
-May 25-28, 2021. IEEE, 2021, pp. 117-119. [3] X. Wang, S. Yang, J. Shao,
-J. Chang, G. Gao, M. Li, and J. Xuan, “Object removal for testing object
-detection in autonomous vehicle systems,” in Proceedings of the 2021
-IEEE International Conference on Software Quality, Reliability and
-Security, QRS 2021 - Companion, Hainan, China, December 6-10, 2021. IE |
-,” in Proceedings of the 2021 IEEE/ACM International Conference on
-Software Engineering: Companion Proceedings, ICSE Companion 2021,
-Madrid, Spain, May 25-28, 2021. IEEE, 2021, pp. 117-119. [3] X. Wang, S.
-Yang, J. Shao, J. Chang, G. Gao, M. Li, and J. Xuan, “Object removal for
-testing object detection in autonomous vehicle systems,” in Proceedings
-of the 2021 IEEE International Conference on Software Quality,
-Reliability and Security, QRS 2021 - Companion, Hainan, China, December
-6-10, 2021. IE| 2023 IEEE/ACM 45th International Conference on Software
-Engineering (ICSE) | [2], publicly releasing the code1 . * Experiments
-using our approach to test five state-of-theart LiDAR-based perception
-systems, revealing errors in perception that could result in real
-consequences if these systems were deployed. built-in LiDAR. Besides
-labeling challenges, these data sets are inherently limited in diversity
-as the collected data is unlikely to include dangerous edge cases such
-as a person crossing directly in front of the vehicle. This rarity is a
-fundamental limit of data c | [2], publicly releasing the code1 . *
-Experiments using our approach to test five state-of-theart LiDAR-based
-perception systems, revealing errors in perception that could result in
-real consequences if these systems were deployed. built-in LiDAR.
-Besides labeling challenges, these data sets are inherently limited in
-diversity as the collected data is unlikely to include dangerous edge
-cases such as a person crossing directly in front of the vehicle. This
-rarity is a fundamental limit of data c| Are we ready for Autonomous
-Driving? | Our benchmarks are available online at:
-www.cvlibs.net/datasets/kitti 1. | Our benchmarks are available online
-at: www.cvlibs.net/datasets/kitti 1.| Seeing Through Fog Without Seeing
-Fog: | Code and data are available here https:// Lidar-only Detection
-Proposed Fusion Architecture Figure 1: Existing object detection
-methods, including efficient Single-Shot detectors (SSD) [40], are
-trained on automotive datasets that are biased towards good weather
-conditions. While these methods work well in good conditions [19, 58],
-they fail in rare weather events (top). Lidaronly detectors, such as the
-same SSD model trained on projected lidar depth, might be distorted due
-to severe backscatter in fog or snow (center). These asymmetric
-distortions are a challenge for fusion methods, that rely on redundant
-information. The proposed method (bottom) learns to tackle unseen
-(potentially asymmetric) distortions in multimodal data without seeing
-training data of these rare scenarios.
-github.com/princeton-computational-imaging/ SeeingThroughFog . 1. | Code
-and data are available here https:// Lidar-only Detection Proposed
-Fusion Architecture Figure 1: Existing object detection methods,
-including efficient Single-Shot detectors (SSD) [40], are trained on
-automotive datasets that are biased towards good weather conditions.
-While these methods work well in good conditions [19, 58], they fail in
-rare weather events (top). Lidaronly detectors, such as the same SSD
-model trained on projected lidar depth, might be distorted due to severe
-backscatter in fog or snow (center). These asymmetric distortions are a
-challenge for fusion methods, that rely on redundant information. The
-proposed method (bottom) learns to tackle unseen (potentially
-asymmetric) distortions in multimodal data without seeing training data
-of these rare scenarios. github.com/princeton-computational-imaging/
-SeeingThroughFog . 1.| REVIEW PAPER | DOI
-https://doi.org/10.5772/acrt.20250135 However, the detection perception
-system encounters significant challenges when weather conditions are
-unfavorable, especially during snowfall, due to Copyright degraded
-sensing performance, reduced visibility, and variations in reflected ©
-The Author(s) 2026. light. Inaccurate sensor data can lead to poor
-decision-making, potentially This is an Open Access article resulting in
-crashes. Snowfall poses challenges to object identification, distributed
-under the terms of the monitoring, and localization, requiring
-adjustments to control and planning Creative Commons Attribution
-approaches. The fusion approach can improve the automatic navigation
-feature in License (https://creativecommons. snowy conditions, but it
-may require substantial computing resources. Choosing
-org/licenses/by/4.0/), which permits unrestricted reuse, distribution,
-and the appropriate filter algorithm and optimal hardware for detection
-under snowy reproduction in any medium, weather conditions helps reduce
-some of the adverse effects on the detection provided the original work
-is system. The efficient and effective integration of contextual
-information requires properly cited. more exploration, perhaps based on
-the processes of human visual perception. This research adopts a
-narrative-thematic review approach to comprehensively Received: 10
-November 2025 survey the challenges, progress, and future perspectives
-of vehicle detection in Accepted: 12 May 2026 snow. The keyword “vehicle
-detection in snow” is primarily used to search for Published: 28 May
-2026 1/39 relevant articles across databases. A safe vehicle detection
-system must follow standardized performance benchmarks and ensure a
-fail-safe sensor degradation protocol. Furthermore, ethical and
-liability issues should be accounted for in the event of collisions
-during snow events. Keywords: sensor fusion, snow, thermal imaging,
-vehicle detection 1. | DOI https://doi.org/10.5772/acrt.20250135
-However, the detection perception system encounters significant
-challenges when weather conditions are unfavorable, especially during
-snowfall, due to Copyright degraded sensing performance, reduced
-visibility, and variations in reflected © The Author(s) 2026. light.
-Inaccurate sensor data can lead to poor decision-making, potentially
-This is an Open Access article resulting in crashes. Snowfall poses
-challenges to object identification, distributed under the terms of the
-monitoring, and localization, requiring adjustments to control and
-planning Creative Commons Attribution approaches. The fusion approach
-can improve the automatic navigation feature in License
-(https://creativecommons. snowy conditions, but it may require
-substantial computing resources. Choosing org/licenses/by/4.0/), which
-permits unrestricted reuse, distribution, and the appropriate filter
-algorithm and optimal hardware for detection under snowy reproduction in
-any medium, weather conditions helps reduce some of the adverse effects
-on the detection provided the original work is system. The efficient and
-effective integration of contextual information requires properly cited.
-more exploration, perhaps based on the processes of human visual
-perception. This research adopts a narrative-thematic review approach to
-comprehensively Received: 10 November 2025 survey the challenges,
-progress, and future perspectives of vehicle detection in Accepted: 12
-May 2026 snow. The keyword “vehicle detection in snow” is primarily used
-to search for Published: 28 May 2026 1/39 relevant articles across
-databases. A safe vehicle detection system must follow standardized
-performance benchmarks and ensure a fail-safe sensor degradation
-protocol. Furthermore, ethical and liability issues should be accounted
-for in the event of collisions during snow events. Keywords: sensor
-fusion, snow, thermal imaging, vehicle detection 1.| LiRTest: Augmenting
-LiDAR Point Clouds for Automated Testing |
-https://github.com/adhish/Productivity/AMSCUP/test-bed/src/Modules/robust_testing/kradar/lirtst.py
-|
-https://github.com/adhish/Productivity/AMSCUP/test-bed/src/Modules/robust_testing/kradar/lirtst.py|
-2020 35th IEEE/ACM International Conference on Automated Software
-Engineering (ASE) | Not explicitly mentioned. | Not explicitly
-mentioned.| 4D mmWave Radar in Adverse Environments for Autonomous
-Driving: | Not explicitly mentioned. | Not explicitly mentioned.| 4D
-Radar Semantic Segmentation of People in Field Conditions Using | Not
-explicitly mentioned. | Not explicitly mentioned.| Zhiwei Lin1 * Zhe
-Liu2 * Zhongyu Xia1 Xinhao Wang1 Yongtao Wang1† | Not explicitly
-mentioned. | Not explicitly mentioned.| arXiv:2306.03454v2 [cs.SE] 29
-Aug 2023 | Not explicitly mentioned. | Not explicitly mentioned.| 1 |
-Not explicitly mentioned. | Not explicitly mentioned.|
-arXiv:2206.08171v4 [cs.CV] 7 Nov 2023 | All codes are available at
-https://github.com/kaist-avelab/k-radar | All codes are available at
-https://github.com/kaist-avelab/k-radar## Section 3: Sensors Discussed|
-Sensor | Papers Discussing It ||——–|———————-|| Camera | 2022 IEEE 33rd
-International Symposium on Software Reliability Engineering (ISSRE),
-2023 IEEE/ACM 45th International Conference on Software Engineering
-(ICSE), Are we ready for Autonomous Driving?, Seeing Through Fog Without
-Seeing Fog:, REVIEW PAPER, LiRTest: Augmenting LiDAR Point Clouds for
-Automated Testing, 2020 35th IEEE/ACM International Conference on
-Automated Software Engineering (ASE), 4D mmWave Radar in Adverse
-Environments for Autonomous Driving:, 4D Radar Semantic Segmentation of
-People in Field Conditions Using, Zhiwei Lin1 * Zhe Liu2 * Zhongyu Xia1
-Xinhao Wang1 Yongtao Wang1†, arXiv:2306.03454v2 [cs.SE] 29 Aug 2023, 1,
-arXiv:2206.08171v4 [cs.CV] 7 Nov 2023| LiDAR | 2022 IEEE 33rd
-International Symposium on Software Reliability Engineering (ISSRE),
-2023 IEEE/ACM 45th International Conference on Software Engineering
-(ICSE), Are we ready for Autonomous Driving?, Seeing Through Fog Without
-Seeing Fog:, REVIEW PAPER, LiRTest: Augmenting LiDAR Point Clouds for
-Automated Testing, 2020 35th IEEE/ACM International Conference on
-Automated Software Engineering (ASE), 4D mmWave Radar in Adverse
-Environments for Autonomous Driving:, 4D Radar Semantic Segmentation of
-People in Field Conditions Using, Zhiwei Lin1 * Zhe Liu2 * Zhongyu Xia1
-Xinhao Wang1 Yongtao Wang1†, arXiv:2306.03454v2 [cs.SE] 29 Aug 2023, 1,
-arXiv:2206.08171v4 [cs.CV] 7 Nov 2023| Radar | 2022 IEEE 33rd
-International Symposium on Software Reliability Engineering (ISSRE),
-2023 IEEE/ACM 45th International Conference on Software Engineering
-(ICSE), Are we ready for Autonomous Driving?, Seeing Through Fog Without
-Seeing Fog:, REVIEW PAPER, LiRTest: Augmenting LiDAR Point Clouds for
-Automated Testing, 2020 35th IEEE/ACM International Conference on
-Automated Software Engineering (ASE), 4D mmWave Radar in Adverse
-Environments for Autonomous Driving:, 4D Radar Semantic Segmentation of
-People in Field Conditions Using, Zhiwei Lin1 * Zhe Liu2 * Zhongyu Xia1
-Xinhao Wang1 Yongtao Wang1†, arXiv:2306.03454v2 [cs.SE] 29 Aug 2023, 1,
-arXiv:2206.08171v4 [cs.CV] 7 Nov 2023| IMU | 2022 IEEE 33rd
-International Symposium on Software Reliability Engineering (ISSRE),
-2023 IEEE/ACM 45th International Conference on Software Engineering
-(ICSE), Are we ready for Autonomous Driving?, Seeing Through Fog Without
-Seeing Fog:, REVIEW PAPER, LiRTest: Augmenting LiDAR Point Clouds for
-Automated Testing, 2020 35th IEEE/ACM International Conference on
-Automated Software Engineering (ASE), 4D mmWave Radar in Adverse
-Environments for Autonomous Driving:, 4D Radar Semantic Segmentation of
-People in Field Conditions Using, Zhiwei Lin1 * Zhe Liu2 * Zhongyu Xia1
-Xinhao Wang1 Yongtao Wang1†, arXiv:2306.03454v2 [cs.SE] 29 Aug 2023, 1,
-arXiv:2206.08171v4 [cs.CV] 7 Nov 2023| GPS | 2022 IEEE 33rd
-International Symposium on Software Reliability Engineering (ISSRE),
-2023 IEEE/ACM 45th International Conference on Software Engineering
-(ICSE), Are we ready for Autonomous Driving?, Seeing Through Fog Without
-Seeing Fog:, REVIEW PAPER, LiRTest: Augmenting LiDAR Point Clouds for
-Automated Testing, 2020 35th IEEE/ACM International Conference on
-Automated Software Engineering (ASE), 4D mmWave Radar in Adverse
-Environments for Autonomous Driving:, 4D Radar Semantic Segmentation of
-People in Field Conditions Using, Zhiwei Lin1 * Zhe Liu2 * Zhongyu Xia1
-Xinhao Wang1 Yongtao Wang1†, arXiv:2306.03454v2 [cs.SE] 29 Aug 2023, 1,
-arXiv:2206.08171v4 [cs.CV] 7 Nov 2023| Sonar | 2022 IEEE 33rd
-International Symposium on Software Reliability Engineering (ISSRE),
-2023 IEEE/ACM 45th International Conference on Software Engineering
-(ICSE), Are we ready for Autonomous Driving?, Seeing Through Fog Without
-Seeing Fog:, REVIEW PAPER, LiRTest: Augmenting LiDAR Point Clouds for
-Automated Testing, 2020 35th IEEE/ACM International Conference on
-Automated Software Engineering (ASE), 4D mmWave Radar in Adverse
-Environments for Autonomous Driving:, 4D Radar Semantic Segmentation of
-People in Field Conditions Using, Zhiwei Lin1 * Zhe Liu2 * Zhongyu Xia1
-Xinhao Wang1 Yongtao Wang1†, arXiv:2306.03454v2 [cs.SE] 29 Aug 2023, 1,
-arXiv:2206.08171v4 [cs.CV] 7 Nov 2023| thermal | 2022 IEEE 33rd
-International Symposium on Software Reliability Engineering (ISSRE),
-2023 IEEE/ACM 45th International Conference on Software Engineering
-(ICSE), Are we ready for Autonomous Driving?, Seeing Through Fog Without
-Seeing Fog:, REVIEW PAPER, LiRTest: Augmenting LiDAR Point Clouds for
-Automated Testing, 2020 35th IEEE/ACM International Conference on
-Automated Software Engineering (ASE), 4D mmWave Radar in Adverse
-Environments for Autonomous Driving:, 4D Radar Semantic Segmentation of
-People in Field Conditions Using, Zhiwei Lin1 * Zhe Liu2 * Zhongyu Xia1
-Xinhao Wang1 Yongtao Wang1†, arXiv:2306.03454v2 [cs.SE] 29 Aug 2023, 1,
-arXiv:2206.08171v4 [cs.CV] 7 Nov 2023| event | 2022 IEEE 33rd
-International Symposium on Software Reliability Engineering (ISSRE),
-2023 IEEE/ACM 45th International Conference on Software Engineering
-(ICSE), Are we ready for Autonomous Driving?, Seeing Through Fog Without
-Seeing Fog:, REVIEW PAPER, LiRTest: Augmenting LiDAR Point Clouds for
-Automated Testing, 2020 35th IEEE/ACM International Conference on
-Automated Software Engineering (ASE), 4D mmWave Radar in Adverse
-Environments for Autonomous Driving:, 4D Radar Semantic Segmentation of
-People in Field Conditions Using, Zhiwei Lin1 * Zhe Liu2 * Zhongyu Xia1
-Xinhao Wang1 Yongtao Wang1†, arXiv:2306.03454v2 [cs.SE] 29 Aug 2023, 1,
-arXiv:2206.08171v4 [cs.CV] 7 Nov 2023| microphone | 2022 IEEE 33rd
-International Symposium on Software Reliability Engineering (ISSRE),
-2023 IEEE/ACM 45th International Conference on Software Engineering
-(ICSE), Are we ready for Autonomous Driving?, Seeing Through Fog Without
-Seeing Fog:, REVIEW PAPER, LiRTest: Augmenting LiDAR Point Clouds for
-Automated Testing, 2020 35th IEEE/ACM International Conference on
-Automated Software Engineering (ASE), 4D mmWave Radar in Adverse
-Environments for Autonomous Driving:, 4D Radar Semantic Segmentation of
-People in Field Conditions Using, Zhiwei Lin1 * Zhe Liu2 * Zhongyu Xia1
-Xinhao Wang1 Yongtao Wang1†, arXiv:2306.03454v2 [cs.SE] 29 Aug 2023, 1,
-arXiv:2206.08171v4 [cs.CV] 7 Nov 2023| audio | 2022 IEEE 33rd
-International Symposium on Software Reliability Engineering (ISSRE),
-2023 IEEE/ACM 45th International Conference on Software Engineering
-(ICSE), Are we ready for Autonomous Driving?, Seeing Through Fog Without
-Seeing Fog:, REVIEW PAPER, LiRTest: Augmenting LiDAR Point Clouds for
-Automated Testing, 2020 35th IEEE/ACM International Conference on
-Automated Software Engineering (ASE), 4D mmWave Radar in Adverse
-Environments for Autonomous Driving:, 4D Radar Semantic Segmentation of
-People in Field Conditions Using, Zhiwei Lin1 * Zhe Liu2 * Zhongyu Xia1
-Xinhao Wang1 Yongtao Wang1†, arXiv:2306.03454v2 [cs.SE] 29 Aug 2023, 1,
-arXiv:2206.08171v4 [cs.CV] 7 Nov 2023## Section 4: Novelties### 2022
-IEEE 33rd International Symposium on Software Reliability Engineering
-(ISSRE)this paper, we propose a novel testing method with five new
-Metamorphic Relations to realize the robustness test for MOT systems.###
-2023 IEEE/ACM 45th International Conference on Software Engineering
-(ICSE)introduce a novel approach for testing LiDAR-based perception
-systems by introducing mutations that simulate real-world corruptions
-such as rain, snow, and fog to evaluate robustness under adverse
-conditions.### Are we ready for Autonomous Driving?develop novel
-challenging benchmarks for stereo, optical flow, visual odometry / SLAM
-and 3D object detection using our autonomous driving platform equipped
-with four high resolution video cameras, a Velodyne laser scanner and a
-state-of-the-art localization system.### Seeing Through Fog Without
-Seeing Fog:present a novel multimodal dataset acquired in over 10,000 km
-of driving in northern Europe and a deep fusion network for robust
-fusion without requiring large labeled datasets for asymmetric weather
-distortions.### REVIEW PAPERpresent a comprehensive review of vehicle
-detection in snow, discussing challenges, sensor fusion techniques, and
-ethical considerations for autonomous driving in snowy conditions.###
-LiRTest: Augmenting LiDAR Point Clouds for Automated Testingpropose
-LiRTest, a mutation-based testing approach for LiDAR point cloud
-perception systems that simulates real-world corruptions like rain,
-snow, and fog to evaluate robustness.### 2020 35th IEEE/ACM
-International Conference on Automated Software Engineering
-(ASE)explicitly mentioned.### 4D mmWave Radar in Adverse Environments
-for Autonomous Driving:explicitly mentioned.### 4D Radar Semantic
-Segmentation of People in Field Conditions Usingexplicitly mentioned.###
-Zhiwei Lin1 * Zhe Liu2 * Zhongyu Xia1 Xinhao Wang1 Yongtao
-Wang1†explicitly mentioned.### arXiv:2306.03454v2 [cs.SE] 29 Aug
-2023explicitly mentioned.### 1explicitly mentioned.###
-arXiv:2206.08171v4 [cs.CV] 7 Nov 2023introduce KAIST-Radar (K-Radar), a
-novel 4D Radar tensor (4DRT)-based 3D object detection dataset and
-benchmark with diverse weather conditions and multimodal sensor data.##
-Section 5: Future Work### 2022 IEEE 33rd International Symposium on
-Software Reliability Engineering (ISSRE)explicitly mentioned.### 2023
-IEEE/ACM 45th International Conference on Software Engineering
-(ICSE)explicitly mentioned.### Are we ready for Autonomous
-Driving?explicitly mentioned.### Seeing Through Fog Without Seeing
-Fog:explicitly mentioned.### REVIEW PAPERresearch will primarily focus
-on improving and developing vehicle identification algorithms that use a
-single-step technique.### LiRTest: Augmenting LiDAR Point Clouds for
-Automated Testingexplicitly mentioned.### 2020 35th IEEE/ACM
-International Conference on Automated Software Engineering
-(ASE)explicitly mentioned.### 4D mmWave Radar in Adverse Environments
-for Autonomous Driving:explicitly mentioned.### 4D Radar Semantic
-Segmentation of People in Field Conditions Usingexplicitly mentioned.###
-Zhiwei Lin1 * Zhe Liu2 * Zhongyu Xia1 Xinhao Wang1 Yongtao
-Wang1†explicitly mentioned.### arXiv:2306.03454v2 [cs.SE] 29 Aug
-2023explicitly mentioned.### 1explicitly mentioned.###
-arXiv:2206.08171v4 [cs.CV] 7 Nov 2023plan to release the complete
-development kits (devkits) that include training/evaluation codes,
-labeling/calibration tools, and visualization tools to accelerate
-4DRT-based perception research.## Section 6: Noises &amp; Abnormalities
-— Unified Catalog| Category | Noise/Abnormality Name | Paper(s) |
-Affected Sensor(s) | Effect on Sensor / Description
-||———-|————————|———-|——————–|——————————–|| Sensor / Hardware | gaussian
-noise | 2022 IEEE 33rd International Symposium on Software Reliability
-Engineering (ISSRE), 2023 IEEE/ACM 45th International Conference on
-Software Engineering (ICSE), Are we ready for Autonomous Driving?,
-Seeing Through Fog Without Seeing Fog:, REVIEW PAPER, LiRTest:
-Augmenting LiDAR Point Clouds for Automated Testing, 2020 35th IEEE/ACM
-International Conference on Automated Software Engineering (ASE), 4D
-mmWave Radar in Adverse Environments for Autonomous Driving:, 4D Radar
-Semantic Segmentation of People in Field Conditions Using, Zhiwei Lin1 *
-Zhe Liu2 * Zhongyu Xia1 Xinhao Wang1 Yongtao Wang1†, arXiv:2306.03454v2
-[cs.SE] 29 Aug 2023, 1, arXiv:2206.08171v4 [cs.CV] 7 Nov 2023 | Camera,
-LiDAR, Radar, IMU, GPS | gaussian noise| Sensor / Hardware | poisson
-noise | 2022 IEEE 33rd International Symposium on Software Reliability
-Engineering (ISSRE), 2023 IEEE/ACM 45th International Conference on
-Software Engineering (ICSE), Are we ready for Autonomous Driving?,
-Seeing Through Fog Without Seeing Fog:, REVIEW PAPER, LiRTest:
-Augmenting LiDAR Point Clouds for Automated Testing, 2020 35th IEEE/ACM
-International Conference on Automated Software Engineering (ASE), 4D
-mmWave Radar in Adverse Environments for Autonomous Driving:, 4D Radar
-Semantic Segmentation of People in Field Conditions Using, Zhiwei Lin1 *
-Zhe Liu2 * Zhongyu Xia1 Xinhao Wang1 Yongtao Wang1†, arXiv:2306.03454v2
-[cs.SE] 29 Aug 2023, 1, arXiv:2206.08171v4 [cs.CV] 7 Nov 2023 | Camera,
-LiDAR, Radar, IMU, GPS | poisson noise| Sensor / Hardware | shot noise |
-2022 IEEE 33rd International Symposium on Software Reliability
-Engineering (ISSRE), 2023 IEEE/ACM 45th International Conference on
-Software Engineering (ICSE), Are we ready for Autonomous Driving?,
-Seeing Through Fog Without Seeing Fog:, REVIEW PAPER, LiRTest:
-Augmenting LiDAR Point Clouds for Automated Testing, 2020 35th IEEE/ACM
-International Conference on Automated Software Engineering (ASE), 4D
-mmWave Radar in Adverse Environments for Autonomous Driving:, 4D Radar
-Semantic Segmentation of People in Field Conditions Using, Zhiwei Lin1 *
-Zhe Liu2 * Zhongyu Xia1 Xinhao Wang1 Yongtao Wang1†, arXiv:2306.03454v2
-[cs.SE] 29 Aug 2023, 1, arXiv:2206.08171v4 [cs.CV] 7 Nov 2023 | Camera,
-LiDAR, Radar, IMU, GPS | shot noise| Sensor / Hardware | speckle noise |
-2022 IEEE 33rd International Symposium on Software Reliability
-Engineering (ISSRE), 2023 IEEE/ACM 45th International Conference on
-Software Engineering (ICSE), Are we ready for Autonomous Driving?,
-Seeing Through Fog Without Seeing Fog:, REVIEW PAPER, LiRTest:
-Augmenting LiDAR Point Clouds for Automated Testing, 2020 35th IEEE/ACM
-International Conference on Automated Software Engineering (ASE), 4D
-mmWave Radar in Adverse Environments for Autonomous Driving:, 4D Radar
-Semantic Segmentation of People in Field Conditions Using, Zhiwei Lin1 *
-Zhe Liu2 * Zhongyu Xia1 Xinhao Wang1 Yongtao Wang1†, arXiv:2306.03454v2
-[cs.SE] 29 Aug 2023, 1, arXiv:2206.08171v4 [cs.CV] 7 Nov 2023 | Camera,
-LiDAR, Radar, IMU, GPS | speckle noise| Sensor / Hardware | impulse
-noise | 2022 IEEE 33rd International Symposium on Software Reliability
-Engineering (ISSRE), 2023 IEEE/ACM 45th International Conference on
-Software Engineering (ICSE), Are we ready for Autonomous Driving?,
-Seeing Through Fog Without Seeing Fog:, REVIEW PAPER, LiRTest:
-Augmenting LiDAR Point Clouds for Automated Testing, 2020 35th IEEE/ACM
-International Conference on Automated Software Engineering (ASE), 4D
-mmWave Radar in Adverse Environments for Autonomous Driving:, 4D Radar
-Semantic Segmentation of People in Field Conditions Using, Zhiwei Lin1 *
-Zhe Liu2 * Zhongyu Xia1 Xinhao Wang1 Yongtao Wang1†, arXiv:2306.03454v2
-[cs.SE] 29 Aug 2023, 1, arXiv:2206.08171v4 [cs.CV] 7 Nov 2023 | Camera,
-LiDAR, Radar, IMU, GPS | impulse noise| Sensor / Hardware | salt and
-pepper | 2022 IEEE 33rd International Symposium on Software Reliability
-Engineering (ISSRE), 2023 IEEE/ACM 45th International Conference on
-Software Engineering (ICSE), Are we ready for Autonomous Driving?,
-Seeing Through Fog Without Seeing Fog:, REVIEW PAPER, LiRTest:
-Augmenting LiDAR Point Clouds for Automated Testing, 2020 35th IEEE/ACM
-International Conference on Automated Software Engineering (ASE), 4D
-mmWave Radar in Adverse Environments for Autonomous Driving:, 4D Radar
-Semantic Segmentation of People in Field Conditions Using, Zhiwei Lin1 *
-Zhe Liu2 * Zhongyu Xia1 Xinhao Wang1 Yongtao Wang1†, arXiv:2306.03454v2
-[cs.SE] 29 Aug 2023, 1, arXiv:2206.08171v4 [cs.CV] 7 Nov 2023 | Camera,
-LiDAR, Radar, IMU, GPS | salt and pepper| Sensor / Hardware | thermal
-noise | 2022 IEEE 33rd International Symposium on Software Reliability
-Engineering (ISSRE), 2023 IEEE/ACM 45th International Conference on
-Software Engineering (ICSE), Are we ready for Autonomous Driving?,
-Seeing Through Fog Without Seeing Fog:, REVIEW PAPER, LiRTest:
-Augmenting LiDAR Point Clouds for Automated Testing, 2020 35th IEEE/ACM
-International Conference on Automated Software Engineering (ASE), 4D
-mmWave Radar in Adverse Environments for Autonomous Driving:, 4D Radar
-Semantic Segmentation of People in Field Conditions Using, Zhiwei Lin1 *
-Zhe Liu2 * Zhongyu Xia1 Xinhao Wang1 Yongtao Wang1†, arXiv:2306.03454v2
-[cs.SE] 29 Aug 2023, 1, arXiv:2206.08171v4 [cs.CV] 7 Nov 2023 | Camera,
-LiDAR, Radar, IMU, GPS | thermal noise| Sensor / Hardware | read noise |
-2022 IEEE 33rd International Symposium on Software Reliability
-Engineering (ISSRE), 2023 IEEE/ACM 45th International Conference on
-Software Engineering (ICSE), Are we ready for Autonomous Driving?,
-Seeing Through Fog Without Seeing Fog:, REVIEW PAPER, LiRTest:
-Augmenting LiDAR Point Clouds for Automated Testing, 2020 35th IEEE/ACM
-International Conference on Automated Software Engineering (ASE), 4D
-mmWave Radar in Adverse Environments for Autonomous Driving:, 4D Radar
-Semantic Segmentation of People in Field Conditions Using, Zhiwi Lin1 *
-Zhe Liu2 * Zhongyu Xia1 Xinhao Wang1 Yongtao Wang1†, arXiv:2306.03454v2
-[cs.SE] 29 Aug 2023, 1, arXiv:2206.08171v4 [cs.CV] 7 Nov 2023 | Camera,
-LiDAR, Radar, IMU, GPS | read noise| Sensor / Hardware | dark current |
-2022 IEEE 33rd International Symposium on Software Reliability
-Engineering (ISSRE), 2023 IEEE/ACM 45th International Conference on
-Software Engineering (ICSE), Are we ready for Autonomous Driving?,
-Seeing Through Fog Without Seeing Fog:, REVIEW PAPER, LiRTest:
-Augmenting LiDAR Point Clouds for Automated Testing, 2020 35th IEEE/ACM
-International Conference on Automated Software Engineering (ASE), 4D
-mmWave Radar in Adverse Environments for Autonomous Driving:, 4D Radar
-Semantic Segmentation of People in Field Conditions Using, Zhiwei Lin1 *
-Zhe Liu2 * Zhongyu Xia1 Xinhao Wang1 Yongtao Wang1†, arX</p>
+<h2 id="cleanup-debt-found">4. Cleanup Debt Found</h2>
+<table>
+<colgroup>
+<col style="width: 29%" />
+<col style="width: 17%" />
+<col style="width: 29%" />
+<col style="width: 23%" />
+</colgroup>
+<thead>
+<tr>
+<th>Category</th>
+<th>Item</th>
+<th>Location</th>
+<th>Impact</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Dead code</strong></td>
+<td><code>prepare_frame_radar</code> imported but never called</td>
+<td><code>pipeline.py:30</code> — imported; 0 call sites</td>
+<td>CFAR noise-floor computation exists in library but is unused by
+pipeline</td>
+</tr>
+<tr>
+<td><strong>Dead code</strong></td>
+<td><code>RADAR_GUARD_CELLS</code>, <code>RADAR_TRAINING_CELLS</code>
+imported but never used</td>
+<td><code>pipeline.py:30</code> — imported; 0 usage sites</td>
+<td>Only used inside <code>prepare_frame_radar()</code> which is itself
+dead code in pipeline context</td>
+</tr>
+<tr>
+<td><strong>Dead code</strong></td>
+<td><code>camera_score()</code> imported but never called</td>
+<td><code>pipeline.py:33</code> — imported; 0 call sites</td>
+<td>Full merged scoring function (area + centrality + occlusion) exists
+but pipeline uses <code>calculate_visibility_score()</code> instead</td>
+</tr>
+<tr>
+<td><strong>Dead code</strong></td>
+<td><code>stereo_consistency()</code> imported but never called</td>
+<td><code>pipeline.py:33</code> — imported; 0 call sites</td>
+<td>Stereo consistency check for front pair exists
+(camera_visibility.py:425-523) but pipeline never invokes it</td>
+</tr>
+<tr>
+<td><strong>Dead code</strong></td>
+<td><code>radar_score_with_doppler</code> does not exist</td>
+<td>Referenced in <code>TESTING_NOTES.md:23</code> as dead code that was
+removed</td>
+<td>Function was planned and logged as implemented but never exists in
+current source</td>
+</tr>
+<tr>
+<td><strong>Schema drift</strong></td>
+<td><code>OUTPUT_SCHEMA</code> missing <code>ghost_flag</code> and
+<code>weather</code></td>
+<td><code>config.py:79-122</code> — no <code>ghost_flag</code> or
+<code>weather</code> entries</td>
+<td>Pipeline.py:460 computes ghost_flag and adds it to row dict, but
+it’s not declared in the output schema config. Same for
+<code>weather</code> at pipeline.py:459.</td>
+</tr>
+<tr>
+<td><strong>Missing calibration extraction</strong></td>
+<td><code>get_camera_params()</code> does not return
+<code>dist_coeffs</code></td>
+<td><code>calibration.py:19-32</code> — returns only intrinsics +
+extrinsics</td>
+<td>Distortion correction math exists but can never receive coefficients
+from the calibration pickle</td>
+</tr>
+<tr>
+<td><strong>Backup files</strong></td>
+<td>None found</td>
+<td>—</td>
+<td>The repo is clean of <code>.backup</code> / <code>.backup2</code>
+files</td>
+</tr>
+<tr>
+<td><strong>TODO/NotImplementedError</strong></td>
+<td>None found</td>
+<td>—</td>
+<td>No <code>TODO</code>, <code>NotImplementedError</code>,
+<code>FIXME</code>, <code>HACK</code>, or <code>XXX</code> in the
+package source files</td>
+</tr>
+<tr>
+<td><strong>Missing dataset</strong></td>
+<td><code>DATASET_ROOT</code> path does not exist</td>
+<td><code>config.py:10</code> →
+<code>/home/adhish/Productivity/AMSCUP/repos/K-Radar</code></td>
+<td>SMK-17 (end-to-end pipeline) fails with “No rows produced” because
+the K-Radar dataset is not mounted. This is an infrastructure issue, not
+a code bug.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="summary">5. Summary</h2>
+<table>
+<colgroup>
+<col style="width: 12%" />
+<col style="width: 34%" />
+<col style="width: 21%" />
+<col style="width: 31%" />
+</colgroup>
+<thead>
+<tr>
+<th>Gap</th>
+<th>Roadmap Tasks</th>
+<th>Verdict</th>
+<th>Key Finding</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Critical #1 — LiDAR range-image occlusion</td>
+<td>1.1, 2.1</td>
+<td><strong>PASS</strong></td>
+<td>Fully implemented and wired. Formula includes undocumented
+<code>confidence</code> factor.</td>
+</tr>
+<tr>
+<td>Critical #2 — Radar CFAR noise-floor</td>
+<td>1.2, 2.2</td>
+<td><strong>PARTIAL</strong></td>
+<td>CFAR function <code>prepare_frame_radar()</code> exists and passes
+tests, but the pipeline explicitly passes
+<code>noise_floor_db=None</code> and uses global median instead. CFAR
+code is dead in the pipeline context.</td>
+</tr>
+<tr>
+<td>Critical #3 — Camera depth-buffer occlusion</td>
+<td>1.3, 2.3</td>
+<td><strong>PASS</strong></td>
+<td>Fully implemented with vectorized <code>np.minimum.at</code> path.
+Timing ~0.33s/frame.</td>
+</tr>
+<tr>
+<td>Non-critical #1 — Distortion correction</td>
+<td>1.3 (partial)</td>
+<td><strong>PARTIAL</strong></td>
+<td>Distortion math is correct but <code>get_camera_params()</code>
+never extracts <code>dist_coeffs</code> from calibration pickle.
+Pipeline cannot feed coefficients to the math.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Dead code metric:</strong> 4 imported-but-never-called
+functions/constants in <code>pipeline.py</code>.<br />
+<strong>Phase log reliability:</strong> Phase 1 log contains <strong>3
+fabricated claims</strong> (non-existent functions/constants). Phase 2
+log falsely claims CFAR is integrated.<br />
+<strong>Infrastructure note:</strong> The K-Radar dataset is not
+mounted. SMK-17 cannot run until <code>DATASET_ROOT</code> points to a
+live dataset.</p>

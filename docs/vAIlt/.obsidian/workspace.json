@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "00_MOC.md",
+                "file": "Daily/2026-07-21.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "00_MOC"
+              "title": "2026-07-21"
             }
           }
         ]
@@ -185,8 +185,13 @@
   },
   "active": "bcc5bd69e8fccc4b",
   "lastOpenFiles": [
-    "08 Resources.md",
+    "noise-injection-design-verification.md",
+    "kradar-effects-verification.md",
+    "Daily/2026-07-21.md",
+    "Daily",
+    "noise-injection-design.md",
     "00_MOC.md",
+    "08 Resources.md",
     "10_Archive/Building_From_Source.md",
     "07_Writing/Aggregated_Data__AMSCUP.md",
     "06_Results/Figure_Inventory_and_LaTeX_Inclusion_Suggestions.md",
@@ -206,10 +211,6 @@
     "02_Literature/Visibility_Calculation_Methods_Literature_Review_and_Analysis.md",
     "02_Literature/Usual_Questions.md",
     "02_Literature/tasks.md",
-    "02_Literature/Sensor_Visibility__Identification_Metrics_for_K-Radar_3.md",
-    "02_Literature/Sensor_Visibility__Identification_Metrics_for_K-Radar_2.md",
-    "02_Literature/Sensor_Visibility__Identification_Metrics_for_K-Radar_1.md",
-    "02_Literature/Sensor_Visibility__Identification_Metrics_for_K-Radar.md",
-    "02_Literature/QA_Report_for_task_t_c872701f_QA_review_aggregated_datamd_completeness.md"
+    "02_Literature/Sensor_Visibility__Identification_Metrics_for_K-Radar_3.md"
   ]
 }

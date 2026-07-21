@@ -43,53 +43,7 @@ log = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
-# NEW PHASE 4: Per-frame precomputation functions (replaces generate_camera_depth_maps)
-# ---------------------------------------------------------------------------
-# The old generate_camera_depth_maps() is replaced by prepare_frame_camera()
-# from camera_visibility.py which handles all 4 cameras at once.
-# Kept for backward compatibility if any external code calls it.
-def generate_camera_depth_maps(points, cam_params_list, width, height):
-    """Legacy function - use prepare_frame_camera() instead."""
-    # Use the first camera in the list
-    intrinsics = cam_params_list[0]['camera_intrinsics'][:3, :3]
-    radar2camera = cam_params_list[0]['radar2camera']
-    
-    depth_map = np.zeros((height, width), dtype=np.float32)
-    
-    if points is None or len(points) == 0:
-        return depth_map
-    
-    # Transform all points to camera frame at once (vectorized)
-    pts_hom = np.hstack([points[:, :3], np.ones((len(points), 1))])
-    pts_cam = (radar2camera @ pts_hom.T).T
-    
-    # Keep only points in front of camera
-    valid = pts_cam[:, 2] > 0
-    if not np.any(valid):
-        return depth_map
-        
-    pts_cam = pts_cam[valid]
-    z_cam = pts_cam[:, 2]
-    x_cam = pts_cam[:, 0]
-    y_cam = pts_cam[:, 1]
-    
-    # Project to image
-    u = (intrinsics[0, 0] * x_cam / z_cam) + intrinsics[0, 2]
-    v = (intrinsics[1, 1] * y_cam / z_cam) + intrinsics[1, 2]
-    
-    u_int = np.round(u).astype(int)
-    v_int = np.round(v).astype(int)
-    
-    # Filter to image bounds
-    in_bounds = (u_int >= 0) & (u_int < width) & (v_int >= 0) & (v_int < height)
-    u_valid = u_int[in_bounds]
-    v_valid = v_int[in_bounds]
-    z_valid = z_cam[in_bounds]
-    
-    # Vectorized minimum reduction using np.minimum.at
-    np.minimum.at(depth_map, (v_valid, u_valid), z_valid)
-    
-    return depth_map
+
 
 # ---------------------------------------------------------------------------
 # Radar zyx_cube grid parameters

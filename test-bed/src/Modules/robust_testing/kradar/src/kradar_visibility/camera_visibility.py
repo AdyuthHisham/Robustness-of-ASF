@@ -217,6 +217,11 @@ def prepare_frame_camera(points, lidar_extrinsics, camera_intrinsics_list, camer
     NEW METHODOLOGY: k-radar-sensor-visibility-metrics.md (§4.1, §4.3)
     Called once per frame to create depth maps for all cameras, shared across objects.
     
+    FIX (Phase 4 Task 4.2 follow-up): Vectorized per-pixel minimum reduction using
+    np.minimum.at() with np.inf initialization to avoid the zero-initialization bug
+    in the legacy generate_camera_depth_maps(). This replaces the Python for-loop
+    that caused ~47.5s/frame overhead.
+    
     Args:
         points: (N, >=3) LiDAR points in radar frame [x, y, z, ...]
         lidar_extrinsics: 4x4 transform from LiDAR to radar frame (if different sensors)
@@ -240,8 +245,8 @@ def prepare_frame_camera(points, lidar_extrinsics, camera_intrinsics_list, camer
         K = camera_intrinsics_list[cam_idx][:3, :3]
         T_radar2cam = camera_extrinsics_list[cam_idx]
         
-        # Initialize depth map for this camera
-        depth_map = np.zeros((image_height, image_width), dtype=np.float32)
+        # Initialize depth map with inf so np.minimum.at() correctly reduces to nearest depth
+        depth_map = np.full((image_height, image_width), np.inf, dtype=np.float32)
         
         # Transform all points to camera frame
         pts_hom = np.hstack([points[:, :3], np.ones((len(points), 1))])  # Nx4
@@ -250,6 +255,8 @@ def prepare_frame_camera(points, lidar_extrinsics, camera_intrinsics_list, camer
         # Keep only points in front of camera
         valid = pts_cam[:, 2] > 0
         if not np.any(valid):
+            # Replace inf with 0 for "no depth data" sentinel
+            depth_map[np.isinf(depth_map)] = 0.0
             depth_maps.append(depth_map)
             continue
             
@@ -269,6 +276,7 @@ def prepare_frame_camera(points, lidar_extrinsics, camera_intrinsics_list, camer
         in_bounds = (u_int >= 0) & (u_int < image_width) & (v_int >= 0) & (v_int < image_height)
         
         if not np.any(in_bounds):
+            depth_map[np.isinf(depth_map)] = 0.0
             depth_maps.append(depth_map)
             continue
             
@@ -276,12 +284,11 @@ def prepare_frame_camera(points, lidar_extrinsics, camera_intrinsics_list, camer
         v_valid = v_int[in_bounds]
         z_valid = z_cam[in_bounds]
         
-        # Build sparse depth map: keep closest point per pixel
-        # Use vectorized minimum reduction
-        for u_pix, v_pix, z_val in zip(u_valid, v_valid, z_valid):
-            if depth_map[v_pix, u_pix] == 0 or z_val < depth_map[v_pix, u_pix]:
-                depth_map[v_pix, u_pix] = z_val
-                
+        # Vectorized per-pixel minimum reduction: keep closest (minimum z) per pixel
+        np.minimum.at(depth_map, (v_valid, u_valid), z_valid)
+        
+        # Replace remaining inf (pixels with no projected points) with 0 sentinel
+        depth_map[np.isinf(depth_map)] = 0.0
         depth_maps.append(depth_map)
         
     return depth_maps

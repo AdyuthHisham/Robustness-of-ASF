@@ -21,11 +21,11 @@ sys.path.insert(0, str(src_path))
 import polars as pl
 from kradar_visibility.lidar_visibility import prepare_frame_lidar, calculate_lidar_visibility
 from kradar_visibility.radar_visibility import prepare_frame_radar, compute_radar_sparsity_score
-from kradar_visibility.camera_visibility import calculate_visibility_score, project_point_to_image
+from kradar_visibility.camera_visibility import calculate_visibility_score, project_point_to_image, prepare_frame_camera
 from kradar_visibility.parser import parse_label_file, get_sequence_label_files
 from kradar_visibility.data_loader import load_radar_cube, load_lidar_points
 from kradar_visibility.calibration import get_camera_params, load_camera_calibration
-from kradar_visibility.pipeline import generate_camera_depth_maps, compute_visibility_for_frame
+from kradar_visibility.pipeline import compute_visibility_for_frame
 from kradar_visibility.config import (
     OS2_64_CHANNELS, OS2_64_VFOV_DEG, OS2_64_HRES_DEG,
     OS1_128_CHANNELS, OS1_128_VFOV_DEG, OS1_128_HRES_DEG,
@@ -206,14 +206,13 @@ def validate_precomputation_for_sequence(sequence_id: str, frame_limit: int = 5)
                     print(f"    ERROR: OS2-64 range image validation failed")
                     all_passed = False
             
-            os1_range_image, os1_sensor_origin = (None, None)
-            if os1_points is not None and len(os1_points) > 0:
-                os1_range_image, os1_sensor_origin = prepare_frame_lidar(
-                    os1_points, OS1_128_CHANNELS, OS1_128_VFOV_DEG, OS1_128_HRES_DEG
-                )
-                if not _validate_range_image_dimensions(os1_range_image, OS1_128_CHANNELS, OS1_128_HRES_DEG):
-                    print(f"    ERROR: OS1-128 range image validation failed")
-                    all_passed = False
+            os1_azimuth_bins = int(360.0 / OS1_128_HRES_DEG)
+            os1_range_image, os1_sensor_origin = prepare_frame_lidar(
+                os1_points, OS1_128_CHANNELS, OS1_128_VFOV_DEG, OS1_128_HRES_DEG
+            )
+            if not _validate_range_image_dimensions(os1_range_image, OS1_128_CHANNELS, os1_azimuth_bins):
+                print(f"    ERROR: OS1-128 range image validation failed")
+                all_passed = False
             
             # Radar noise floor map
             radar_noise_floor_map = None
@@ -234,22 +233,30 @@ def validate_precomputation_for_sequence(sequence_id: str, frame_limit: int = 5)
             
             if calib_available and os1_points is not None and len(os1_points) > 0:
                 seq_int = int(sequence_id)
+                # Get camera intrinsics and extrinsics for all 4 directions
+                camera_intrinsics_list = []
+                camera_extrinsics_list = []
                 for direction in ['front', 'left', 'right', 'rear']:
-                    try:
-                        cam_params_list = get_camera_params(direction, seq=seq_int)
-                        if cam_params_list:
-                            depth_map = generate_camera_depth_maps(
-                                os1_points, cam_params_list, CAM_HALF_WIDTH, CAM_HALF_HEIGHT
-                            )
-                            camera_depth_maps[direction] = depth_map
-                            if not _validate_depth_map(depth_map, os1_points, cam_params_list[0]):
-                                print(f"    WARNING: Depth map validation failed for {direction} camera")
-                                # Don't fail the entire validation for depth map issues
-                        else:
-                            camera_depth_maps[direction] = None
-                    except Exception as e:
-                        print(f"    WARNING: Failed to generate depth map for {direction}: {e}")
-                        camera_depth_maps[direction] = None
+                    params_list = get_camera_params(direction, seq=seq_int)
+                    camera_intrinsics_list.append(params_list[0]['camera_intrinsics'])
+                    camera_extrinsics_list.append(params_list[0]['radar2camera'])
+                # Identity for LiDAR to radar (they share the same frame in K-Radar)
+                lidar_extrinsics = np.eye(4)
+                # Compute depth maps for all cameras at once (vectorized)
+                depth_maps = prepare_frame_camera(
+                    os1_points[:, :3],  # only xyz
+                    lidar_extrinsics,
+                    camera_intrinsics_list,
+                    camera_extrinsics_list,
+                    CAM_HALF_WIDTH,
+                    CAM_HALF_HEIGHT
+                )
+                for i, direction in enumerate(['front', 'left', 'right', 'rear']):
+                    depth_map = depth_maps[i]
+                    camera_depth_maps[direction] = depth_map
+                    if not _validate_depth_map(depth_map, os1_points, camera_intrinsics_list[i]):
+                        print(f"    WARNING: Depth map validation failed for {direction} camera")
+                        # Don't fail the entire validation for depth map issues
             else:
                 for direction in ['front', 'left', 'right', 'rear']:
                     camera_depth_maps[direction] = None
