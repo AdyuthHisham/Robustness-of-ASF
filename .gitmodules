@@ -1,9 +1,9 @@
 [submodule "docs/Latex_Report"]
 	path = docs/Latex_Report
-	url = https://github.com/AdyuthHisham/Latex_Report.git
+	url = git@github.com:AdyuthHisham/AMSCUP_LATEX.git
 [submodule "repos/AMSCUP_PLUS"]
 	path = repos/AMSCUP_PLUS
-	url = https://github.com/AdyuthHisham/AMSCUP_PLUS.git
+	url = git@github.com:AdyuthHisham/AMSCUP_PLUS.git
 [submodule "repos/K-Radar"]
 	path = repos/K-Radar
 	url = git@github.com:AdyuthHisham/K-Radar.git

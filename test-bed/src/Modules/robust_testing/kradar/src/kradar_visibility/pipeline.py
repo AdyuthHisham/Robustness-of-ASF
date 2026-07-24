@@ -14,6 +14,13 @@ Changes vs. original:
             disable camera metrics for that sequence rather than crashing.
   ISSUE-08: Guard added before pl.DataFrame() for the empty-rows case.
   WEATHER-01: Parse description.txt for weather label and add to each row.
+  TASK-3.1: Radar CFAR noise floor (prepare_frame_radar) computed once per
+            frame and passed as noise_floor_db to compute_radar_sparsity_score,
+            replacing the global-median fallback.  RADAR_GUARD_CELLS/RADAR_TRAINING_CELLS
+            are imported from radar_visibility and passed through via the
+            function's default parameters (guard=2, training=4).  The fallback
+            chain in compute_radar_sparsity_score is preserved for the case
+            where the noise floor map is None.
 """
 
 from pathlib import Path
@@ -210,6 +217,16 @@ def compute_visibility_for_frame(sequence_id, header, objects, dataset_root,
     else:
         noise_floor_val = -100.0
 
+    # NEW Phase 3 Task 3.1: Per-frame CFAR noise floor map
+    # Calls prepare_frame_radar() which uses RADAR_GUARD_CELLS=2 and RADAR_TRAINING_CELLS=4
+    # sliding-window guard/training-cell CFAR to produce a spatially-varying noise floor.
+    # When passed to compute_radar_sparsity_score(), this replaces the global-median
+    # fallback and bounds the score to [0, 1] via DB_HEADROOM clipping.
+    if radar_cube is not None:
+        noise_floor_db = prepare_frame_radar(radar_cube)
+    else:
+        noise_floor_db = None
+
     seq_int = int(sequence_id) if sequence_id.isdigit() else 1
 
     # NEW PHASE 4: Per-frame precomputation for LiDAR and Camera
@@ -271,7 +288,11 @@ def compute_visibility_for_frame(sequence_id, header, objects, dataset_root,
                 if (bbox['z_max'] > bbox['z_min'] and
                         bbox['y_max'] > bbox['y_min'] and
                         bbox['x_max'] > bbox['x_min']):
-                    radar_score = float(compute_radar_sparsity_score(radar_cube, bbox, noise_floor_db=None, noise_floor_val=noise_floor_val, cube_db=cube_db, valid_mask=valid_mask))
+                    # Task 3.1: noise_floor_db sourced from prepare_frame_radar() CFAR map.
+                    # Dropping noise_floor_val here lets the function use the CFAR map
+                    # (noise_floor_db) which takes priority over global-median fallback
+                    # only when noise_floor_val is None.
+                    radar_score = float(compute_radar_sparsity_score(radar_cube, bbox, noise_floor_db=noise_floor_db, cube_db=cube_db, valid_mask=valid_mask))
             except Exception as exc:
                 log.debug("radar score failed for obj %s: %s", obj.tracking_id, exc)
                 radar_score = 0.0

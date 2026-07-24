@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Daily/2026-07-21.md",
+                "file": "verification_report_part_ghostflag.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "2026-07-21"
+              "title": "verification_report_part_ghostflag"
             }
           }
         ]
@@ -183,14 +183,27 @@
       "bases:Create new base": false
     }
   },
-  "active": "027471fbf8456163",
+  "active": "bcc5bd69e8fccc4b",
   "lastOpenFiles": [
-    "noise-injection-implementation-report.md",
-    "noise-injection-design-verification.md",
-    "kradar-effects-verification.md",
-    "Daily/2026-07-21.md",
-    "Daily",
+    "noise-injection-taxonomy-revision-report.md",
+    "verification_report_part_ghostflag 1.md",
+    "verification_report_part_ghostflag.md",
     "noise-injection-design.md",
+    "home/adhish/Productivity/AMSCUP/test-bed/src/Modules/robust_testing/kradar/docs/verification_report_part_ghostflag.md",
+    "home/adhish/Productivity/AMSCUP/test-bed/src/Modules/robust_testing/kradar/docs",
+    "home/adhish/Productivity/AMSCUP/test-bed/src/Modules/robust_testing/kradar",
+    "home/adhish/Productivity/AMSCUP/test-bed/src/Modules/robust_testing",
+    "home/adhish/Productivity/AMSCUP/test-bed/src/Modules",
+    "home/adhish/Productivity/AMSCUP/test-bed/src",
+    "home/adhish/Productivity/AMSCUP/test-bed",
+    "home/adhish/Productivity/AMSCUP",
+    "home/adhish/Productivity",
+    "home/adhish",
+    "home",
+    "noise-injection-design-verification.md",
+    "noise-injection-implementation-report.md",
+    "Daily/2026-07-21.md",
+    "kradar-effects-verification.md",
     "00_MOC.md",
     "08 Resources.md",
     "10_Archive/Building_From_Source.md",
@@ -207,10 +220,6 @@
     "03_Theory/BSD_3-Clause_License.md",
     "03_Theory/Annotations.md",
     "03_Theory/03 Theory.md",
-    "03_Theory/0_Problem_Statement.md",
-    "02_Literature/Visibility_Calculation_Methods_Literature_Review_and_Analysis_1.md",
-    "02_Literature/Visibility_Calculation_Methods_Literature_Review_and_Analysis.md",
-    "02_Literature/Usual_Questions.md",
-    "02_Literature/tasks.md"
+    "03_Theory/0_Problem_Statement.md"
   ]
 }

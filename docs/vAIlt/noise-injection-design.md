@@ -1,51 +1,95 @@
 # Noise Injection Module — Inference-Time Robustness Testing
 
-**Date:** 2026-07-21
-**Status:** Design proposal (pre-implementation)
+**Date:** 2026-07-23 (Rev 2 — taxonomy revision)
+**Status:** Implementation complete
 **Scope:** Standalone corruption/injection module for radar + LiDAR + camera at K-Radar evaluation time only.
+
+---
+
+## Change Log (Rev 1 → Rev 2)
+
+| Date | Change | Reason |
+|------|--------|--------|
+| 2026-07-23 | Replaced 18-effect list with 12-effect taxonomy (4 per modality) | User specification — streamlined to canonical sensor-failure types: frame deletion, Gaussian noise / noise-induced shifts, partial loss, complete loss. |
+| 2026-07-23 | Removed 11 old effects: R2 (doppler corruption), R3 (range attenuation), R5 (ghost points), R7 (power saturation), L2 (FOV occlusion), L4 (range dropout), L5 (downsampling), C2 (motion blur), C3 (brightness), C5 (JPEG compression), C6 (gamma distortion) | Not part of the new canonical taxonomy. Preserved in `noise_injection.py` under `# LEGACY EFFECTS` section — not loaded into registries, available for manual import. |
+| 2026-07-23 | Renamed "sparse_point_dropout" → "loss_partial" (radar), "random_dropout" → "loss_partial" (LiDAR); unified API with `fraction` param | Standardised naming across modalities. The underlying Bernoulli-drop mechanism is identical. |
+| 2026-07-23 | Added `frame_deletion` across all 3 modalities (new) | New requirement: deterministic (interval or index-list) or random (per-frame probability) frame skip. |
+| 2026-07-23 | Added `noise_induced_shifts` for radar (new) | Replacement for old azimuth_jitter + new requirement: coordinate/bin shift caused by a noise process, distinct from additive power noise. |
+| 2026-07-23 | Added `loss_complete` as a distinct explicit effect (not fraction=1.0 alias) | Sesign decision: see §1.4. |
+| 2026-07-23 | LiDAR `gaussian_noise` widened from pure position noise to position + intensity noise | Unified effect per spec: "additive Gaussian noise on point positions/intensity". |
+| 2026-07-23 | Camera `loss_partial` uses single-region zero-out with `fraction` param; distinct from old `patch_occlusion` | Per spec requirement: "distinct from generic patch occlusion". |
+| 2026-07-23 | Updated registries (`RADAR_EFFECTS`, `LIDAR_EFFECTS`, `CAMERA_EFFECTS`) to reflect exactly the 12-effect taxonomy | Old registries preserved as `RADAR_EFFECTS_LEGACY` etc. |
+| 2026-07-23 | Added `frame_index` optional parameter to `NoiseInjector.__call__()` and `_apply_list()` | Required by deterministic frame_deletion (interval/index-list sub-mode). |
+
+### What maps from old to new
+
+| Old effect | New effect | Mapping |
+|---|---|---|
+| R1 power_gaussian_noise | — (removed) | Not in new radar taxonomy (replaced by noise_induced_shifts for radar-specific noise). |
+| R2 sparse_point_dropout | `loss_partial` (radar) | Same Bernoulli-drop mechanism; param renamed `rate` → `fraction`. |
+| R3 range_attenuation | — (removed) | — |
+| R4 doppler_corruption | — (removed) | — |
+| R5 ghost_points | — (removed) | — |
+| R6 azimuth_jitter | `noise_induced_shifts` (partial) | `noise_induced_shifts` is a distinct mechanism (Cartesian displacement vs angular rotation). Old azimuth_jitter preserved as legacy. |
+| R7 power_saturation | — (removed) | — |
+| L1 random_dropout | `loss_partial` (LiDAR) | Same mechanism; param renamed `rate` → `fraction`. |
+| L2 fov_occlusion | — (removed) | — |
+| L3 position_noise | `gaussian_noise` (LiDAR, widened) | Now also adds noise to intensity channel. Renamed from `lidar_position_noise`. |
+| L4 range_dropout | — (removed) | — |
+| L5 downsampling | — (removed) | — |
+| C1 gaussian_noise | `gaussian_noise` (camera) | Unchanged. |
+| C2 motion_blur | — (removed) | — |
+| C3 brightness | — (removed) | — |
+| C4 patch_occlusion | — (removed) | Not in new taxonomy. Camera `loss_partial` uses a different mechanism (single region with `fraction` param). Old patch_occlusion preserved as legacy. |
+| C5 jpeg_compression | — (removed) | — |
+| C6 gamma_distortion | — (removed) | — |
+
+### Duplicate "Loss Partial" resolution
+
+The original task specification listed LiDAR as having 5 effects but enumerated only 4 items: frame deletion, Gaussian noise, loss partial, loss complete. The text "loss partial" appeared twice in the source — a transcription artifact. The design treats Loss Partial as a single effect, giving LiDAR exactly **4** effects. The claimed total of "5 LiDAR + 4 camera + 4 radar = 13 effects" is therefore **12** effects. This document uses the enumerated lists as the source of truth.
 
 ---
 
 ## 1. Corruption Types by Modality
 
-Each entry: short mechanism description, well-known sensor-corruption origin, and config parameters.
+Each entry: short mechanism description and config parameters.
 
-### 1.1 Radar — 4D Imaging Radar (7 types)
+### 1.1 Radar — 4D Imaging Radar (4 effects)
 
-| # | Name | Mechanism | Origin / Standard | Parameters |
-|---|------|-----------|------------------|------------|
-| R1 | **Power Gaussian noise** | Additive Gaussian noise to per-bin power values (`rdr_sparse[:,3]` RCS, `rdr_polar_3d[0]` power plane, `pc100p` power channels). Noise is independent per bin. | Standard sensor-noise model — thermal noise in receiver chain. | `std` (float, noise sigma), `clip_min` (float, floor dB) |
-| R2 | **Sparse-point dropout** | Randomly drop rows from `rdr_sparse` (the N×4 or N×5 point cloud) by Bernoulli sampling. Each point kept with probability `1 - rate`. Equivalent to reduced probability-of-detection. | Common radar detection dropout — target RCS below noise floor causes missed detections. | `rate` (float ∈ [0,1], fraction dropped) |
-| R3 | **Range attenuation** | Scale power values by `exp(-alpha * (r - r0)+)` where `r` is range from sensor origin. Simulates increased path loss or atmospheric absorption beyond a range threshold. | Free-space path loss + atmospheric attenuation (ITU-R P.676). | `alpha` (float, dB/m), `r0` (float, start range in m) |
-| R4 | **Doppler corruption** | Add noise to or zero out the doppler channel (`rdr_polar_3d[1]` or cube doppler plane). Simulates velocity ambiguity or micro-Doppler smearing. | Doppler ambiguity / micro-Doppler spread from vibration or rotation. | `mode` (enum: `gaussian`|`zero`|`mask`), `std` (float, gaussian sigma) |
-| R5 | **Ghost point injection** | Inject N random false-positive radar points into `rdr_sparse`. Positions uniformly sampled from the sensor FOV; power values sampled from the observed power distribution. | Multipath reflections or sidelobe detections create phantom targets. | `num` (int, points per frame), `power_bounds` (tuple [min, max] dB) |
-| R6 | **Azimuth/elevation jitter** | Add angular noise to point positions before Cartesian conversion (equivalent to perturbing `theta` in `rdr_polar_3d` bin assignment). Rotates each point around the sensor origin by `N(0, sigma_deg)` degrees. | Angle estimation noise from monopulse processing / beamwidth limits. | `sigma_deg` (float, angular std dev), `per_axis` (bool, independent azimuth/elevation) |
-| R7 | **Power saturation / clipping** | Clamp power values above a configurable ceiling. Simulates ADC saturation near strong reflectors. | ADC saturation (common in close-range high-RCS targets). | `ceiling` (float, max dB), `floor` (float, min dB, default -inf) |
+| # | Name | Mechanism | Parameters |
+|---|------|-----------|------------|
+| R1 | **Frame deletion** | Skip entire radar frame. Deterministic mode: delete every Nth frame (or frames in an explicit index list). Random mode: delete each frame with independent probability p. When fired, sets `rdr_sparse` → `None`, `rdr_polar_3d` → `None`, `pc100p` → `None`. | `mode` (str, `"deterministic"` or `"random"`, default `"random"`), `interval` (int, every Nth — used when `mode="deterministic"` and no `index_list`), `index_list` (list[int], explicit indices to delete — overrides `interval`), `p` (float, per-frame prob — used when `mode="random"`, default 0.1) |
+| R2 | **Noise-induced shifts** | Shift radar detection positions by a noise process. Each point in `rdr_sparse[:, :3]` is displaced by a random vector drawn from a zero-mean Gaussian (or uniform) distribution. This is a _coordinate shift_ effect — distinct from additive power noise. Also shifts `pc100p[:, :3]`. | `shift_std` (float, std dev of displacement in metres, default 1.0), `distribution` (str, `"gaussian"` or `"uniform"`, default `"gaussian"`), `clip_radius` (float, max displacement radius in metres, optional — clips extreme outliers) |
+| R3 | **Loss partial** | Remove a fraction of radar detections/points via Bernoulli sampling on `rdr_sparse` rows. Each point independently kept with probability `(1 - fraction)`. Also drops `pc100p` rows. | `fraction` (float ∈ [0, 1], fraction of points/returns to remove, default 0.3) |
+| R4 | **Loss complete** | Full radar data blackout for this frame. Sets `rdr_sparse` → `None`, `rdr_polar_3d` → `None`, `pc100p` → `None`. Semantic marker: this frame experienced a total sensor blackout (as opposed to "every point happened to be dropped"). | (none) |
 
-### 1.2 LiDAR — 64-beam Mechanical LiDAR (5 types)
+### 1.2 LiDAR — 64-beam Mechanical LiDAR (4 effects)
 
-| # | Name | Mechanism | Origin / Standard | Parameters |
-|---|------|-----------|------------------|------------|
-| L1 | **Random point dropout** | Uniform-random removal of N% of points from `ldr64` point cloud. Simulates reduced reflectivity or return loss. | Standard dropout — reduced surface reflectivity / incidence angle. | `rate` (float ∈ [0,1]) |
-| L2 | **FOV occlusion (azimuth sector)** | Keep only points whose azimuth falls outside `[min_deg, max_deg]` (same mechanism as existing `missed` effect, now parameterized here). | Physical FOV blockage (vehicle body, debris, weather). | `min_deg`, `max_deg` (float, degrees), `invert` (bool, keep *inside* instead) |
-| L3 | **Gaussian position noise** | Add independent `N(0, sigma)` noise to each (x,y,z) coordinate in `ldr64`. Simulates ranging jitter. | Standard range-measurement noise (time-of-flight jitter). | `sigma_xy` (float, m), `sigma_z` (float, m, optional — defaults to `sigma_xy`) |
-| L4 | **Range-limited dropout** | Drop points outside `[r_min, r_max]`. Simulates minimum-range blind spot and maximum-range attenuation. | LiDAR minimum range / maximum unambiguous range. | `r_min` (float, m, default 0), `r_max` (float, m, default 200) |
-| L5 | **Downsampling** | Keep every Nth point (uniform stride). Simulates reduced angular resolution (fewer beams or lower rotation rate). | Reduced beam count or angular resolution. | `stride` (int, keep every Nth point) |
+| # | Name | Mechanism | Parameters |
+|---|------|-----------|------------|
+| L1 | **Frame deletion** | Skip entire LiDAR frame. Same semantics as radar frame deletion. When fired, sets `ldr64` → `None`. | `mode` (str, `"deterministic"` or `"random"`), `interval` (int), `index_list` (list[int]), `p` (float) |
+| L2 | **Gaussian noise** | Add independent `N(0, sigma_xy)` noise to each (x, y) and `N(0, sigma_z)` to z position, plus `N(0, sigma_intensity)` to the intensity channel. | `sigma_xy` (float, m, default 0.1), `sigma_z` (float, m, optional — defaults to sigma_xy), `sigma_intensity` (float, intensity units, default 0.0 — set > 0 to also corrupt intensity) |
+| L3 | **Loss partial** | Remove a fraction of LiDAR points via Bernoulli sampling. Each point kept with probability `(1 - fraction)`. | `fraction` (float ∈ [0, 1], default 0.3) |
+| L4 | **Loss complete** | Full LiDAR blackout. Sets `ldr64` → `None`. | (none) |
 
-### 1.3 Camera — Multi-view RGB (6 types)
+### 1.3 Camera — Multi-view RGB (4 effects)
 
-| # | Name | Mechanism | Origin / Standard | Parameters |
-|---|------|-----------|------------------|------------|
-| C1 | **Gaussian noise** | Additive `N(0, sigma)` per pixel per channel. | Standard sensor read noise. | `sigma` (float, pixel value std, 0–255 range) |
-| C2 | **Motion blur** | Convolve image with a directional box/gaussian kernel. Simulates camera motion during exposure. | Standard motion blur — camera platform vibration / ego-motion. | `kernel_size` (int, odd), `angle_deg` (float, blur direction), `intensity` (float, blur weight) |
-| C3 | **Brightness adjustment** | Multiply all pixel values by `factor` and clip to [0, 255]. | Exposure variation / auto-exposure instability. | `factor` (float, multiplier), `per_channel` (bool, default false) |
-| C4 | **Random patch occlusion** | Overlay N random rectangular patches (size `[h,w]`) filled with a fixed color or noise on the image. | Physical debris, raindrops on lens, sensor dead pixels. | `num_patches` (int), `max_size` (tuple [h,w] fraction of image), `fill` (enum: `black`|`white`|`mean`|`random`) |
-| C5 | **JPEG compression** | Encode/decode through cv2 JPEG at a configurable quality level. | Standard compression artifacts in transmitted video. | `quality` (int, 1–100, lower = more artifacts) |
-| C6 | **Histogram / gamma distortion** | Apply `gamma` correction (power-law). | Camera gamma / tone-mapping variation. | `gamma` (float, typical 0.5–2.0) |
+| # | Name | Mechanism | Parameters |
+|---|------|-----------|------------|
+| C1 | **Frame deletion** | Skip entire camera frame. Same semantics as radar/LiDAR. When fired, all camera-image keys found in the dict_item are set to a zero-filled normalized tensor. | `mode` (str), `interval` (int), `index_list` (list[int]), `p` (float) |
+| C2 | **Gaussian noise** | Additive `N(0, sigma)` per pixel per channel in normalized tensor space. | `sigma` (float, pixel value std in 0–255 units, default 10) |
+| C3 | **Loss partial** | Zero out a single contiguous rectangular region covering approximately `fraction` of the image area. Region is randomly positioned. Distinct from multi-patch occlusion — this is the canonical "partial data loss" corruption. | `fraction` (float ∈ [0, 1], fraction of image area to zero, default 0.2) |
+| C4 | **Loss complete** | Full image blackout. All camera keys replaced with a zero-filled normalized tensor (pixel values ≈ -mean/std). | (none) |
 
-**Note on existing camera crack/scratch overlay:** The existing overlay mechanism at L570–580 is replaced by the more general C4 (patch occlusion). If crack/scratch overlay is specifically desired it can be implemented as a special case of C4 with pre-defined mask patterns — but the existing PNG-based approach is skipped because the referenced files do not exist and reproducing them is scope creep.
+### 1.4 Design Decision: Loss Partial vs Loss Complete
 
-**Note on existing LiDAR "missed" effect:** L2 subsumes the existing mechanism. The new module reimplements it rather than calling the existing inline code, so the dependency on `cfg_effect.lid.effect == 'missed'` string matching is eliminated.
+**Decision: Distinct explicit effects.** `loss_complete` is a separate effect function, NOT `loss_partial(fraction=1.0)`.
+
+Rationale:
+1. **Semantic difference:** `loss_partial` models a stochastic data-loss process (each point/region has independent probability of being lost). `loss_complete` models a deterministic total sensor blackout. The two represent different failure modes for robustness testing.
+2. **Camera mechanism divergence:** For camera, `loss_partial(fraction=0.3)` blacks out a region of the image (30% area). `loss_partial(fraction=1.0)` would need to black out the entire image, but the contiguous-region mechanism doesn't naturally extend to covering 100% of the image without being a qualitatively different operation (it would need to draw a region larger than the image). `loss_complete` is implemented as setting the entire tensor to zero — a distinct code path.
+3. **Metadata clarity:** Downstream consumers (evaluation scripts, metrics, visualization) can distinguish "frame had a total sensor blackout" from "frame had extreme partial loss" by the effect name in the metadata. This matters for per-failure-mode analysis.
+4. **Edge-case determinism:** `loss_partial(fraction=1.0)` on point clouds (LiDAR/radar) produces an empty array — which is the same as `loss_complete`. But `loss_complete` sets the key to `None` (allowing downstream `_has_key` to correctly report "this sensor has no data"), whereas `loss_partial` leaves an empty array `shape=(0, N)`. Using `None` vs empty array is a cleaner signal for downstream code.
 
 ---
 
@@ -54,13 +98,12 @@ Each entry: short mechanism description, well-known sensor-corruption origin, an
 ### 2.1 File layout
 
 ```
-datasets/effects/           # NEW standalone directory
+datasets/effects/
     __init__.py             # exports NoiseInjector + config schema
     noise_injection.py      # NoiseInjector class + per-effect functions
     config.py               # EffectConfig dataclass schema
+    test_noise_injection.py # Unit tests
 ```
-
-**Rationale for `datasets/effects/` over `utils/effects/`:** The module operates on the dict_item format produced by the dataset's `__getitem__()`, which is a data-pipeline concern. Colocating it under `datasets/` keeps the data-pipeline logic together and mirrors where `kradar_fusion_v1_0_calib_change.py` lives (which is the file that currently contains inline effect code).
 
 ### 2.2 Core class
 
@@ -71,257 +114,116 @@ class NoiseInjector:
     Operates on post-__getitem__ dict_item; no dependency on cfg_effect.
     """
     def __init__(self, config: EffectConfig):
-        """
-        config: EffectConfig dataclass with per-modality effect lists.
-        Sets up the per-effect random seeds and state machines.
-        """
         self.config = config
         self.rng = np.random.default_rng(config.seed)
+        # Resolve effect lists from config
+        ...
 
-    def __call__(self, dict_item: dict) -> dict:
+    def should_skip(self, frame_index: int, modality: str) -> bool:
+        """
+        Pre-check for frame_deletion effects. Called by the eval script
+        BEFORE fetching the frame to avoid wasted data loading.
+        Returns True if this frame_index should be skipped for the
+        given modality based on frame_deletion config.
+        """
+        ...
+
+    def __call__(self, dict_item: dict, frame_index: int | None = None) -> dict:
         """
         Apply all configured corruptions to one sample's dict_item.
-        Called once per frame after dataset.__getitem__().
-        Modifies dict_item in-place and returns it.
-        Order: radar -> LiDAR -> camera (by increasing data size;
-               camera last because images are largest and least disruptive
-               to reorder if point-cloud effects change the point count).
+        If frame_index is provided, deterministic frame_deletion
+        (interval / index_list) can use it. When frame_deletion fires,
+        the affected sensor keys are set to None and subsequent
+        effects skip them via _has_key().
+        Order: radar -> LiDAR -> camera.
         """
-        if self.config.radar:
-            dict_item = self._apply_radar(dict_item)
-        if self.config.lidar:
-            dict_item = self._apply_lidar(dict_item)
-        if self.config.camera:
-            dict_item = self._apply_camera(dict_item)
-        # Tag the dict to record what was applied
+        ...
         dict_item['meta']['noise_injection'] = self._metadata()
         return dict_item
 ```
 
-### 2.3 Per-modality dispatch methods
+### 2.3 Per-effect function signature
+
+Each effect is a pure function:
 
 ```python
-def _apply_radar(self, d: dict) -> dict:
-    """Applies each configured radar effect in order. Each effect called
-    only if its probability gate [0,1] < p(seed_draw)."""
-    for eff in self.config.radar:
-        if self.rng.uniform() < eff.p:
-            d = eff.fn(d, eff.params, self.rng)
-    return d
-
-def _apply_lidar(self, d: dict) -> dict: ...
-def _apply_camera(self, d: dict) -> dict: ...
+def effect_name(dict_item: dict, params: dict, rng: np.random.Generator) -> dict
 ```
 
-Each effect is a pure function with signature:
+The function modifies dict_item in-place and returns it. Effects that fire (probability gate passed) may set sensor keys to `None` (for deletion/blackout effects) or modify data in-place.
 
-```python
-def gaussian_noise_radar(dict_item: dict, params: dict, rng: np.random.Generator) -> dict
-def sparse_point_dropout(dict_item: dict, params: dict, rng: np.random.Generator) -> dict
-# ... one function per effect listed in §1
-```
+### 2.4 Config schema
 
-### 2.4 Config schema (dataclass)
+Unchanged from Rev 1 — `EffectConfig` and `Effect` dataclasses remain the same. The `Effect.params` dict carries effect-specific parameters per the tables in §1.
 
-```python
-@dataclass
-class EffectConfig:
-    """Top-level config for the noise injection module."""
-    seed: int = 42           # Master seed; each effect derives a sub-seed
-    radar: list[Effect] | None = None
-    lidar: list[Effect] | None = None
-    camera: list[Effect] | None = None
-
-@dataclass
-class Effect:
-    """One effect instance (compositional — multiple per modality)."""
-    name: str                # Effect name, e.g. 'power_gaussian_noise'
-    p: float = 1.0           # Per-frame probability of applying this effect
-    params: dict = field(default_factory=dict)  # Effect-specific parameters
-```
-
-**Composability:** Multiple Effect entries per modality — e.g. `radar=[Effect('power_gaussian_noise', p=0.8, params={'std': 0.1}), Effect('ghost_points', p=0.3, params={'num': 5})]` applies power noise on 80% of frames and ghost points on 30% of frames, independently per frame. If both fire on the same frame, they apply in list order.
-
-### 2.5 Effect registry
-
-A dict mapping effect name → function, loaded at module import time:
+### 2.5 Effect registries
 
 ```python
 RADAR_EFFECTS: dict[str, Callable] = {
-    'power_gaussian_noise':     gaussian_noise_radar,
-    'sparse_point_dropout':     sparse_point_dropout,
-    'range_attenuation':        range_attenuation,
-    'doppler_corruption':       doppler_corruption,
-    'ghost_points':             ghost_points,
-    'azimuth_jitter':           azimuth_jitter,
-    'power_saturation':         power_saturation,
+    'frame_deletion':       radar_frame_deletion,
+    'noise_induced_shifts': radar_noise_induced_shifts,
+    'loss_partial':         radar_loss_partial,
+    'loss_complete':        radar_loss_complete,
 }
-LIDAR_EFFECTS: dict[str, Callable] = { ... }
-CAMERA_EFFECTS: dict[str, Callable] = { ... }
+
+LIDAR_EFFECTS: dict[str, Callable] = {
+    'frame_deletion':       lidar_frame_deletion,
+    'gaussian_noise':       lidar_gaussian_noise,
+    'loss_partial':         lidar_loss_partial,
+    'loss_complete':        lidar_loss_complete,
+}
+
+CAMERA_EFFECTS: dict[str, Callable] = {
+    'frame_deletion':       camera_frame_deletion,
+    'gaussian_noise':       camera_gaussian_noise,
+    'loss_partial':         camera_loss_partial,
+    'loss_complete':        camera_loss_complete,
+}
 ```
 
----
-
-## 3. Bypass vs Fix Decision
-
-### Decision: Bypass (Option b) — build an independent entry point
-
-The new module is called **after** `dataset.__getitem__()` returns, as a post-processing wrapper. It does not depend on `cfg_effect`, `consider_effects`, `build_dataset`, or any of the four broken links in the existing chain.
-
-### Three blockers + phantom class: how each is handled
-
-| Blocker | Existing broken path | Bypass approach |
-|---------|---------------------|-----------------|
-| **#1** `build_dataset()` has no `**kwargs` (util_pipeline.py:56) | Cannot forward `cfg_effect` to dataset constructor | Not touched. The module gets data *after* the dataset produces it — no constructor injection needed. |
-| **#2** Camera overlay PNGs don't exist (resources/imgs/) | `FileNotFoundError` on first camera frame | Not touched. Camera corruptions use procedural generation (C4 patches, C1 noise, C2 blur) — no external image assets. |
-| **#3** `consider_effects = False` hardcoded (main_fusion_eval_0.py:75) | Dead code branch unreachable | Not touched. The eval script imports `NoiseInjector` directly and never touches the `consider_effects` / `cfg_effect` block. The old dead code can be left in place or pruned — it's inert either way. |
-| **Phantom class** `KRadarFusion_v1_0_AffectedSensor` not in `__all__` | `KeyError` if ever reached | Not touched. The eval script uses `build_dataset(self, split='test')` with the standard dataset name from the config YAML — unaffected by the phantom string at line 39 (which is overridden when `build_dataset` resolves `p_pline.cfg.DATASET.NAME` from the yaml config, not line 39's override). |
-
-### What IS touched: exactly one file
-
-| File | Change |
-|------|--------|
-| `scripts/main_fusion_eval_0.py` | Add 3–4 lines: import `NoiseInjector`, construct it with a config dict, call it on each `dict_item` after `dataset[idx_frame]`. |
-
-That is the **only** integration point in the entire main codebase. All corruption logic lives in `datasets/effects/`.
-
-### Tradeoffs of the rejected option (fix the chain)
-
-**Option (a) Fix the existing system** would require touching:
-
-1. `utils/util_pipeline.py` — add `**kwargs` to `build_dataset()` signature and pass them to the constructor
-2. `datasets/__init__.py` — register either `KRadarFusion_v1_0_CalibChange` or the phantom class name
-3. `scripts/main_fusion_eval_0.py` — fix the class name string, flip `consider_effects = True`
-4. `datasets/kradar_fusion_v1_0_calib_change.py` — add radar effect hooks inline in `get_rdr_sparse()`, `get_rdr_polar_3d()`, `get_rpcs()`
-5. `resources/imgs/` — generate crack/scratch PNGs (or modify the code to skip missing files)
-
-**Risks:**
-- `build_dataset()` is used by the training pipeline (`pipeline_detection_v1_0.py:55-56`). Adding `**kwargs` to it is safe in Python (backward-compatible), but it creates a new code path through dataset construction that could interact with config loading. Every change to shared infrastructure carries regression risk to training.
-- The eval script line 39 sets `self.cfg.DATASET.NAME = 'KRadarFusion_v1_0_AffectedSensor'` — if this is the *only* name the script works with and it doesn't match the real class, the eval script must change regardless. Once you're changing the eval script anyway, the bypass approach costs the same touch-point but with zero risk to training.
-- Adding radar effects inline means scattering effect logic across 4 separate methods in a 1600+ line file, making the dataset harder to read and test.
-- The existing mechanism lacks randomization, composition, and metadata-tagging — retrofitting those would require restructuring the inline code anyway.
-
-**Verdict:** Bypass is lower risk (zero regression on training, zero regression on existing eval if the module is disabled), cleaner separation of concerns, and gives all three modalities first-class compositional support from day one.
+Legacy effect registries (`RADAR_EFFECTS_LEGACY`, etc.) are maintained in the source file for backward compatibility but are NOT loaded into `ALL_EFFECTS` and NOT used by `NoiseInjector`.
 
 ---
 
-## 4. Integration Points
+## 3. Integration Points
 
-### 4.1 Eval script — `scripts/main_fusion_eval_0.py`
+Unchanged from Rev 1. The module is called as a post-processing step after `dataset.__getitem__()`. Only `scripts/main_fusion_eval_0.py` imports `NoiseInjector` (3–4 lines). Training pipeline (`pipelines/pipeline_detection_v1_0.py`) has zero references.
 
-The only file that changes. Approximate diffs:
+### Frame deletion integration
 
-```python
-# === NEW: at top of file ===
-import sys, os
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-from datasets.effects.noise_injection import NoiseInjector
-from datasets.effects.config import EffectConfig, Effect
-
-# === NEW: inside ResultVis.__init__, after line 102 (end of cfg_effect dead block) ===
-self.injector = NoiseInjector(EffectConfig(
-    seed=42,
-    radar=[
-        Effect('power_gaussian_noise', p=0.8, params={'std': 0.05}),
-    ],
-    lidar=[
-        Effect('random_dropout', p=1.0, params={'rate': 0.2}),
-    ],
-    camera=[
-        Effect('gaussian_noise', p=0.5, params={'sigma': 10}),
-        Effect('motion_blur', p=0.3, params={'kernel_size': 5, 'angle_deg': 45, 'intensity': 1.0}),
-    ],
-))
-
-# === NEW: inside vis_objects() line 111, after `dict_item = dataset[idx_frame]` ===
-dict_item = self.injector(dict_item)
-```
-
-That is the full extent of integration. The script's `collate_fn`, network forward pass, visualization code, and metric collection handle corrupted data identically to clean data (because the data shape does not change for most effect types — the exceptions, like dropout, reduce point count but the collate_fn already handles variable-length point clouds).
-
-### 4.2 Training pipeline — `pipelines/pipeline_detection_v1_0.py`
-
-**Zero changes.** The training script never imports or references `NoiseInjector`. The `build_dataset()` calls at lines 55–56 pass no corruption config. The dataset's `__getitem__` is unmodified. Training data is never corrupted.
-
-### 4.3 Visualization script — `tools/asf_visualization/main_get_videos.py`
-
-Optionally updated if visualization of corrupted data is desired. Same pattern: instantiate `NoiseInjector` and call on each `dict_item` after `__getitem__`. Not required for the core robustness-testing use case.
+When frame_deletion is configured, the eval script SHOULD call `injector.should_skip(idx, modality)` before loading each frame to avoid wasted I/O. If `should_skip` is not called and the frame is loaded anyway, `__call__` handles it by setting sensor keys to `None` — the frame is still returned but the affected modality's data is empty.
 
 ---
 
-## 5. Verification Plan
+## 4. Verification Plan
 
-### 5.1 Unit-level: per-effect function correctness
-
-For each effect function in §1:
+### 4.1 Per-effect verification
 
 | Effect | How to verify | Acceptance |
 |--------|---------------|------------|
-| R1 Power Gaussian | Load a frame's `rdr_sparse`, apply effect with `std=0.5`, check `hist(new[:,3] - old[:,3])` approximates `N(0, 0.5)` | KS test p > 0.05 or visual histogram inspection |
-| R2 Sparse-point dropout | `rate=0.5`, check `len(new_rdr) ≈ 0.5 * len(old_rdr)` | Within ±5% of expected count |
-| R3 Range attenuation | Compute range of each point, confirm power decays beyond `r0` | Power at `r > r0` strictly lower than power at `r <= r0` for same RCS |
-| R4 Doppler corruption | `mode='zero'` → check doppler channel is all zeros; `mode='gaussian'` → check noise added | Zero mode: `all(new_dop == 0)`. Gaussian: std matches param |
-| R5 Ghost points | `num=10`, check `len(new_rdr) - len(old_rdr) == 10` (unless combined with dropout) | Point count delta matches `num` |
-| R6 Azimuth jitter | Compute azimuth before/after, check distribution of delta approximates `N(0, sigma_deg)` | Std of angular delta within 10% of `sigma_deg` |
-| R7 Power saturation | `ceiling=100`, check `all(new_power <= 100)` | All values ≤ ceiling |
-| L1 Random dropout | `rate=0.3`, check point count | Within ±5% of expected |
-| L2 FOV occlusion | `min_deg=-30, max_deg=30`, compute azimuth of all kept points | No point has azimuth in [-30, 30] degrees |
-| L3 Position noise | `sigma_xy=0.1`, check `mean(norm(new_xyz - old_xyz)) ≈ 0.1*sqrt(3)` for 3D or `≈ 0.1*sqrt(2)` for xy-only | Mean error within 20% of expected |
-| L4 Range dropout | `r_min=5, r_max=50`, check range of all kept points | All kept: `r ∈ [5, 50]` |
-| L5 Downsampling | `stride=4`, check `len(new_ldr) ≈ len(old_ldr)/4` | Count within ±5% of expected |
-| C1 Gaussian noise | Per-pixel diff vs original approximates `N(0, sigma)` | Mean pixel diff ≈ 0, std ≈ `sigma` |
-| C2 Motion blur | Check image is visibly blurred (visual); check kernel applied correctly (unit test on known pattern) | Convolution produces expected output on test pattern |
-| C3 Brightness | `factor=1.5`, check `mean(new_img) ≈ 1.5 * mean(old_img)` (within clipping tolerance) | Ratio within 5% before clipping |
-| C4 Patch occlusion | `num_patches=3, fill='black'`, check N rectangular regions have all-zero pixel values | Exactly N zero blocks found |
-| C5 JPEG | `quality=10`, check file-size-like metric differs from original | PSNR vs original < 30 dB |
-| C6 Gamma | `gamma=2.0`, check power-law relationship | Mean reponse error < 5% |
+| Frame deletion (deterministic) | `interval=10, frame_index=20` → sensor key set to `None` | Key is `None` |
+| Frame deletion (random) | `p=1.0` → sensor key set to `None` | Key is `None` |
+| Radar noise_induced_shifts | Compute position delta before/after; check `std(delta) ≈ shift_std` | Mean of `std(delta)` within 30% of `shift_std` |
+| Loss partial (all modalities) | `fraction=0.5`, check point count ~50% of original | Count within ±5% of expected |
+| Loss complete (all modalities) | Sensor key is `None` after effect | Key is `None` |
+| LiDAR Gaussian noise | Std of position delta ≈ param | Within 30% of sigma_xy/sigma_z |
+| Camera Gaussian noise | Std of pixel delta > 0 when sigma > 0 | Pixel std > 0 |
+| Camera loss partial | Exactly one contiguous zeroed region found | 1 region detected; area ~ fraction × total |
 
-### 5.2 Integration-level: bypass strategy works end-to-end
+### 4.2 Integration
 
-1. **Dry-run without injector:** Run `scripts/main_fusion_eval_0.py` with `injector` = identity pass-through. Confirm eval produces same results as current baseline (no regression).
-2. **Dry-run with injector enabled but zero-corruption config** (all `p=0.0` or empty effect lists). Confirm numerical bit-exact output to the baseline for at least one frame.
-3. **Run with one effect per modality at `p=1.0`:** Confirm the script completes without errors for the full sequence. Check output metrics differ from clean baseline.
-4. **Phantom class avoidance:** Confirm the eval script never references `KRadarFusion_v1_0_AffectedSensor` — only the config YAML's dataset name is used via `build_dataset(self, split='test')` at line 105.
-
-### 5.3 Regression: training pipeline is untouched
-
-1. Confirm `pipelines/pipeline_detection_v1_0.py` has zero lines referencing `NoiseInjector`, `effects`, `cfg_effect`, or any file under `datasets/effects/`.
-2. Confirm `utils/util_pipeline.py` `build_dataset()` is unmodified (still no `**kwargs`).
-3. Run one training epoch on a single sequence (seq '10', 62 frames) with batch_size=1 to confirm no import error or data-path change.
-
-### 5.4 Metadata verification
-
-1. After injection, confirm `dict_item['meta']['noise_injection']` is a dict listing every effect that was drawn (name, parameter values, `p` threshold, seed sub-branch).
-2. In the eval output log, print this metadata for each frame to allow per-sample audit.
+- All 12 effects can be composed in any order via `EffectConfig`
+- Frame deletion runs before other effects in _apply_list (pre-check) so deleted data is not unnecessarily processed
+- Metadata injection works with all effect combinations
 
 ---
 
-## Appendix A: Effect ordering within a modality
-
-Within each modality, effects are applied in the order listed in the `EffectConfig` list. The default order (and the recommended one) is:
-
-**Radar:** R6 (jitter) → R7 (saturation) → R1 (power noise) → R4 (doppler) → R3 (attenuation) → R2 (dropout) → R5 (ghosts)
-
-Rationale: geometrical perturbation first (jitter), then signal-domain changes (saturation, noise, doppler, attenuation), then structural changes (dropout removes points, ghosts adds them last so they survive).
-
-**LiDAR:** L4 (range limit) → L2 (FOV occlusion) → L3 (position noise) → L1 (dropout) → L5 (downsample)
-
-Rationale: clipping first (range, FOV), then noise, then subsampling.
-
-**Camera:** C3 (brightness) → C6 (gamma) → C1 (noise) → C2 (blur) → C4 (occlusion) → C5 (JPEG)
-
-Rationale: radiometric transforms first, then additive noise, then blur (which would smooth other artifacts), then structural patches, then compression.
-
----
-
-## Appendix B: Relationship to existing code
+## 5. Relationship to existing code
 
 | File | Existing role | New role | Conflict? |
 |------|--------------|----------|-----------|
-| `datasets/effects/` (NEW) | — | All corruption logic | No |
-| `datasets/kradar_fusion_v1_0_calib_change.py` | Contains inline camera/LiDAR effects (dead code) | Unchanged; inline effects remain inert behind `cfg_effect` guard | No |
-| `scripts/main_fusion_eval_0.py` | Eval script with dead effect block | Add `NoiseInjector` call (3 lines) | No |
-| `utils/util_pipeline.py` | `build_dataset()` factory | Unchanged | No |
-| `datasets/__init__.py` | Dataset registry | Unchanged | No |
-| `pipelines/pipeline_detection_v1_0.py` | Training pipeline | Unchanged | No |
-| `tools/asf_visualization/main_get_videos.py` | Visualization | Unchanged (optional later) | No |
+| `datasets/effects/` | All corruption logic | Same — taxonomy narrowed from 18 → 12 effects | No |
+| `datasets/effects/noise_injection.py` | 18-effect implementation | 12-effect implementation + legacy section | No — backward-compatible via legacy registries |
+| `datasets/kradar_fusion_v1_0_calib_change.py` | Inline camera/LiDAR effects (dead code) | Unchanged | No |
+| `scripts/main_fusion_eval_0.py` | Eval script with dead effect block | Add `NoiseInjector` call | No |
+| Training pipeline | — | Zero changes | No |
