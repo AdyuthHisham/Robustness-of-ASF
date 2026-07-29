@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "verification_report_part_ghostflag.md",
+                "file": "noise-visual-inspection-report.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "verification_report_part_ghostflag"
+              "title": "noise-visual-inspection-report"
             }
           }
         ]
@@ -185,9 +185,9 @@
   },
   "active": "bcc5bd69e8fccc4b",
   "lastOpenFiles": [
+    "verification_report_part_ghostflag.md",
     "noise-injection-taxonomy-revision-report.md",
     "verification_report_part_ghostflag 1.md",
-    "verification_report_part_ghostflag.md",
     "noise-injection-design.md",
     "home/adhish/Productivity/AMSCUP/test-bed/src/Modules/robust_testing/kradar/docs/verification_report_part_ghostflag.md",
     "home/adhish/Productivity/AMSCUP/test-bed/src/Modules/robust_testing/kradar/docs",

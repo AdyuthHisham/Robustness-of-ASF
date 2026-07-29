@@ -79,6 +79,7 @@ CAMERA_EXTRINSICS = {
 OUTPUT_SCHEMA = [
     "sequence_id",
     "frame_idx",
+    "timestamp",
     "obj_tracking_id",
     "obj_class",
     "obj_x",
@@ -119,6 +120,7 @@ OUTPUT_SCHEMA = [
     "cam_rear_visibility_score",
     "num_sensors_visible",
     "primary_sensor",
+    "ghost_flag",
 ]
 
 # Weather labels: the allowed weather conditions (excluding "normal" as per api_contracts.md example)

@@ -1,4 +1,9 @@
 import pickle
+import os as _os
+from typing import Optional
+
+import numpy as _np
+import yaml as _yaml
 
 # Camera mapping: direction -> (cam_number, cam_key)
 # front: 1,2 | right: 3,4 | rear: 5,6 | left: 7,8
@@ -8,6 +13,30 @@ CAMERA_MAP = {
     'rear': [(5, 'rear0'), (6, 'rear1')],
     'left': [(7, 'left0'), (8, 'left1')],
 }
+
+# Calibration resources base path
+_CALIB_ROOT = '/home/adhish/Productivity/AMSCUP/repos/K-Radar/resources/cam_calib'
+
+
+def _load_dist_coeffs(cam_key: str) -> Optional[_np.ndarray]:
+    """Load distortion coefficients [k1,k2,p1,p2,k3] from per-camera YAML.
+
+    K-Radar YAMLs store coefficients as k1,k2,k3,k4,k5 which map to the
+    OpenCV convention [k1,k2,p1,p2,k3] at positions [0,1,2,3,4].
+    Returns None if the file does not exist or cannot be read (backward compatible).
+    """
+    yaml_path = f'{_CALIB_ROOT}/common/cam_{cam_key}.yml'
+    if not _os.path.exists(yaml_path):
+        return None
+    try:
+        with open(yaml_path, 'r') as f:
+            data = _yaml.safe_load(f)
+        return _np.array([
+            data['k1'], data['k2'], data['k3'], data['k4'], data['k5']
+        ], dtype=_np.float64)
+    except Exception:
+        return None
+
 
 def load_camera_calibration(seq=1):
     """Load T_params_seq pickle for a given sequence. Returns dict of cam_key -> params."""
@@ -28,6 +57,7 @@ def get_camera_params(direction, seq=1):
             'camera_intrinsics': params['camera_intrinsics'],  # 4x4
             'radar2camera': params['radar2camera'],            # 4x4
             'camera2radar': params['camera2radar'],            # 4x4
+            'dist_coeffs': _load_dist_coeffs(cam_key),
         })
     return result
 

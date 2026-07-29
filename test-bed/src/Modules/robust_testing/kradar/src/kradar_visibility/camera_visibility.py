@@ -61,15 +61,25 @@ def project_point_to_image(point_3d, camera_intrinsics, T_radar2cam, dist_coeffs
     if dist_coeffs is not None and len(dist_coeffs) >= 4:
         k1, k2, p1, p2 = dist_coeffs[0], dist_coeffs[1], dist_coeffs[2], dist_coeffs[3]
         k3 = dist_coeffs[4] if len(dist_coeffs) > 4 else 0.0
-        
-        r2 = x*x + y*y
+
+        # Convert pixel coordinates to normalized image coordinates first.
+        # OpenCV distortion model operates on normalized coords (X/Z, Y/Z),
+        # NOT on pixel coordinates — applying it to pixel coords causes r^2 to
+        # be ~10^6 instead of ~4, producing catastrophic blowup.
+        fx, fy = K[0, 0], K[1, 1]
+        cx, cy = K[0, 2], K[1, 2]
+        x_norm = (x - cx) / fx
+        y_norm = (y - cy) / fy
+
+        r2 = x_norm*x_norm + y_norm*y_norm
         radial_distortion = 1 + k1*r2 + k2*(r2**2) + k3*(r2**3)
-        
-        x_distorted = x * radial_distortion + 2*p1*x*y + p2*(r2 + 2*x*x)
-        y_distorted = y * radial_distortion + p1*(r2 + 2*y*y) + 2*p2*x*y
-        
-        x = x_distorted
-        y = y_distorted
+
+        x_distorted_norm = x_norm * radial_distortion + 2*p1*x_norm*y_norm + p2*(r2 + 2*x_norm*x_norm)
+        y_distorted_norm = y_norm * radial_distortion + p1*(r2 + 2*y_norm*y_norm) + 2*p2*x_norm*y_norm
+
+        # Convert back to pixel coordinates
+        x = x_distorted_norm * fx + cx
+        y = y_distorted_norm * fy + cy
 
     u = x
     v = y
@@ -354,8 +364,12 @@ def camera_score(box_half_extents: np.ndarray,
         y_norm = (v - K[1, 2]) / K[1, 1]
         r2 = x_norm*x_norm + y_norm*y_norm
         radial = 1 + k1*r2 + k2*(r2**2) + k3*(r2**3)
-        u = u * radial + 2*p1*x_norm*y_norm + p2*(r2 + 2*x_norm*x_norm)
-        v = v * radial + p1*(r2 + 2*y_norm*y_norm) + 2*p2*x_norm*y_norm
+        # Apply distortion to normalized coords, then convert back to pixels.
+        # Previously used u*radial which mixes pixel and normalized spaces (wrong).
+        fx, fy = K[0, 0], K[1, 1]
+        cx, cy = K[0, 2], K[1, 2]
+        u = (x_norm * radial + 2*p1*x_norm*y_norm + p2*(r2 + 2*x_norm*x_norm)) * fx + cx
+        v = (y_norm * radial + p1*(r2 + 2*y_norm*y_norm) + 2*p2*x_norm*y_norm) * fy + cy
     
     # Convex hull of projected corners -> clip to image bounds
     x_min, x_max = np.min(u), np.max(u)
