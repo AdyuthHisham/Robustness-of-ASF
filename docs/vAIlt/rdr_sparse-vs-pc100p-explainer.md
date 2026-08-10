@@ -183,7 +183,7 @@ But **no model code** (`models/pre_processor/*.py`, `models/skeletons/*.py`, `sc
 
 | Property               | `rdr_sparse`                            | `pc100p`                                          |
 |------------------------|------------------------------------------|---------------------------------------------------|
-| **Point count**        | ~1000–10,000 (top-N% by power quantile) | 1,012,224 (every voxel in the 256×107×37 grid)   |
+| **Point count**        | ~1000–10,000 *after ROI filtering* (see correction below) — raw output of `generate_sparse_rdr_cube_for_wider_rtnh()` is ~1.5M (top 10% of the 150×400×250 `radar_zyx_cube` grid) | 1,012,224 (every voxel in the 256×107×37 grid)   |
 | **Columns**            | 4: `[x, y, z, power]`                   | 5: `[x, y, z, power, doppler]`                   |
 | **Threshold**          | Quantile-filtered (top 10% default)     | None — all voxels present                         |
 | **Derivation**         | From raw `.mat` tesseract via grid-index decode | From pre-computed `polar3d_{idx}.npy` or live cube  |
@@ -201,7 +201,7 @@ But **no model code** (`models/pre_processor/*.py`, `models/skeletons/*.py`, `sc
 **No.** They are not row-aligned, not point-count-aligned, and not intended to represent the same set of physical points.
 
 - `pc100p` contains **every voxel** in the radar's polar grid → ~1 million rows
-- `rdr_sparse` contains only the **top ~10% by power** of the cube's voxels → at most ~100k rows, typically ~1000–10,000 after ROI filtering
+- `rdr_sparse` contains the **top 10% by power** of the cube's voxels at generation time → ~1.5M rows raw (see correction below), reduced to ~1000–10,000 after ROI filtering at load time
 
 The only relationship is that both originate from the same underlying 4D radar cube (the "tesseract"): `rdr_sparse` via offline quantile-threshold + grid-to-cartesian conversion, and `pc100p` via live (or pre-computed) polar-to-cartesian conversion of the full cube. They share a common source but are **independent representations, not synchronised copies** of one another.
 
@@ -265,3 +265,14 @@ Here's the evidence chain:
 | `pc100p` NOT read by any model code | models/ directory | exhaustive search — zero hits |
 | Noise-injection treats both keys | `datasets/effects/noise_injection.py` | 144, 189, 207, 666–669, 773–774 |
 | No cross-reference between keys | entire repo | exhaustive search — zero hits |
+
+---
+
+## Correction (2026-07-30, from `docs/vAIlt/radar-mat-vs-npy-corruption-point-report.md`)
+
+This doc's original claim (Sections 1, 3, 4: "`rdr_sparse` is ~1000–10,000 points") conflates two different stages of the pipeline and needs disambiguation:
+
+- **Raw output of `generate_sparse_rdr_cube_for_wider_rtnh()`** (the function that actually produces `sprdr_*.npy`, i.e. `rdr_sparse` before any further filtering): measured directly against the real `radar_zyx_cube/cube_00033.mat` file — **exactly 1,500,000 points/frame** (top 10% of the `150×400×250 = 15,000,000`-voxel `radar_zyx_cube` grid). This is what actually gets written to disk as `rdr_sparse`.
+- **~1000–10,000 points**, as originally stated here, is the count *after* the fusion loader's ROI filter (`filter_roi`, `kradar_fusion_v1_0_calib_change.py:1125–1138`) crops the loaded `rdr_sparse` array down to the detection region — i.e. what the model actually consumes per-frame post-crop, not what's on disk.
+
+Both numbers are correct for what they describe; the original text above just didn't distinguish "on-disk `sprdr_*.npy` size" from "post-ROI-filter size fed to the model." Left the original phrasing in place above rather than rewritten, per this correction.

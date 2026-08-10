@@ -587,6 +587,105 @@ class TestDataQuality:
         assert distinct >= 1, f"Only {distinct} sequence(s) represented"
 
 
+class TestGhostFlag:
+    """Test cases for ghost_flag: radar-only detection with no other sensor corroboration.
+
+    ghost_flag formula (pipeline.py:481):
+        radar_visible AND NOT lidar64_visible AND NOT lidar128_visible
+        AND NOT (cam_front_visible OR cam_left_visible OR cam_right_visible OR cam_rear_visible)
+
+    These tests validate the boolean logic using synthetic data.
+    """
+
+    @staticmethod
+    def _ghost_expr() -> pl.Expr:
+        return (
+            pl.col("radar_visible")
+            & ~pl.col("lidar64_visible")
+            & ~pl.col("lidar128_visible")
+            & ~(pl.col("cam_front_visible") | pl.col("cam_left_visible")
+                | pl.col("cam_right_visible") | pl.col("cam_rear_visible"))
+        )
+
+    def test_ghost01_radar_only_sets_ghost_true(self):
+        """GHOST-01: radar_visible=True, all other visible=False -> ghost_flag must be True."""
+        df = pl.DataFrame({
+            "radar_visible": [True],
+            "lidar64_visible": [False],
+            "lidar128_visible": [False],
+            "cam_front_visible": [False],
+            "cam_left_visible": [False],
+            "cam_right_visible": [False],
+            "cam_rear_visible": [False],
+        })
+        assert df.select(self._ghost_expr()).item() is True
+
+    def test_ghost02_radar_with_lidar64_sets_ghost_false(self):
+        """GHOST-02: radar_visible=True, lidar64_visible=True -> ghost_flag must be False."""
+        df = pl.DataFrame({
+            "radar_visible": [True],
+            "lidar64_visible": [True],
+            "lidar128_visible": [False],
+            "cam_front_visible": [False],
+            "cam_left_visible": [False],
+            "cam_right_visible": [False],
+            "cam_rear_visible": [False],
+        })
+        assert df.select(self._ghost_expr()).item() is False
+
+    def test_ghost03_radar_with_lidar128_sets_ghost_false(self):
+        """GHOST-03: radar_visible=True, lidar128_visible=True -> ghost_flag must be False."""
+        df = pl.DataFrame({
+            "radar_visible": [True],
+            "lidar64_visible": [False],
+            "lidar128_visible": [True],
+            "cam_front_visible": [False],
+            "cam_left_visible": [False],
+            "cam_right_visible": [False],
+            "cam_rear_visible": [False],
+        })
+        assert df.select(self._ghost_expr()).item() is False
+
+    def test_ghost04_radar_with_camera_sets_ghost_false(self):
+        """GHOST-04: radar_visible=True, cam_front_visible=True -> ghost_flag must be False."""
+        df = pl.DataFrame({
+            "radar_visible": [True],
+            "lidar64_visible": [False],
+            "lidar128_visible": [False],
+            "cam_front_visible": [True],
+            "cam_left_visible": [False],
+            "cam_right_visible": [False],
+            "cam_rear_visible": [False],
+        })
+        assert df.select(self._ghost_expr()).item() is False
+
+    def test_ghost05_radar_not_visible_always_not_ghost(self):
+        """GHOST-05: radar_visible=False -> ghost_flag must be False regardless of other sensors."""
+        df = pl.DataFrame({
+            "radar_visible": [False, False, False, False],
+            "lidar64_visible": [True, False, False, False],
+            "lidar128_visible": [False, True, False, False],
+            "cam_front_visible": [False, False, True, False],
+            "cam_left_visible": [False, False, False, False],
+            "cam_right_visible": [False, False, False, False],
+            "cam_rear_visible": [False, False, False, True],
+        })
+        assert df.select(self._ghost_expr()).to_series().to_list() == [False, False, False, False]
+
+    def test_ghost06_all_sensors_invisible_not_ghost(self):
+        """GHOST-06: all sensors invisible -> ghost_flag must be False (no radar means no ghost)."""
+        df = pl.DataFrame({
+            "radar_visible": [False],
+            "lidar64_visible": [False],
+            "lidar128_visible": [False],
+            "cam_front_visible": [False],
+            "cam_left_visible": [False],
+            "cam_right_visible": [False],
+            "cam_rear_visible": [False],
+        })
+        assert df.select(self._ghost_expr()).item() is False
+
+
 @pytest.mark.optional
 class TestWeatherImpact:
     def test_ver25_lidar_lower_in_adverse_weather(self, output_table):

@@ -195,3 +195,4 @@ cmake-build-*/
 
 repos/AI-MSF-Benchmark/
 
+.claude/worktrees/

@@ -197,8 +197,18 @@ class TestMetrics:
         scores = calculate_camera_visibility(center_corners, seq=1)
         assert scores['front'] > 0
 
+    @pytest.mark.slow
+    @pytest.mark.timeout(1500)
     def test_smk17_full_pipeline_two_sequences(self, dataset_root, smoke_sequence_ids, smoke_frame_limit, tmp_path):
-            """SMK-17: end-to-end pipeline.py run on 2 sequences / 20 frames -> parquet, no crash, all columns present."""
+            """SMK-17: end-to-end pipeline.py run on 2 sequences / 20 frames -> parquet, no crash, all columns present.
+
+            Marked `slow` — runs the full pipeline (≈10+ minutes on real K-Radar data,
+            well over the default smoke budget). Excluded from default `uv run pytest
+            tests/test_smoke.py` runs; invoke explicitly with `uv run pytest -m slow`.
+
+            Per-test timeout=1500s (25 min) overrides any global pytest-timeout setting,
+            giving headroom over the ~800s measured cost on real data at 19–22 s/frame.
+            """
             from kradar_visibility.pipeline import run
             import polars as pl
 

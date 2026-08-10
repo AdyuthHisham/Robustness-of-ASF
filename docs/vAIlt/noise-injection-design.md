@@ -132,10 +132,15 @@ class NoiseInjector:
     def __call__(self, dict_item: dict, frame_index: int | None = None) -> dict:
         """
         Apply all configured corruptions to one sample's dict_item.
-        If frame_index is provided, deterministic frame_deletion
-        (interval / index_list) can use it. When frame_deletion fires,
-        the affected sensor keys are set to None and subsequent
-        effects skip them via _has_key().
+        Deterministic frame_deletion (interval / index_list) is driven
+        solely by dict_item['meta']['idx'][modality], populated by the
+        caller/dataset — NOT by this frame_index argument, which the
+        effect functions do not read for that decision (see
+        frame-deletion-rng-desync-fix-report.md, Discrepancy #1). This
+        argument's only current effect is keying should_skip()'s decision
+        cache so should_skip() and __call__() agree for the same frame.
+        When frame_deletion fires, the affected sensor keys are set to
+        None and subsequent effects skip them via _has_key().
         Order: radar -> LiDAR -> camera.
         """
         ...

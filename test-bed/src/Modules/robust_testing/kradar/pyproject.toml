@@ -28,8 +28,13 @@ packages = ["src/kradar_visibility"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
+# Exclude `slow` from the default run; invoke long-running tests explicitly
+# with `uv run pytest -m slow`. The full smoke suite (excluding `slow`)
+# must complete in well under 5 minutes.
+addopts = ["-m", "not slow"]
 markers = [
     "optional: tests that require extra data or are future scope",
+    "slow: tests that take longer than the default smoke budget (e.g. end-to-end pipeline runs); excluded from default runs, invoke with -m slow",
 ]
 
 [dependency-groups]
@@ -37,5 +42,6 @@ dev = [
     "black>=26.5.1",
     "mypy>=2.1.0",
     "pre-commit>=4.5.1",
+    "pytest-timeout>=2.4.0",
     "ruff>=0.15.5",
 ]

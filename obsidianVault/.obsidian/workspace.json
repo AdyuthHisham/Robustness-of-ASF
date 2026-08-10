@@ -15,8 +15,8 @@
               "state": {
                 "file": "Canvas.canvas",
                 "viewState": {
-                  "x": 4196.900622120403,
-                  "y": -1920,
+                  "x": 4500.024376030725,
+                  "y": 251.02148070907185,
                   "zoom": -0.5540446136191663
                 }
               },
@@ -109,7 +109,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300
+    "width": 300,
+    "collapsed": true
   },
   "right": {
     "id": "09bf09362ada1f1e",
