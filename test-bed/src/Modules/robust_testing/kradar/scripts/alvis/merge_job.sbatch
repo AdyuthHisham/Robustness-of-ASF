@@ -6,7 +6,7 @@
 # every sequence's shard already exists from the array job, so each is
 # skipped instantly and this just concatenates them into the final Parquet.
 #
-#SBATCH -A <NAISS_COMPUTE_PROJECT>
+#SBATCH -A naiss2026-4-494
 #SBATCH -p alvis
 #SBATCH -C NOGPU
 #SBATCH -c 1
@@ -17,13 +17,15 @@
 
 set -euo pipefail
 
-REMOTE_DIR="${REMOTE_DIR:-$HOME/kradar_visibility}"
-cd "$REMOTE_DIR"
+BASE_DIR="${BASE_DIR:-/cephyr/NOBACKUP/groups/c3se2025-3-18/users/adyuth/AMSCUP}"
+KRADAR_DIR="$BASE_DIR/test-bed/src/Modules/robust_testing/kradar"
+cd "$KRADAR_DIR"
 mkdir -p slurm_logs
 
+module load uv/0.7.13-GCCcore-14.2.0
 source .venv/bin/activate
 
 python scripts/run_split.py \
-  --dataset-root /cephyr/users/adyuth/Alvis/Desktop/cephyr_c3se2025-3-18/datasets/kradar \
-  --shard-dir /mimer/NOBACKUP/groups/naiss2025-22-321/projects/AMSCUP/kradar_visibility/shards \
-  --output /mimer/NOBACKUP/groups/naiss2025-22-321/projects/AMSCUP/kradar_visibility/kradar_test_split_full.parquet
+  --dataset-root "$BASE_DIR/repos/K-Radar" \
+  --shard-dir outputs/shards \
+  --output outputs/kradar_test_split_full.parquet

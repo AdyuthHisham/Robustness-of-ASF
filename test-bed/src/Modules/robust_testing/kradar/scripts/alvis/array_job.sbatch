@@ -1,15 +1,23 @@
 #!/bin/bash
 # scripts/alvis/array_job.sbatch — one SLURM array task per K-Radar sequence.
 # Each task processes its sequence's test-split frames (bundled split file,
-# resources/split/test.txt) to its own Parquet shard on Mimer. Resumable:
-# rerunning skips any sequence whose shard already exists.
+# resources/split/test.txt) to its own Parquet shard. Resumable: rerunning
+# skips any sequence whose shard already exists.
 #
-# Fill in / verify before submitting (see docs/ALVIS_MIGRATION_PLAN.md §9):
-#   - #SBATCH -A          : NAISS/C3SE compute project (not yet known)
-#   - REMOTE_DIR           : where push_to_alvis.sh deployed this subproject
+# Deployment: this repo is deployed via git clone to
+#   /cephyr/NOBACKUP/groups/c3se2025-3-18/users/adyuth/AMSCUP
+# --dataset-root points at repos/K-Radar, which has data/, preprocessed/,
+# pretrained/, revise_label/ symlinked in to the real dataset locations
+# (/cephyr/NOBACKUP/groups/c3se2025-3-18/datasets/kradar and kradar_pre/,
+# and the Mimer refined-label path) — this makes the on-cluster layout
+# identical to local dev, just with DATASET_ROOT overridden via --dataset-root
+# since config.py's default is hardcoded to the local dev machine's path.
+#
+# Fill in / verify before submitting (see docs/ALVIS_MIGRATION_PLAN.md):
+#   - #SBATCH -A          : naiss2026-4-494 (confirmed via sacctmgr)
 #   - -c / --workers        : tune after the first few tasks report real timing
 #
-#SBATCH -A <NAISS_COMPUTE_PROJECT>
+#SBATCH -A naiss2026-4-494
 #SBATCH -p alvis
 #SBATCH -C NOGPU
 #SBATCH -c 16
@@ -21,17 +29,19 @@
 
 set -euo pipefail
 
-REMOTE_DIR="${REMOTE_DIR:-$HOME/kradar_visibility}"
-cd "$REMOTE_DIR"
-mkdir -p slurm_logs
+BASE_DIR="${BASE_DIR:-/cephyr/NOBACKUP/groups/c3se2025-3-18/users/adyuth/AMSCUP}"
+KRADAR_DIR="$BASE_DIR/test-bed/src/Modules/robust_testing/kradar"
+cd "$KRADAR_DIR"
+mkdir -p slurm_logs outputs/shards
 
+module load uv/0.7.13-GCCcore-14.2.0
 source .venv/bin/activate
 
 SEQ="$SLURM_ARRAY_TASK_ID"
 
 python scripts/run_split.py \
   --sequences "$SEQ" \
-  --dataset-root /cephyr/users/adyuth/Alvis/Desktop/cephyr_c3se2025-3-18/datasets/kradar \
+  --dataset-root "$BASE_DIR/repos/K-Radar" \
   --workers 16 \
-  --shard-dir /mimer/NOBACKUP/groups/naiss2025-22-321/projects/AMSCUP/kradar_visibility/shards \
+  --shard-dir outputs/shards \
   --skip-merge

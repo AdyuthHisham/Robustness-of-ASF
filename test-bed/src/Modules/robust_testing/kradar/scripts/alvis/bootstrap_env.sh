@@ -1,24 +1,26 @@
 #!/usr/bin/env bash
-# scripts/alvis/bootstrap_env.sh — run ON Alvis (alvis2 login/transfer node),
-# from inside the pushed kradar_visibility directory, with outbound internet
-# available (needed once, to install uv and resolve dependencies).
+# scripts/alvis/bootstrap_env.sh — interactive equivalent of setup_env.sbatch.
+# Prefer submitting setup_env.sbatch instead; this is here for manual/debug
+# use only (e.g. inside an `srun --pty` allocation, not the login node).
 #
-# Do NOT run this inside a SLURM job — compute nodes are expected to be
-# air-gapped. Run it once here, then jobs activate the resulting .venv.
+# Alvis is a shared cluster: no host-level package installs. `uv` is a
+# C3SE-provided module and pulls in its own Python (>=3.11, satisfies this
+# project's requires-python) as a toolchain dependency — nothing is
+# installed outside this project's local .venv/, which lives on Cephyr
+# NOBACKUP project storage.
 
 set -euo pipefail
 
 cd "$(dirname "${BASH_SOURCE[0]}")/../.."
 
-if ! command -v uv >/dev/null 2>&1; then
-  echo "uv not found — installing to \$HOME/.local/bin"
-  curl -LsSf https://astral.sh/uv/install.sh | sh
-  export PATH="$HOME/.local/bin:$PATH"
-fi
+module load uv/0.7.13-GCCcore-14.2.0
+
+export UV_PYTHON_DOWNLOADS=never
+export UV_PYTHON="$(command -v python3)"
 
 uv --version
 
-echo "Locking + syncing dependencies (from $(pwd))..."
+echo "Locking + syncing dependencies (from $(pwd)) into local .venv/ ..."
 uv lock
 uv sync
 
