@@ -143,10 +143,46 @@ ARRAY_JOB=$(sbatch --parsable array_job.sbatch)
 sbatch --dependency=afterok:${ARRAY_JOB} merge_job.sbatch
 ```
 
-## 8. Open items to resolve before writing code
+## 8. In-sequence parallelism (implemented)
 
-1. Exact sequence count/IDs under the real Cephyr `kradar` path on Alvis (drives `--array=` range).
-2. Confirm `radar_zyx_cube/` (not just raw tesseract) is present per-sequence at that path.
-3. Confirm alvis2 has outbound internet for the `uv` installer, or identify the module-based Python fallback.
-4. NAISS/C3SE project account string for `#SBATCH -A` (not specified in task brief).
-5. Whether `test-bed/pyproject.toml`'s workspace member list needs fixing before `uv sync` works cleanly, or whether syncing from inside `kradar/` sidesteps it entirely (untested).
+`scripts/run_full_sequence.py` now takes `--workers N`. Frames within a sequence are independent (each loads its own sensor files and returns its own rows), so `N>1` dispatches them to a `ProcessPoolExecutor` instead of the original serial per-frame loop — processes, not threads, since the work is CPU-bound array/OpenCV math that would contend on the GIL under threading. `--workers 1` (default) is byte-identical to the pre-existing serial behavior.
+
+- BLAS/OpenMP thread pools (`OMP_NUM_THREADS`, `OPENBLAS_NUM_THREADS`, `MKL_NUM_THREADS`) are pinned to `1` at import time (via `os.environ.setdefault`, so an sbatch-supplied value is respected, not overridden) to prevent numpy/OpenCV's internal threading from oversubscribing cores the process pool is also using.
+- Verified on real data (sequence 2, local dev machine): 4 workers over 6 frames gave a ~1.9x wall-clock speedup (135s → 72s), below the naive 4x due to shared I/O contention on this machine — expect a better ratio on Alvis given more cores and, per §5, faster/less-contended storage access than the local sshfs path this was benchmarked over.
+- Output is content-identical between worker counts (validated via a full-row `polars` equality check after sorting by `(frame_idx, obj_tracking_id)`), though row order can differ since parallel results are assembled as they complete rather than strictly in frame order.
+- Practical effect on §4 sizing: bump `-c` per array task to match the desired `--workers` value (e.g. `-c 16 --workers 16`) rather than leaving it at the placeholder `-c 2`; re-measure per-sequence walltime once run on Alvis before finalizing `-t`.
+- New tests: `tests/test_parallel_smoke.py` (SMK-18: thread-env pinning, fast, no dataset; SMK-19: serial vs. parallel output parity on real data, `slow`; SMK-20: one frame failing under a worker pool doesn't crash the pool or lose other frames' rows, `slow`). Run via `uv run pytest tests/test_parallel_smoke.py` (fast) and `-m slow` (real-data tests, ~35s–4min each on this machine).
+
+## 9. Dataset-split runner + bundled split files (implemented)
+
+Added `scripts/run_split.py`: a multi-sequence driver that runs the pipeline over a K-Radar train/test split (e.g. `resources/split/test.txt` — one line per frame, `"<sequence_id>,<label_filename>"`, selecting a subset of frames *within* each sequence, not held-out sequences) rather than every frame. Each sequence writes its own shard (resumable — an existing shard is skipped unless `--overwrite`), and shards are concatenated into one combined Parquet at the end.
+
+- `resources/split/test.txt` and `train.txt` are **bundled inside the kradar_visibility subproject** (`resources/split/`, copied from the K-Radar repo's own `resources/split/`) rather than read from the separate K-Radar git submodule. This means the "only `kradar/` needs to be transferred" claim in §1 now actually holds with no exceptions — the split files would otherwise have been the one thing requiring the K-Radar submodule on Alvis too.
+- `run_split.py --sequences <id>` processes one sequence — this is exactly the SLURM array-job unit of work (§2); `array_job.sbatch` (§10) calls it with `--sequences $SLURM_ARRAY_TASK_ID`.
+- Validated end-to-end locally: full test-split frames for sequences 1+2 (531 frames) — 1,243 output rows, zero frame errors, correct per-object schema, resumability confirmed (rerun skips existing shards, still merges correctly).
+- **Found and fixed a real correctness bug during this validation**: `lidar_visibility.py`'s occlusion computation used horizontal-only (x,y) range where it needed true 3D range (x,y,z), causing `arcsin` domain errors (→ `NaN`, silently misrouted to the wrong LUT channel) and systematically underestimating occlusion for any object with vertical offset from the sensor — corrupting `lidar64/128_sparsity_score` for affected objects. One-line fix (`lidar_visibility.py:266`); confirmed via smoke suite + targeted re-run of the previously-affected frames under `-W error::RuntimeWarning`. This means any output produced before this fix (including the local seq1/seq2 validation shards from the first pass) is stale and must be regenerated.
+
+## 10. Alvis job scripts (implemented, illustrative account string only)
+
+Added under `scripts/alvis/`:
+
+- **`push_to_alvis.sh`** — run locally. `rsync`s the kradar_visibility subproject to Alvis (`~/kradar_visibility` by default), excluding `.venv`/`outputs`/caches.
+- **`bootstrap_env.sh`** — run once on `alvis2` (needs outbound internet) after pushing. Installs `uv` if missing, runs `uv lock && uv sync`, sanity-imports the package.
+- **`array_job.sbatch`** — `--array=1-58%12`, one task per sequence, calls `run_split.py --sequences $SLURM_ARRAY_TASK_ID --workers 16 --skip-merge`, reading from Cephyr and writing shards to a Mimer output dir.
+- **`merge_job.sbatch`** — submitted with `--dependency=afterok:<array_job_id>`; calls `run_split.py` with no `--sequences` (full split), which skips every already-done shard instantly and just concatenates.
+- **`submit_all.sh`** — run on Alvis, submits both with the dependency wired up automatically, prints job IDs and a `sacct` command to watch them.
+
+All `#SBATCH -A <NAISS_COMPUTE_PROJECT>` lines are placeholders — see open item #1 below.
+
+## 11. Open items resolved / still open
+
+Resolved via the live sshfs mount to Cephyr (already reachable from local dev — confirmed the mount source paths match the task brief's Cephyr paths exactly):
+- ~~Exact sequence count/IDs~~ — **58 sequences (1-58)**, matching both split files exactly.
+- ~~Confirm `radar_zyx_cube/` presence~~ — **confirmed present for all 58 sequences** (not just raw `radar_tesseract/`).
+
+Still open (need Alvis-side access I don't have — direct SSH from this machine gets `Permission denied`; only the pre-established read-only sshfs mounts are reachable):
+1. **NAISS/C3SE compute project account string** for `#SBATCH -A` — required before any script here can actually submit.
+2. Confirm `alvis2` has outbound internet for the `uv` installer (`bootstrap_env.sh` needs this once), or provide the module-based Python fallback if not.
+3. Whether `test-bed/pyproject.toml`'s workspace member list needs fixing before `uv sync` works cleanly from inside `kradar/`, or whether it's a non-issue when syncing from that directory directly (untested on Alvis; local `uv sync` from within `kradar/` has not hit this).
+4. Real per-sequence wall-clock at `--workers 16` on actual Alvis NOGPU cores — only benchmarked up to 4 workers locally (§8, memory-constrained dev box); use the first few array tasks' actual runtime to tune `-c`/`--workers`/`-t` before letting the full array run unattended.
+5. Confirm the chosen Mimer output subdirectory (`/mimer/NOBACKUP/groups/naiss2025-22-321/projects/AMSCUP/kradar_visibility/`) is fine to create, or provide a preferred path.

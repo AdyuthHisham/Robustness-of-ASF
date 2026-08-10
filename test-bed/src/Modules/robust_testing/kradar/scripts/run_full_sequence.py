@@ -9,6 +9,9 @@ Usage
   # Dry-run on first N frames:
   uv run python scripts/run_full_sequence.py --max-frames 3
 
+  # Parallel across frames (process pool, one frame per worker):
+  uv run python scripts/run_full_sequence.py --workers 8
+
 Note
 ----
 This script does NOT modify pipeline.py, radar_visibility.py, lidar_visibility.py,
@@ -17,11 +20,22 @@ that captures current baseline behaviour.
 """
 
 import logging
+import os
 import sys
 import time
 import traceback
 from pathlib import Path
 from typing import Optional
+
+# Pin BLAS/OpenMP thread pools to 1 *before* numpy/opencv are imported
+# (transitively, via the kradar_visibility imports below). Each frame is
+# already its own unit of work under --workers>1 (process pool); letting
+# numpy/opencv spawn their own internal thread pools per worker oversubscribes
+# CPU cores and can make parallel runs slower than serial. Harmless in serial
+# (--workers 1, the default) mode too. Respects a pre-set value from the
+# caller's environment (e.g. an sbatch script pinning to a specific core count).
+for _env_var in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS"):
+    os.environ.setdefault(_env_var, "1")
 
 import polars as pl
 
@@ -52,11 +66,42 @@ ANNOTATED_FRAMES = 187
 TOTAL_OBJECTS = 222
 
 
+def _process_one_frame(
+    label_file: Path,
+    sequence_id: str,
+    dataset_root: Path,
+    calib_available: bool,
+    weather_label: str,
+) -> tuple[str, list[dict], Optional[str]]:
+    """Parse one label file and compute its visibility rows.
+
+    Module-level (not a closure) so it is picklable for ProcessPoolExecutor.
+    Returns (frame_name, rows, error_or_None) — never raises; mirrors the
+    per-frame try/except behaviour of the original serial loop so error-log
+    output is identical whether run serially or in parallel.
+    """
+    frame_name = label_file.stem
+    try:
+        header, objects = parse_label_file(label_file)
+        rows = compute_visibility_for_frame(
+            sequence_id, header, objects, dataset_root,
+            calib_available=calib_available,
+            weather_label=weather_label,
+        )
+        return frame_name, rows, None
+    except Exception:
+        return frame_name, [], traceback.format_exc()
+
+
 def run_sequence(
     sequence_id: str = SEQUENCE,
     dataset_root: Optional[Path] = None,
     max_frames: Optional[int] = None,
     annotated_first: bool = False,
+    workers: int = 1,
+    frame_filter: Optional[set] = None,
+    output_path: Optional[Path] = None,
+    error_log_path: Optional[Path] = None,
 ) -> pl.DataFrame:
     """Run the pipeline on *every* frame of one sequence with per-frame progress.
 
@@ -68,6 +113,25 @@ def run_sequence(
         Root of the K-Radar dataset.  Defaults to config.DATASET_ROOT.
     max_frames : int or None
         If set, process at most this many label files (for dry-run testing).
+    workers : int
+        Number of worker processes. 1 (default) runs the original serial
+        per-frame loop. >1 dispatches frames to a ProcessPoolExecutor —
+        frames are independent units of work (each loads its own sensor
+        files and produces its own rows), so this parallelizes near-linearly
+        up to I/O/core limits. Output rows and the error log are identical
+        to the serial run regardless of worker count (order-independent
+        content; row order may differ since --workers>1 assembles results
+        as they complete rather than strictly in frame order).
+    frame_filter : set of str or None
+        If set, restrict processing to label files whose filename (e.g.
+        "00182_00150.txt") is in this set — used to run only a dataset
+        split (e.g. K-Radar's resources/split/test.txt) rather than every
+        frame in the sequence. Applied before annotated_first/max_frames.
+    output_path : Path or None
+        Parquet output path. Defaults to the module-level OUTPUT_PATH
+        (settable via CLI --output / main()'s global override).
+    error_log_path : Path or None
+        Error log path. Defaults to the module-level ERROR_LOG.
 
     Returns
     -------
@@ -77,8 +141,10 @@ def run_sequence(
         dataset_root = DATASET_ROOT
 
     dataset_root = Path(dataset_root)
-    output_path = OUTPUT_PATH
-    error_log_path = ERROR_LOG
+    if output_path is None:
+        output_path = OUTPUT_PATH
+    if error_log_path is None:
+        error_log_path = ERROR_LOG
 
     # ------------------------------------------------------------------ #
     # Calibration availability  (same logic as pipeline.run())
@@ -109,6 +175,10 @@ def run_sequence(
     # Label file list (identical to pipeline.run() with frame_limit=None)
     # ------------------------------------------------------------------ #
     label_files = get_sequence_label_files(sequence_id, dataset_root)
+    n_available = len(label_files)
+
+    if frame_filter is not None:
+        label_files = [f for f in label_files if f.name in frame_filter]
 
     if annotated_first and max_frames is not None:
         # Skip empty frames to get a quick dry-run with real output
@@ -133,7 +203,7 @@ def run_sequence(
 
     print(f"Sequence:        {sequence_id}")
     print(f"Dataset root:    {dataset_root}")
-    print(f"Label files:     {n_total}  (total available: {len(get_sequence_label_files(sequence_id, dataset_root))})")
+    print(f"Label files:     {n_total}  (total available: {n_available})")
     print(f"Weather:         {weather_label}")
     print(f"Calibration:     {'available' if calib_available else 'UNAVAILABLE (camera zeroed)'}")
     print(f"Output:          {output_path}")
@@ -145,53 +215,66 @@ def run_sequence(
     # ------------------------------------------------------------------ #
     # Main loop with per-frame progress
     # ------------------------------------------------------------------ #
-    all_rows: list[dict] = []
-    errors: list[str] = []
+    # results[idx] = (frame_name, rows, error_or_None) — filled in whatever
+    # order frames finish, then consumed in original label_files order below
+    # so output rows / error-log entries are identical to the serial run.
+    results: list[Optional[tuple[str, list[dict], Optional[str]]]] = [None] * n_total
     t_start = time.time()
 
-    for idx, label_file in enumerate(label_files):
-        t_frame = time.time()
-        frame_name = label_file.stem
-        frame_success = True
-        frame_error_msg = ""
-
-        try:
-            header, objects = parse_label_file(label_file)
-            rows = compute_visibility_for_frame(
-                sequence_id, header, objects, dataset_root,
-                calib_available=calib_available,
-                weather_label=weather_label,
-            )
-            all_rows.extend(rows)
-        except Exception as exc:
-            frame_success = False
-            frame_error_msg = f"{type(exc).__name__}: {exc}"
-            tb = traceback.format_exc()
-            errors.append(
-                f"[FRAME {idx + 1:>4d} / {n_total}] {frame_name}\n"
-                f"  File:     {label_file}\n"
-                f"  Error:    {frame_error_msg}\n"
-                f"  Traceback:\n"
-                f"{'    ' + tb.replace(chr(10), chr(10) + '    ').rstrip()}"
-            )
-
+    def _report_progress(frames_done: int, frame_name: str, ok: bool) -> None:
         elapsed = time.time() - t_start
-        frame_duration = time.time() - t_frame
-
-        # ETA estimate based on per-frame average so far
-        frames_done = idx + 1
         if frames_done > 2:
             avg_per_frame = elapsed / frames_done
             eta_remaining = avg_per_frame * (n_total - frames_done)
             eta_str = f"{eta_remaining:>8.0f}s" if eta_remaining < 3600 else f"{eta_remaining / 3600:>7.1f}h"
         else:
             eta_str = "  warming…"
-
-        frame_count_str = f"{idx + 1:>4d}/{n_total}"
-        status = "OK" if frame_success else "ERR"
+        frame_count_str = f"{frames_done:>4d}/{n_total}"
+        status = "OK" if ok else "ERR"
         print(
             f"{frame_name:>10}  {frame_count_str:>6}  {elapsed:>8.0f}s  {eta_str:>10}  {status}"
         )
+
+    if workers <= 1:
+        for idx, label_file in enumerate(label_files):
+            frame_name, rows, error = _process_one_frame(
+                label_file, sequence_id, dataset_root, calib_available, weather_label
+            )
+            results[idx] = (frame_name, rows, error)
+            _report_progress(idx + 1, frame_name, error is None)
+    else:
+        from concurrent.futures import ProcessPoolExecutor, as_completed
+
+        with ProcessPoolExecutor(max_workers=workers) as pool:
+            future_to_idx = {
+                pool.submit(
+                    _process_one_frame,
+                    label_file, sequence_id, dataset_root, calib_available, weather_label,
+                ): idx
+                for idx, label_file in enumerate(label_files)
+            }
+            frames_done = 0
+            for future in as_completed(future_to_idx):
+                idx = future_to_idx[future]
+                frame_name, rows, error = future.result()
+                results[idx] = (frame_name, rows, error)
+                frames_done += 1
+                _report_progress(frames_done, frame_name, error is None)
+
+    all_rows: list[dict] = []
+    errors: list[str] = []
+    for idx, label_file in enumerate(label_files):
+        frame_name, rows, error = results[idx]
+        if error is None:
+            all_rows.extend(rows)
+        else:
+            errors.append(
+                f"[FRAME {idx + 1:>4d} / {n_total}] {frame_name}\n"
+                f"  File:     {label_file}\n"
+                f"  Error:    {error.strip().splitlines()[-1]}\n"
+                f"  Traceback:\n"
+                f"{'    ' + error.replace(chr(10), chr(10) + '    ').rstrip()}"
+            )
 
     # ------------------------------------------------------------------ #
     # Write errors log
@@ -301,6 +384,14 @@ def main():
              "Implies --max-frames N.",
     )
     parser.add_argument(
+        "--workers",
+        type=int,
+        default=1,
+        help="Number of worker processes for per-frame parallelism (default: 1 = serial, "
+             "original behaviour). Frames are independent units of work; >1 dispatches "
+             "them to a ProcessPoolExecutor.",
+    )
+    parser.add_argument(
         "--error-log",
         type=Path,
         default=None,
@@ -321,6 +412,7 @@ def main():
         dataset_root=args.dataset_root,
         max_frames=args.max_frames,
         annotated_first=args.annotated_first,
+        workers=args.workers,
     )
 
 

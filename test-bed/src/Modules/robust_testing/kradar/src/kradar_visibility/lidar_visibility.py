@@ -262,8 +262,15 @@ def _compute_occlusion_fraction_from_range_image(bbox: List[float], range_image:
     # We need to transform to sensor frame
     corners_sensor = corners - sensor_origin  # Shift to sensor-relative coordinates
 
-    # Convert to spherical coordinates for each corner
-    ranges = np.linalg.norm(corners_sensor[:, :2], axis=1)
+    # Convert to spherical coordinates for each corner. Elevation must use the
+    # full 3D range (not horizontal-only) — the range image built in
+    # build_range_image() stores true 3D range per bin (sqrt(x^2+y^2+z^2)),
+    # so `ranges` must match that here or (a) arcsin can receive a ratio
+    # outside [-1,1] for near-vertical corners (NaN, silently corrupting
+    # channel_indices via argmin-over-NaN) and (b) the occlusion comparison
+    # against range_samples below would be comparing horizontal distance to
+    # true range, biasing occluded_fraction low for any corner with nonzero z.
+    ranges = np.linalg.norm(corners_sensor, axis=1)
     elevations = np.arcsin(corners_sensor[:, 2] / np.maximum(ranges, 1e-6))
     azimuths = np.arctan2(corners_sensor[:, 1], corners_sensor[:, 0])
 
