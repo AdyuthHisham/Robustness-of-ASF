@@ -13,6 +13,7 @@ from kradar_visibility import (
     HeaderInfo, load_radar_cube, load_lidar_points, load_camera_image,
     ALLOWED_WEATHER,
 )
+from kradar_visibility.lidar_visibility import prepare_frame_lidar
 
 
 class TestParsing:
@@ -196,6 +197,82 @@ class TestMetrics:
         ], dtype=np.float32)
         scores = calculate_camera_visibility(center_corners, seq=1)
         assert scores['front'] > 0
+
+    def test_smk21_lidar_range_image_float32_bin_boundary(self):
+        """SMK-21: prepare_frame_lidar's vectorized bin-index computation must
+        match a per-point scalar reference exactly, including at float32
+        precision.
+
+        Regression test for a real bug found while vectorizing
+        build_range_image's per-point Python loop: with float32 input points
+        (as real K-Radar LiDAR clouds are), numpy's classic scalar-vs-array
+        promotion rules mean `numpy.float32 scalar / python float` (what the
+        old scalar loop computed via `azimuth_deg[i] / h_res_deg`) upcasts to
+        float64, while a naive `float32 array / python float` division stays
+        float32 — losing precision right at bin-boundary truncation and
+        occasionally landing a point in the wrong (chan, azimuth) bin. This
+        reproduces the exact real-world failure found on K-Radar sequence 2
+        frame 00031_00001 (azimuth 326.55deg, OS2-64 config): a point whose
+        azimuth divides almost exactly onto a bin boundary in float32 but not
+        in float64, one bin off between the two precisions.
+        """
+        num_channels, v_fov_deg, h_res_deg = 64, 33.2, 0.35
+
+        # A cluster of points straddling the exact bin boundary that
+        # triggered the real mismatch (azimuth ~= 933 * h_res_deg), plus
+        # assorted other points to exercise the general path.
+        boundary_azimuth_deg = 933 * h_res_deg  # 326.55
+        elevation_deg = 0.0  # well within FOV
+        rng = np.random.default_rng(123)
+
+        def to_xyz(azimuth_deg, elevation_deg, r):
+            az_rad = np.radians(azimuth_deg)
+            el_rad = np.radians(elevation_deg)
+            x = r * np.cos(el_rad) * np.cos(az_rad)
+            y = r * np.cos(el_rad) * np.sin(az_rad)
+            z = r * np.sin(el_rad)
+            return np.array([x, y, z], dtype=np.float32)
+
+        points = [to_xyz(boundary_azimuth_deg, elevation_deg, 10.0)]
+        for _ in range(200):
+            az = rng.uniform(0, 360)
+            el = rng.uniform(-v_fov_deg / 2, v_fov_deg / 2)
+            r = rng.uniform(0.5, 100.0)
+            points.append(to_xyz(az, el, r))
+        points = np.stack(points).astype(np.float32)
+
+        def scalar_reference(points, num_channels, v_fov_deg, h_res_deg):
+            x, y, z = points[:, 0], points[:, 1], points[:, 2]
+            range_vals = np.sqrt(x**2 + y**2 + z**2)
+            elevation = np.arcsin(np.divide(z, range_vals, out=np.zeros_like(z), where=range_vals != 0))
+            azimuth = np.arctan2(y, x)
+            elevation_deg = np.degrees(elevation)
+            azimuth_deg = np.degrees(azimuth)
+            azimuth_deg = np.where(azimuth_deg < 0, azimuth_deg + 360.0, azimuth_deg)
+            azimuth_bins = int(360.0 / h_res_deg)
+            elevation_bin_size = v_fov_deg / num_channels
+            min_elevation = -v_fov_deg / 2.0
+            max_elevation = v_fov_deg / 2.0
+            elev_mask = (elevation_deg >= min_elevation) & (elevation_deg <= max_elevation)
+            range_image = np.zeros((num_channels, azimuth_bins), dtype=np.float32)
+            for i in range(len(points)):
+                if not elev_mask[i]:
+                    continue
+                elev, azi, r = elevation_deg[i], azimuth_deg[i], range_vals[i]
+                chan = int((elev - min_elevation) / elevation_bin_size)
+                if chan < 0 or chan >= num_channels:
+                    continue
+                az_bin = int(azi / h_res_deg)
+                if az_bin < 0 or az_bin >= azimuth_bins:
+                    az_bin = az_bin % azimuth_bins
+                current_val = range_image[chan, az_bin]
+                if current_val == 0.0 or r < current_val:
+                    range_image[chan, az_bin] = r
+            return range_image
+
+        expected = scalar_reference(points, num_channels, v_fov_deg, h_res_deg)
+        actual, _ = prepare_frame_lidar(points, num_channels, v_fov_deg, h_res_deg)
+        assert np.array_equal(expected, actual), "vectorized range image diverges from scalar reference"
 
     @pytest.mark.slow
     @pytest.mark.timeout(1500)

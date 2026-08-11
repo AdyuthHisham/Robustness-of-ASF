@@ -79,33 +79,35 @@ def prepare_frame_lidar(points, num_channels, v_fov_deg, h_res_deg):
     max_elevation = v_fov_deg / 2.0
     elev_mask = (elevation_deg >= min_elevation) & (elevation_deg <= max_elevation)
 
-    # Initialize range image with zeros (meaning no point)
-    range_image = np.zeros((num_channels, azimuth_bins), dtype=np.float32)
+    # Compute channel/azimuth bin index for every point at once (vectorized
+    # equivalent of the old per-point Python loop's int() truncation).
+    # Explicit float64 promotion matters here: when points (and therefore
+    # elevation_deg/azimuth_deg) are float32, numpy's classic scalar-vs-array
+    # promotion rules mean a per-element `numpy.float32 scalar / python
+    # float` (what the old loop did via `azimuth_deg[i]`) upcasts to
+    # float64, while `float32 array / python float` (a naive vectorized
+    # version) stays float32 — losing precision right at bin-boundary
+    # truncation and occasionally landing in the wrong bin. Promoting here
+    # keeps the vectorized path bit-identical to the old loop's behavior.
+    chan_all = ((elevation_deg.astype(np.float64) - min_elevation) / elevation_bin_size).astype(np.int64)
+    az_bin_all = (azimuth_deg.astype(np.float64) / h_res_deg).astype(np.int64)
+    az_bin_all = np.mod(az_bin_all, azimuth_bins)  # wrap, matches the loop's out-of-range handling
 
-    # For each point within FOV, compute bin indices and update range if closer
-    for i in range(len(points)):
-        if not elev_mask[i]:
-            continue
-        elev = elevation_deg[i]
-        azi = azimuth_deg[i]
-        r = range_vals[i]
+    # Points outside the elevation FOV or whose channel index falls outside
+    # [0, num_channels) are dropped, same as the loop's `continue` cases.
+    valid_mask = elev_mask & (chan_all >= 0) & (chan_all < num_channels)
 
-        # Compute channel index (0 to num_channels-1)
-        chan = int((elev - min_elevation) / elevation_bin_size)
-        if chan < 0 or chan >= num_channels:
-            # Should not happen due to clamping, but skip to be safe
-            continue
-
-        # Compute azimuth bin (0 to azimuth_bins-1)
-        az_bin = int(azi / h_res_deg)
-        if az_bin < 0 or az_bin >= azimuth_bins:
-            # Wrap around (should not happen with [0,360) azimuth)
-            az_bin = az_bin % azimuth_bins
-
-        # Update range if this point is closer than current value
-        current_val = range_image[chan, az_bin]
-        if current_val == 0.0 or r < current_val:
-            range_image[chan, az_bin] = r
+    # Scatter-min: keep the closest range per (channel, azimuth_bin). Seed
+    # with +inf so every bin starts "unset", then convert untouched bins to
+    # 0.0 to match the original "0.0 means no point" sentinel.
+    range_image = np.full((num_channels, azimuth_bins), np.inf, dtype=np.float32)
+    if np.any(valid_mask):
+        np.minimum.at(
+            range_image,
+            (chan_all[valid_mask], az_bin_all[valid_mask]),
+            range_vals[valid_mask].astype(np.float32),
+        )
+    range_image[np.isinf(range_image)] = 0.0
 
     sensor_origin = np.array([0.0, 0.0, 0.0], dtype=np.float32)
     return range_image, sensor_origin
