@@ -1,6 +1,19 @@
 # Migration Changelog
 Generated: 2026-07-02 13:20:46
 
+## 2026-08-11 — Vault ingestion / thesis-shaped restructure, Phases 1-5 complete
+
+Full run of `docs/vault_ingestion_prompt.md`. Summary (detail in the dated sub-entries below):
+
+- **Phase 1 (dedup)**: 26 import-echo duplicates archived to `10_Archive/` (verified byte-identical after stripping frontmatter, not assumed from filename); 1 false positive (`Annotations_1.md`) caught and reverted before commit; `BSD_3-Clause_License.md` archived as misfiled; `LibCrypt_Patcher*` left in place per user decision.
+- **Phase 2 (Theory/Design/Implementation)**: 3 new `03_Theory` notes (Visibility Formulas, Coordinate Frames, Sensor Noise Models), 4 new `04_Design` notes (Noise Taxonomy, System Architecture, API Contracts, Output Schema) + folder MOC (didn't exist before), 1 new `05_Implementation` disambiguation note.
+- **Phase 3 (Literature Survey)**: 12 per-paper notes (fanned out to 4 parallel Explore agents per the prompt's explicit exception) + `Literature_Survey.md` synthesis across 4 themes, with explicit cross-paper disagreements documented rather than silently resolved.
+- **Phase 4 (Results/Writing)**: `Verification_Report.md` merges the 6-file verification cluster chronologically (not pick-longest — files cover different audit foci); `Noise_Visual_Inspection.md` gallery with `_assets/` symlink into `repos/K-Radar/outputs/`; ~28 flat noise-injection report files sorted into `04_Design`/`05_Implementation`/`06_Results`; `07_Writing/Introduction.md` written as genuine synthesized prose per the hard requirement.
+- **Phase 5 (LaTeX mapping)**: `LaTeX_Report_Structure.md` and `Vault_to_Thesis_Mapping.md`, every pre-computed fact in the task spec independently re-verified against the actual submodule files — one **new** breakage found and reported (missing brace in `Theory.tex:223`, a compile-breaking syntax error not in the original brief).
+- **Phase 6 (index)**: `00_MOC.md` updated with links into the new structure; `08 Resources.md` moved from the vault root into `08_Resources/` to match every other section's folder+MOC-file pattern (the only remaining root-level inconsistency).
+
+Constraints honored throughout: nothing under `docs/Latex_Report/` or `obsidianVault/` was edited; no source `.md` under `docs/` or `test-bed/` was deleted or moved (only vault notes were archived); every derived note carries a `## Source` section.
+
 ## 2026-08-11 — Dedup pass (Phase 1 of `docs/vault_ingestion_prompt.md`)
 
 Executed `docs/vAIlt/00_Inbox/Dedup_Map.md` Groups A/B (import-echo `_N` files), confirmed by the user.
