@@ -4,6 +4,30 @@ Merged, chronological synthesis of the `kradar_visibility` pipeline's independen
 
 **Excluded from this merge**: `docs/verification_report.md` — despite the matching filename, this is a QA report auditing `docs/noise_addition_analysis.md` (a literature-synthesis document), not a pipeline verification report. Different topic entirely; not part of this cluster.
 
+## Current status (re-verified 2026-08-11 against live code + live pytest — supersedes the historical gap table below)
+
+The gap table and Go/No-Go verdict below are the state as of 2026-07-21/23. Re-running the checks directly against the current codebase on 2026-08-11 shows **most blocking gaps are now fixed**:
+
+| Gap | 2026-07-21 verdict | 2026-08-11 live-verified status |
+|---|---|---|
+| C#2 Radar CFAR wiring | **PARTIAL, blocking** — scores up to 62 billion | **FIXED.** `pipeline.py:226` now calls `prepare_frame_radar()`; result flows into `compute_radar_sparsity_score()`. Live run (`sequence_ids=['1'], frame_limit=5`): `radar_sparsity_score` range **[0.061, 0.126]** — correctly bounded |
+| `ghost_flag`/`weather` missing from `OUTPUT_SCHEMA` | Confirmed missing | **FIXED.** Both present in `config.py:79–124` (44 columns, verified via `grep`). `docs/output_schema_fix.md` documents the exact diff (added `timestamp` and `ghost_flag`; `weather` was already present) |
+| `dist_coeffs` never extracted from calibration | Confirmed dead path | **FIXED.** `calibration.py:21` adds `_load_dist_coeffs()`, wired through `camera_visibility.py` |
+| No VER test for ghost-flag semantics | Confirmed absent | **FIXED.** `TestGhostFlag` class, 6 tests (`ghost01`–`ghost06`), all pass live |
+| SMK-15 `count` referenced before assignment | Failing (from a separate constituent report) | **FIXED** — passes live |
+| Range-image build is a Python loop | Confirmed | **FIXED** — now `np.minimum.at`, vectorized |
+| SMK-17 "times out at >300s" | Reported as timeout (dataset-IO bound) | **Disputed by the project's own newer errata note** — `test-bed/.../kradar/TESTING_NOTES.md` ("Errata: False Claims from Prior Sessions") documents a re-run showing the full smoke suite passes in 242s with zero timeouts, and explicitly flags the timeout claim as false. This session's own re-run also hit a timeout at 100–300s on this machine (dataset I/O is slow here), so the honest read is: **outcome is machine/IO-dependent, not a fixed logic failure** — don't cite "SMK-17 times out" as a stable fact either way without stating the environment |
+
+**Still open, confirmed unchanged**: `stereo_consistency()` still imported but never called from `pipeline.py`; `MIN_RAYS_FOR_OCCLUSION_CHECK` guard still absent; LiDAR channel-LUT selection is still the `expected_density > 50` heuristic; Doppler-coherence gating still absent — but per `TESTING_NOTES.md` this and camera-temporal-consistency are now **formally reclassified as out of scope** (K-Radar has no RTK-GPS/INS stream to validate Doppler consistency against), not pending work; VER-25/26 still skip with the stale "weather not yet wired" message despite weather being wired.
+
+**New backup-file debt not in the original cleanup list**: `src/kradar_visibility/radar_visibility.py.bak` — confirmed genuinely stale via diff (missing the CFAR vectorization present in the live `.py` file), alongside the previously-known `scripts/validate_precomputation.py.bak`.
+
+**New bug, not previously documented anywhere in this vault**: `outputs/output_seq2_full_investigation.md` (a live 217-row parquet audit, not a source-code-only pass) found a confirmed logic defect in `_compute_occlusion_fraction_from_range_image()` (`lidar_visibility.py:237–298`). The range image is initialized with `np.zeros(...)`, so a bin value of `0.0` means "sensor never sampled this cell" — but the occlusion check's `valid_samples` filter (`np.isfinite(...) & ~np.isnan(...)`) treats `0.0` as a valid sample, and the occlusion comparison (`ranges > range_samples`) then reads "unsampled" as "confirmed something closer here," i.e. occluded. Net effect: an object with a large genuine in-box point count (confirmed case: 6412 points) can be scored `lidar128_visible=False, lidar128_sparsity_score=0.0` purely because its 8 sampled corners happened to land on unsampled range-image bins — a false 100%-occluded verdict with 100% reported confidence. **Root-cause fix**: exclude `range_image == 0.0` bins from `valid_samples` (treat as unknown → lowers confidence, doesn't raise `occluded_fraction`), not yet applied as of this check.
+
+That same investigation independently reproduced and confirmed several of this report's other verdicts against live data (radar score ceiling at exactly 1.0 from the `np.clip` — intended, not a bug; `cam_right`/`cam_rear` all-False for one sequence — intended, verified via synthetic-geometry probe that the code path itself works; `ghost_flag` all-False for a clean sequence — intended, high cross-sensor agreement on non-corrupted data).
+
+## Historical gap table (2026-07-21/23, superseded above where marked FIXED — kept for audit trail)
+
 ## Chronology
 
 | Date | Report | Scope |
@@ -50,18 +74,21 @@ Every constituent report independently concludes that phase-implementation-log p
 
 Smoke: 18 pass, 0 fail, 2 timeout (SMK-17 full-pipeline, `smk_all_sequences` — both >300s, dataset-IO bound, not logic failures). Verify: 27 pass, 13 skip (mostly insufficient data at toy scale; VER-25/26 weather-impact tests skip via a stale message — weather **is** wired into pipeline output as of this audit, but the skip condition was never updated to reflect that). Zero `NotImplementedError` stubs found anywhere in the test suite across all 6 reports.
 
-## Cleanup debt (unresolved as of the latest constituent report)
+## Cleanup debt (unresolved as of the latest constituent report — see 2026-08-11 update above for current status)
 
-- `pipeline.py:274` hard-codes `noise_floor_db=None` — the single highest-priority fix (unblocks C#2).
-- `config.OUTPUT_SCHEMA` missing `ghost_flag` and `weather` — both are written at runtime but undeclared in the schema.
-- `calibration.py`'s `get_camera_params()` never extracts `dist_coeffs` — camera distortion correction is fully coded but unreachable.
-- 7 dead imports in `pipeline.py` (`prepare_frame_radar`, `RADAR_GUARD_CELLS`, `RADAR_TRAINING_CELLS`, `OS2_64_CHANNEL_LUT`, `OS1_128_CHANNEL_LUT`, `camera_score`, `stereo_consistency`).
-- Stray backup file `scripts/validate_precomputation.py.bak`.
-- VER-25/26 skip message is stale (claims weather isn't wired; it is).
+- ~~`pipeline.py:274` hard-codes `noise_floor_db=None`~~ — **FIXED**, see above.
+- ~~`config.OUTPUT_SCHEMA` missing `ghost_flag` and `weather`~~ — **FIXED**, see above.
+- ~~`calibration.py`'s `get_camera_params()` never extracts `dist_coeffs`~~ — **FIXED**, see above.
+- 7 dead imports in `pipeline.py` (`prepare_frame_radar`, `RADAR_GUARD_CELLS`, `RADAR_TRAINING_CELLS`, `OS2_64_CHANNEL_LUT`, `OS1_128_CHANNEL_LUT`, `camera_score`, `stereo_consistency`) — **still open**: `prepare_frame_radar` is now genuinely called (not dead), but `RADAR_GUARD_CELLS`/`RADAR_TRAINING_CELLS`/`OS2_64_CHANNEL_LUT`/`OS1_128_CHANNEL_LUT`/`stereo_consistency` remain imported-but-unused in `pipeline.py`.
+- Stray backup files: `scripts/validate_precomputation.py.bak` **and** `src/kradar_visibility/radar_visibility.py.bak` (new, confirmed stale — pre-dates the CFAR vectorization).
+- VER-25/26 skip message is stale (claims weather isn't wired; it is) — **still open**.
+- **New**: `_compute_occlusion_fraction_from_range_image()` zero-bin-as-occluded bug — see above, not yet fixed.
 
 ## Go/No-Go: Checkpoint 4
 
-**NO-GO**, per the 2026-07-21 Final report — blocked on the radar CFAR wiring gap (scores exceeding [0,1] by 11 orders of magnitude), the missing `OUTPUT_SCHEMA` entries, SMK-17 timeout, and the dead `stereo_consistency` path.
+**Historical verdict (2026-07-21): NO-GO** — blocked on the radar CFAR wiring gap (scores exceeding [0,1] by 11 orders of magnitude), the missing `OUTPUT_SCHEMA` entries, SMK-17 timeout, and the dead `stereo_consistency` path.
+
+**Current verdict (2026-08-11, live-verified)**: the radar CFAR and `OUTPUT_SCHEMA` blockers are fixed. Remaining blockers before a clean GO: `stereo_consistency` dead code (Task 4.4 explicitly required it, per the original checkpoint text "stereo consistency optional" — re-read the checkpoint wording before treating this as blocking; it may already satisfy "optional"), and the newly-found range-image occlusion bug, which silently zeros out `lidar128_sparsity_score`/`visible` for objects that should be visible — this is a correctness bug in a load-bearing metric, not just missing coverage, and should be fixed before trusting any LiDAR-visibility-derived result (e.g. for Results-chapter figures) at face value.
 
 ## Source
 
@@ -72,3 +99,7 @@ Smoke: 18 pass, 0 fail, 2 timeout (SMK-17 full-pipeline, `smk_all_sequences` —
 - `test-bed/src/Modules/robust_testing/kradar/docs/verification_report_part_ghostflag.md` (119 L — ghost-flag deep dive)
 - `test-bed/src/Modules/robust_testing/kradar/outputs/verification_report.md` (60 L — earliest raw pytest snapshot, 2026-07-14)
 - `test-bed/src/Modules/robust_testing/kradar/docs/verification_report_partial1.md` (17 L — pointer/summary of the partial1 report above, no unique content)
+- **2026-08-11 re-verification** (live, this session): direct `grep`/`diff` against `src/kradar_visibility/*.py`, `config.py`; live `uv run pytest tests/test_smoke.py` (18 passed), `uv run pytest tests/test_verify.py` (27 passed, 19 skipped, includes the new `TestGhostFlag` class); live pipeline run via `pipeline.run(sequence_ids=['1'], frame_limit=5)` confirming bounded radar scores and populated `ghost_flag`/`weather` columns
+- `test-bed/src/Modules/robust_testing/kradar/TESTING_NOTES.md` ("Errata: False Claims from Prior Sessions" — disputes the SMK-17-timeout claim, formally closes Doppler/temporal-consistency as out of scope)
+- `test-bed/src/Modules/robust_testing/kradar/outputs/output_seq2_full_investigation.md` (live 217-row parquet audit — source of the new range-image occlusion bug finding)
+- `test-bed/src/Modules/robust_testing/kradar/docs/output_schema_fix.md` (documents the exact `OUTPUT_SCHEMA` fix)
