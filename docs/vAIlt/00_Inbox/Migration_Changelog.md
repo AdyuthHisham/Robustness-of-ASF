@@ -1,6 +1,24 @@
 # Migration Changelog
 Generated: 2026-07-02 13:20:46
 
+## 2026-08-11 — Dedup pass (Phase 1 of `docs/vault_ingestion_prompt.md`)
+
+Executed `docs/vAIlt/00_Inbox/Dedup_Map.md` Groups A/B (import-echo `_N` files), confirmed by the user.
+Verified via diff (frontmatter-stripped) that every archived pair is byte-identical in body content before moving.
+
+**Archived to `10_Archive/` (26 files, content-identical to their canonical, confirmed by diff):**
+`05_Implementation/`: `11_README_Requirements_1`, `4_Visibility_Metric_Methodology__Recommendations_1`, `6_Smoke_Test_Scaffold_1`, `7_Verification_Test_Scaffold_1`, `Config_Reference_1`, `Goals_And_Subgoals_1`, `Hermes_Multi-Agent_Workplan_1`, `KRadar_configpy_Reference_1`, `K-Radar_Configuration_Reference_1`, `K-Radar_Coordinate_Frame_Analysis_Report_1`, `K-Radar_Multi-Sensor_Visibility_Calculation_Formulas_and_Methodologies_1`, `K-Radar_Sensor_Visibility_Pipeline__Recommended_Methods_Theory__Implementation_{1,2,3}`, `K-Radar_Visibility_Analysis__Master_Task_Brief_1`, `K-Radar_Visibility_Pipeline__Debug_Data_Gathering__Web_Viewer_1`, `K-Radar_Visibility_Pipeline__Issue_Summary_1`, `K-Radar_Visibility_Visual_Verification__Web_UI_Specification_1`, `Orchestrator_Task_Implement_K-Radar_Visibility_Analysis_Pipeline_1`, `Prompt_K-Radar_Multi-Sensor_Visibility_Analysis_Table_Generator_1`, `Refined_SOULmd_Files__Unified_Perception_Framework_Dev_Team_1`, `Sensor_Noise_Modeling_for_Object_Detection_Sensor_Fusion_Test_Suites_1`, `Visibility_Metrics_Comparison_ELI15_1`.
+`02_Literature/`: `Sensor_Visibility__Identification_Metrics_for_K-Radar_{1,2,3}`, `Visibility_Calculation_Methods_Literature_Review_and_Analysis_1`.
+`07_Writing/`: `Aggregated_Data__AMSCUP_1`.
+
+**Also archived (misfiled, not a dedup — per user decision):** `03_Theory/BSD_3-Clause_License.md` and `_1.md` — third-party license text unrelated to the thesis project, moved wholesale to `10_Archive/03_Theory/`.
+
+**Left in place (per user decision):** `05_Implementation/LibCrypt_Patcher.md`, `LibCrypt_Patcher_1.md`, `LibCrypt_Patcherreadmemd_-_Changelog.md`, `_1.md` — content unrelated to AMSCUP, user chose to leave rather than archive.
+
+**False positive caught and reverted:** `03_Theory/Annotations_1.md` was initially archived on the assumption it was an import-echo of `Annotations.md`, matching the general `_N` pattern. Diff against the changelog's original source paths showed it is genuinely different content — Zotero annotations on `lyuCameraLiDARIMU2025` vs `Annotations.md`'s `liAutomaticTargetlessLiDAR2023`. Restored to `03_Theory/`.
+
+**Deferred to Phase 2 (not resolved in this pass):** the 8-file verification-report cluster (`docs/verification_report.md`, `docs/verification_report_partial1.md`, and 6 files under `test-bed/.../kradar/docs/` and `.../outputs/`) needs a real diff-and-fold merge, not a pick-longest — different "part_" suffixes suggest different phases/sections, not simple re-saves. See `Dedup_Map.md` Group C.
+
 ## Summary
 - Processed: 44 files
 - Skipped (duplicates): 0 files
