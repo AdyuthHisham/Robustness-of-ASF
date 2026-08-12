@@ -55,6 +55,12 @@ class TestParsing:
         desc = parse_description_txt("1", dataset_root)
         assert desc['weather'] in ALLOWED_WEATHER
 
+    def test_smk04b_environment_time_of_day_parsed(self, dataset_root):
+        """SMK-04b: description.txt environment/time_of_day fields parsed alongside weather."""
+        desc = parse_description_txt("1", dataset_root)
+        assert 'location' in desc and desc['location']
+        assert 'time' in desc and desc['time']
+
 
 class TestProjection:
     @pytest.mark.parametrize("xyz,camera,expect_visible", [
@@ -310,13 +316,37 @@ class TestMetrics:
                 'cam_left_visible', 'cam_left_visibility_score',
                 'cam_right_visible', 'cam_right_visibility_score',
                 'cam_rear_visible', 'cam_rear_visibility_score',
-                'ghost_flag'  # New in phase 2
+                'ghost_flag',  # New in phase 2
+                'weather', 'environment', 'time_of_day', 'frame_object_count',
             ]
             for col in expected_cols:
                 assert col in df.columns, f"Missing expected column: {col}"
 
             # Check that ghost flag is boolean
             assert df['ghost_flag'].dtype == pl.Boolean, "ghost_flag column must be boolean"
+
+            # frame_object_count must be a per-frame constant equal to the
+            # number of object-rows sharing that (sequence_id, frame_idx).
+            counts = df.group_by(["sequence_id", "frame_idx"]).agg(
+                pl.len().alias("n_rows"),
+                pl.col("frame_object_count").n_unique().alias("n_unique"),
+                pl.col("frame_object_count").first().alias("val"),
+            )
+            assert (counts["n_unique"] == 1).all(), (
+                "frame_object_count must be constant within a frame"
+            )
+            assert (counts["val"] == counts["n_rows"]).all(), (
+                "frame_object_count must equal the number of object-rows in that frame"
+            )
+
+            # environment/time_of_day must be constant per sequence (same
+            # description.txt read as weather) and non-null when weather is.
+            env_counts = df.group_by("sequence_id").agg(
+                pl.col("environment").n_unique().alias("n_env"),
+                pl.col("time_of_day").n_unique().alias("n_tod"),
+            )
+            assert (env_counts["n_env"] <= 1).all()
+            assert (env_counts["n_tod"] <= 1).all()
 
             # Optionally, check that the file was written
             out_path = tmp_path / "smoke_output.parquet"

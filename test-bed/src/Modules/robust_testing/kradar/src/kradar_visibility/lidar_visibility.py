@@ -292,8 +292,15 @@ def _compute_occlusion_fraction_from_range_image(bbox: List[float], range_image:
     range_samples = range_image[channel_indices, azimuth_indices]
 
     # Compute occlusion fraction and confidence
-    # Ignore infinite values in range_samples (no hit) and NaN values
-    valid_samples = np.isfinite(range_samples) & ~np.isnan(range_samples)
+    # Ignore infinite values in range_samples (no hit) and NaN values.
+    # A stored range of exactly 0.0 means the bin was never sampled by any
+    # LiDAR point this frame (prepare_frame_lidar() initializes the range
+    # image with np.zeros(...) and leaves unhit bins at 0.0) -- it means
+    # "unknown", not "confirmed empty at zero range". Treating it as valid
+    # data made every corner that maps to an unsampled bin compare as
+    # `real_range > 0.0` and get scored as occluded with full confidence,
+    # even when the object has a large genuine in-box point count.
+    valid_samples = np.isfinite(range_samples) & ~np.isnan(range_samples) & (range_samples > 0.0)
     if np.any(valid_samples):
         # For valid samples, if actual range > range image value, then occluded
         occluded = np.zeros_like(ranges, dtype=bool)

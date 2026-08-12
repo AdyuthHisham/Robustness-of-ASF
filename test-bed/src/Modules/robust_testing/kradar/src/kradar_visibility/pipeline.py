@@ -14,6 +14,11 @@ Changes vs. original:
             disable camera metrics for that sequence rather than crashing.
   ISSUE-08: Guard added before pl.DataFrame() for the empty-rows case.
   WEATHER-01: Parse description.txt for weather label and add to each row.
+  ENV-01: Parse description.txt's environment/time_of_day fields (same read
+          as WEATHER-01, no change to weather parsing) and add as
+          `environment`/`time_of_day` columns.  Also adds `frame_object_count`
+          (len(objects) computed once per frame, broadcast to every row for
+          that frame) — see config.OUTPUT_SCHEMA.
   TASK-3.1: Radar CFAR noise floor (prepare_frame_radar) computed once per
             frame and passed as noise_floor_db to compute_radar_sparsity_score,
             replacing the global-median fallback.  RADAR_GUARD_CELLS/RADAR_TRAINING_CELLS
@@ -120,7 +125,10 @@ def _obj_corners(obj) -> np.ndarray:
         [ hl, -hw, -hh], [ hl, -hw,  hh], [ hl,  hw, -hh], [ hl,  hw,  hh],
     ], dtype=np.float64)
 
-    cos_t, sin_t = math.cos(obj.theta), math.sin(obj.theta)
+    # obj.theta is stored in degrees in the raw K-Radar label files (e.g. 106.39),
+    # not radians -- convert before feeding math.cos/sin.
+    theta_rad = math.radians(obj.theta)
+    cos_t, sin_t = math.cos(theta_rad), math.sin(theta_rad)
     R = np.array([[cos_t, -sin_t, 0],
                   [sin_t,  cos_t, 0],
                   [0,      0,     1]], dtype=np.float64)
@@ -173,7 +181,9 @@ def _assert_radar_cube_shape(cube: np.ndarray):
 # Per-frame visibility computation
 # ---------------------------------------------------------------------------
 def compute_visibility_for_frame(sequence_id, header, objects, dataset_root,
-                                  calib_available: bool = True, weather_label: str = "normal"):
+                                  calib_available: bool = True, weather_label: str = "normal",
+                                  environment_label: Optional[str] = None,
+                                  time_of_day_label: Optional[str] = None):
     """Compute all visibility metrics for every object in one frame.
 
     Args:
@@ -184,11 +194,18 @@ def compute_visibility_for_frame(sequence_id, header, objects, dataset_root,
         calib_available:   Set to False when calibration failed to load for
                            this sequence; camera metrics will be zeroed out.
         weather_label:     Weather label for the sequence (default: "normal").
+        environment_label: Environment label for the sequence (e.g. "highway"),
+                           parsed from description.txt field 1. None if absent.
+        time_of_day_label: Time-of-day label for the sequence (e.g. "day"),
+                           parsed from description.txt field 2. None if absent.
 
     Returns:
         List of row dicts (one per object).
     """
     rows = []
+    # ENV-01: per-frame object count, computed once and broadcast to every
+    # object-row belonging to this frame (not a per-sensor value).
+    frame_object_count = len(objects)
 
     # --- Load sensor data for this frame ---
     radar_cube = load_radar_cube(sequence_id, header.tesseract_idx, dataset_root)
@@ -478,6 +495,9 @@ def compute_visibility_for_frame(sequence_id, header, objects, dataset_root,
             'num_sensors_visible': num_sensors_visible,
             'primary_sensor': primary_sensor,
             'weather': weather_label,
+            'environment': environment_label,
+            'time_of_day': time_of_day_label,
+            'frame_object_count': frame_object_count,
             'ghost_flag': radar_visible and not lidar64_visible and not lidar128_visible and not (cam_front_visible or cam_left_visible or cam_right_visible or cam_rear_visible),
         })
 
@@ -535,6 +555,15 @@ def run(
                 log.warning(f"No weather found in description.txt for sequence {seq_id}; using 'normal'")
             weather_label = "normal"
 
+        # ENV-01: environment / time_of_day come from the same description.txt
+        # read (fields 1 and 2); parsed as-is, no validation set like weather.
+        environment_label = weather_info.get('location', '').strip() or None
+        time_of_day_label = weather_info.get('time', '').strip() or None
+        if environment_label is None:
+            log.warning(f"No environment found in description.txt for sequence {seq_id}")
+        if time_of_day_label is None:
+            log.warning(f"No time_of_day found in description.txt for sequence {seq_id}")
+
         label_files = get_sequence_label_files(seq_id, dataset_root)
         if frame_limit:
             annotated = []
@@ -556,6 +585,8 @@ def run(
                     seq_id, header, objects, dataset_root,
                     calib_available=calib_available,
                     weather_label=weather_label,
+                    environment_label=environment_label,
+                    time_of_day_label=time_of_day_label,
                 )
                 all_rows.extend(rows)
             except Exception as exc:
@@ -575,6 +606,9 @@ def run(
         'cam_right_proj_y': pl.Float64,
         'cam_rear_proj_x':  pl.Float64,
         'cam_rear_proj_y':  pl.Float64,
+        'environment': pl.Utf8,
+        'time_of_day': pl.Utf8,
+        'frame_object_count': pl.Int64,
     })
 
     if output_path:

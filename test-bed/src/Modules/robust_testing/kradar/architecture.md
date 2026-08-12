@@ -248,6 +248,10 @@ One row per (sequence, frame, tracked object).  Columns defined in `config.OUTPU
 | obj_length/width/height | float | annotation (full, meters) |
 | obj_distance_ego | float | computed (meters) |
 | sensor_identify | str | annotation |
+| weather | str | description.txt field 3 (validated against ALLOWED_WEATHER, fallback "normal") |
+| environment | str \| null | description.txt field 1 (`location` key), unvalidated |
+| time_of_day | str \| null | description.txt field 2 (`time` key), unvalidated |
+| frame_object_count | int | computed: len(objects) for this frame, broadcast to all its rows |
 | radar_visible | bool | computed |
 | radar_fov_in | bool | computed |
 | radar_range_in | bool | computed |

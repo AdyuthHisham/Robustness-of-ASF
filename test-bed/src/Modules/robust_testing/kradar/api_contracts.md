@@ -52,7 +52,9 @@ CAMERA_INTRINSICS: dict[str, dict[str, float]]  # keys: fx, fy, cx, cy
 CAMERA_EXTRINSICS: dict[str, dict]     # keys: R (3×3 list), t (list[3])
 
 # Output schema — ordered column names
-OUTPUT_SCHEMA: list[str]              # 44 columns, see §3.1 of spec
+OUTPUT_SCHEMA: list[str]              # 47 columns, see §3.1 of spec
+                                       # (adds environment, time_of_day,
+                                       # frame_object_count alongside weather)
 
 # Weather labels list
 WEATHER_LABELS: list[str]             # ["clear", "overcast", "fog", "rain", "sleet", "snow"]

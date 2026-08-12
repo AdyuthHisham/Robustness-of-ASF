@@ -8,9 +8,8 @@
 #
 #SBATCH -A naiss2026-4-494
 #SBATCH -p alvis
-#SBATCH -C NOGPU
+#SBATCH --gpus-per-node=A40:1
 #SBATCH -c 1
-#SBATCH --mem=4G
 #SBATCH -t 00:30:00
 #SBATCH -o slurm_logs/merge_%j.out
 #SBATCH -J kradar_vis_merge
@@ -23,7 +22,9 @@ cd "$KRADAR_DIR"
 mkdir -p slurm_logs
 
 module load uv/0.7.13-GCCcore-14.2.0
-source .venv/bin/activate
+# kradar is a uv workspace member of test-bed (see test-bed/pyproject.toml),
+# so `uv sync` resolves the shared venv at the workspace root, not here.
+source "$BASE_DIR/test-bed/.venv/bin/activate"
 
 python scripts/run_split.py \
   --dataset-root "$BASE_DIR/repos/K-Radar" \

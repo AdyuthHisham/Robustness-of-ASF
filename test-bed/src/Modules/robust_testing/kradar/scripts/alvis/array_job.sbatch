@@ -17,11 +17,16 @@
 #   - #SBATCH -A          : naiss2026-4-494 (confirmed via sacctmgr)
 #   - -c / --workers        : tune after the first few tasks report real timing
 #
+# This account has GPU-partition access only — NOGPU nodes/-C NOGPU are not
+# usable here, and --mem cannot be requested directly (memory scales with
+# -c/--gpus-per-node automatically). Requests 1 A40 (unused by this
+# CPU-only pipeline) purely to satisfy account/queue policy, matching the
+# working pattern already established in repos/AMSCUP_PLUS/*.sbatch.
+#
 #SBATCH -A naiss2026-4-494
 #SBATCH -p alvis
-#SBATCH -C NOGPU
+#SBATCH --gpus-per-node=A40:1
 #SBATCH -c 16
-#SBATCH --mem=8G
 #SBATCH -t 08:00:00
 #SBATCH --array=1-58%12
 #SBATCH -o slurm_logs/array_%A_%a.out
@@ -35,7 +40,9 @@ cd "$KRADAR_DIR"
 mkdir -p slurm_logs outputs/shards
 
 module load uv/0.7.13-GCCcore-14.2.0
-source .venv/bin/activate
+# kradar is a uv workspace member of test-bed (see test-bed/pyproject.toml),
+# so `uv sync` resolves the shared venv at the workspace root, not here.
+source "$BASE_DIR/test-bed/.venv/bin/activate"
 
 SEQ="$SLURM_ARRAY_TASK_ID"
 

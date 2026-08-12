@@ -197,3 +197,5 @@ repos/AI-MSF-Benchmark/
 
 .claude/
 .claude/worktrees/
+
+*.parquet

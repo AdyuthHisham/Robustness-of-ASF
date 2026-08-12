@@ -19,9 +19,8 @@
 #
 #SBATCH -A naiss2026-4-494
 #SBATCH -p alvis
-#SBATCH -C NOGPU
+#SBATCH --gpus-per-node=A40:1
 #SBATCH -c 4
-#SBATCH --mem=8G
 #SBATCH -t 00:30:00
 #SBATCH -o slurm_logs/setup_env_%j.out
 #SBATCH -J kradar_vis_setup_env
@@ -42,10 +41,12 @@ export UV_PYTHON="$(command -v python3)"
 uv --version
 "$UV_PYTHON" --version
 
-echo "Locking + syncing dependencies (from $(pwd)) into local .venv/ ..."
+echo "Locking + syncing dependencies (from $(pwd)) ..."
 uv lock
 uv sync
 
+# kradar is a uv workspace member of test-bed (see test-bed/pyproject.toml),
+# so `uv sync` resolves the shared venv at the workspace root, not here.
 echo ""
-echo "Environment ready at $(pwd)/.venv"
+echo "Environment ready at $BASE_DIR/test-bed/.venv"
 uv run python -c "import kradar_visibility, polars, numpy, cv2; print('imports OK')"
