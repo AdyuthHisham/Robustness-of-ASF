@@ -10,10 +10,21 @@ N_points = Σᵢ [Pᵢ ∈ bbox]
 ```
 `bbox` is the axis-aligned bounding box (AABB) enclosing the 8 rotated corners of the object annotation — the rotated box is reduced to its AABB before the point-in-box test, which over-counts near corners when `theta ≠ 0`.
 
-**Expected density** (fixed per sensor, not per-object extent):
+**Expected density** (fixed per sensor, not per-object extent). VFOV and
+HRES values corrected to match the K-Radar dataset paper
+(`docs/lit_survey/noise_addition/kradar.pdf`, p.12, Table 7) — see
+[[../06_Results/lidar128-legacy-remap-visibility-anomaly|LiDAR128 Legacy-Remap Visibility Anomaly]]
+for the discrepancies this fixed:
+- OS2-64 VFOV was 33.2°, paper says 22.5°; OS1-128 was 44.5°, paper says 45°.
+- OS2-64/OS1-128 HRES (azimuth resolution) was 0.35°/0.17° respectively —
+  wrong on both counts. Table 7's resolution row is `[0.1cm range res,
+  0.18° azimuth res, 0.35° elevation res]`, **identical for both sensors**.
+  0.35° is the elevation resolution (confirmed via `VFOV/channels`: both
+  `22.5/64` and `45/128` ≈ 0.35°), not OS2-64's azimuth res. Correct azimuth
+  res for both sensors is 0.18°.
 ```
-E_OS2  = (64  × 33.2 / 360) × (360 / 0.35) ≈ 6,074  points/m³
-E_OS1  = (128 × 44.5 / 360) × (360 / 0.17) ≈ 33,459 points/m³
+E_OS2  = (64  × 22.5 / 360) × (360 / 0.18) ≈ 8,000   points/m³
+E_OS1  = (128 × 45.0 / 360) × (360 / 0.18) ≈ 32,000  points/m³
 ```
 
 **Sparsity score:**
@@ -21,7 +32,7 @@ E_OS1  = (128 × 44.5 / 360) × (360 / 0.17) ≈ 33,459 points/m³
 S_lidar = clip(N_points / (E × V_bbox), 0, 1)
 ```
 
-**Gating:** `visible = True` iff `N_points > 0` AND center within `[0, 120]` m range (FOV limit `[-200,200]×[-200,200]` m is effectively unbounded). The pipeline runs this twice per frame — once for OS2-64, once for OS1-128 — producing independent `lidar64_*` / `lidar128_*` columns. **No occlusion handling**: the point-in-box test counts all points geometrically inside the bbox regardless of whether they belong to an occluder.
+**Gating:** `visible = True` iff `N_points > 0` AND center within range (FOV limit `[-200,200]×[-200,200]` m is effectively unbounded). Range cutoff is **per-sensor**, matching Table 7: `[0, 240]` m for OS2-64, `[0, 120]` m for OS1-128 (previously both shared a single `[0, 120]` m cutoff, under-counting OS2-64 detections beyond 120m). The pipeline runs this twice per frame — once for OS2-64, once for OS1-128 — producing independent `lidar64_*` / `lidar128_*` columns. **No occlusion handling**: the point-in-box test counts all points geometrically inside the bbox regardless of whether they belong to an occluder.
 
 ## Camera — 8-corner projection → area × centrality
 

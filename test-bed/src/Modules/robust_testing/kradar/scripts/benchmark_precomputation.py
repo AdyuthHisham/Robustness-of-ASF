@@ -37,7 +37,7 @@ from kradar_visibility.config import (
 from kradar_visibility.pipeline import (
     RADAR_Z_MIN, RADAR_Z_MAX, RADAR_Y_MIN, RADAR_Y_MAX,
     RADAR_X_MIN, RADAR_X_MAX, RADAR_GRID_Z, RADAR_GRID_Y, RADAR_GRID_X,
-    _EXPECTED_OS2, _EXPECTED_OS1, _LIDAR_FOV, _LIDAR_RANGE,
+    _EXPECTED_OS2, _EXPECTED_OS1, _LIDAR_FOV, _LIDAR_RANGE_OS2, _LIDAR_RANGE_OS1,
     _world_to_voxel, _radar_fov_check, _radar_range_check, _obj_corners,
     _bbox_voxels_from_annotation, _bbox_list_from_annotation
 )
@@ -142,12 +142,12 @@ def benchmark_with_precomputation(radar_cube, os2_points, os1_points, objects, s
             # LiDAR scores
             if os2_points is not None and len(os2_points) > 0:
                 calculate_lidar_visibility(
-                    os2_points, bbox_list, _LIDAR_FOV, _LIDAR_RANGE,
+                    os2_points, bbox_list, _LIDAR_FOV, _LIDAR_RANGE_OS2,
                     _EXPECTED_OS2, range_image=os2_range_image, sensor_origin=os2_sensor_origin
                 )
             if os1_points is not None and len(os1_points) > 0:
                 calculate_lidar_visibility(
-                    os1_points, bbox_list, _LIDAR_FOV, _LIDAR_RANGE,
+                    os1_points, bbox_list, _LIDAR_FOV, _LIDAR_RANGE_OS1,
                     _EXPECTED_OS1, range_image=os1_range_image, sensor_origin=os1_sensor_origin
                 )
             
@@ -200,12 +200,12 @@ def benchmark_without_precomputation(radar_cube, os2_points, os1_points, objects
             # LiDAR scores (NO range image - fallback path)
             if os2_points is not None and len(os2_points) > 0:
                 calculate_lidar_visibility(
-                    os2_points, bbox_list, _LIDAR_FOV, _LIDAR_RANGE,
+                    os2_points, bbox_list, _LIDAR_FOV, _LIDAR_RANGE_OS2,
                     _EXPECTED_OS2, range_image=None, sensor_origin=None
                 )
             if os1_points is not None and len(os1_points) > 0:
                 calculate_lidar_visibility(
-                    os1_points, bbox_list, _LIDAR_FOV, _LIDAR_RANGE,
+                    os1_points, bbox_list, _LIDAR_FOV, _LIDAR_RANGE_OS1,
                     _EXPECTED_OS1, range_image=None, sensor_origin=None
                 )
             

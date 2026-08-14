@@ -45,8 +45,8 @@ from .camera_visibility import (calculate_camera_visibility, project_point_to_im
                                 prepare_frame_camera, camera_score, stereo_consistency)
 from .config import (
     RADAR_FOV_AZIMUTH_DEG, RADAR_FOV_ELEVATION_DEG, RADAR_MAX_RANGE_M,
-    OS2_64_CHANNELS, OS2_64_VFOV_DEG, OS2_64_HRES_DEG,
-    OS1_128_CHANNELS, OS1_128_VFOV_DEG, OS1_128_HRES_DEG,
+    OS2_64_CHANNELS, OS2_64_VFOV_DEG, OS2_64_HRES_DEG, OS2_64_MAX_RANGE_M,
+    OS1_128_CHANNELS, OS1_128_VFOV_DEG, OS1_128_HRES_DEG, OS1_128_MAX_RANGE_M,
     CAM_HALF_WIDTH, CAM_HALF_HEIGHT,
     DEPTH_MARGIN, DEPTH_SAMPLE_RADIUS
 )
@@ -82,7 +82,11 @@ _EXPECTED_OS1 = (OS1_128_CHANNELS * OS1_128_VFOV_DEG / 360.0) * (360.0 / OS1_128
 
 # LiDAR FOV limits [x_min, x_max, y_min, y_max] in meters (center-point check)
 _LIDAR_FOV = [-200.0, 200.0, -200.0, 200.0]  # effectively no FOV cutoff
-_LIDAR_RANGE = [0.0, 120.0]
+# Per-sensor range limits (Table 7: os2-64 max range 240m, os1-128 max range
+# 120m). Previously both sensors shared a single [0, 120] cutoff, which
+# under-counted os2-64 detections beyond 120m.
+_LIDAR_RANGE_OS2 = [0.0, OS2_64_MAX_RANGE_M]
+_LIDAR_RANGE_OS1 = [0.0, OS1_128_MAX_RANGE_M]
 
 
 # ---------------------------------------------------------------------------
@@ -329,7 +333,7 @@ def compute_visibility_for_frame(sequence_id, header, objects, dataset_root,
             try:
                 vis, cnt, sco = calculate_lidar_visibility(
                     os2_points, bbox_list,
-                    fov=_LIDAR_FOV, range_limit=_LIDAR_RANGE,
+                    fov=_LIDAR_FOV, range_limit=_LIDAR_RANGE_OS2,
                     expected_density=_EXPECTED_OS2,
                     range_image=os2_range_image,
                     sensor_origin=os2_sensor_origin,
@@ -347,7 +351,7 @@ def compute_visibility_for_frame(sequence_id, header, objects, dataset_root,
             try:
                 vis, cnt, sco = calculate_lidar_visibility(
                     os1_points, bbox_list,
-                    fov=_LIDAR_FOV, range_limit=_LIDAR_RANGE,
+                    fov=_LIDAR_FOV, range_limit=_LIDAR_RANGE_OS1,
                     expected_density=_EXPECTED_OS1,
                     range_image=os1_range_image,
                     sensor_origin=os1_sensor_origin,
@@ -357,6 +361,14 @@ def compute_visibility_for_frame(sequence_id, header, objects, dataset_root,
                 lidar128_score = float(sco[0])
             except Exception as exc:
                 log.debug("lidar128 failed for obj %s: %s", obj.tracking_id, exc)
+
+        # ISSUE-09: lidar128_visible_confirmed tracks whether *this sensor's own*
+        # point count/score justified visible=True, before the legacy 'L' OR-remap
+        # below can set lidar128_visible=True purely from lidar64's result (and
+        # vice versa). Without this, a consumer filtering on lidar128_visible can
+        # get rows with lidar128_points_count=0 / lidar128_sparsity_score=0.0.
+        lidar64_visible_confirmed = lidar64_visible
+        lidar128_visible_confirmed = lidar128_visible
 
         # For legacy 'L' label, map to lidar64_visible OR lidar128_visible
         if obj.sensor_identify == 'L':
@@ -471,9 +483,11 @@ def compute_visibility_for_frame(sequence_id, header, objects, dataset_root,
             'radar_range_in': radar_range_in,
             'radar_sparsity_score': radar_score,
             'lidar64_visible': lidar64_visible,
+            'lidar64_visible_confirmed': lidar64_visible_confirmed,
             'lidar64_points_count': lidar64_points,
             'lidar64_sparsity_score': lidar64_score,
             'lidar128_visible': lidar128_visible,
+            'lidar128_visible_confirmed': lidar128_visible_confirmed,
             'lidar128_points_count': lidar128_points,
             'lidar128_sparsity_score': lidar128_score,
             'cam_front_visible': cam_front_visible,
@@ -499,6 +513,12 @@ def compute_visibility_for_frame(sequence_id, header, objects, dataset_root,
             'time_of_day': time_of_day_label,
             'frame_object_count': frame_object_count,
             'ghost_flag': radar_visible and not lidar64_visible and not lidar128_visible and not (cam_front_visible or cam_left_visible or cam_right_visible or cam_rear_visible),
+            # occluded: object sits within the ego vehicle's nominal sensing
+            # range (radar FOV+range, used as the geometric "should be
+            # observable" proxy) but no sensor confirms it — i.e. not out of
+            # range, just blocked from view. Distinct from ghost_flag (which
+            # flags the opposite case: radar-only detections).
+            'occluded': radar_fov_in and radar_range_in and num_sensors_visible == 0,
         })
 
     return rows

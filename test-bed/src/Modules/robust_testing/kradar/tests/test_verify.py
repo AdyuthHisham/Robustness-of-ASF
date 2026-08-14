@@ -145,6 +145,70 @@ class TestLidarWithRangeImage:
         assert points_with_ri[0] == points_no_ri[0]
         # Score with occlusion info should be <= score without (due to penalty or same)
         assert score_with_ri[0] <= score_no_ri[0] + 0.1  # Small tolerance for floating point
+
+    def test_ver33_occlusion_corners_not_mirrored_for_off_origin_bbox(self):
+        """VER-33: occlusion-fraction corner reconstruction must use the bbox's
+        actual world-frame coordinates, not their negation.
+
+        Regression test for a bug where `_compute_occlusion_fraction_from_range_image`
+        built corners as [-xmin, -ymin, -zmin] etc. instead of [xmin, ymin, zmin].
+        That only produces the correct AABB when xmin == -xmax (box symmetric
+        about the world origin) -- true for VER-27/28's toy bbox (which is why
+        they didn't catch it) but false for every real K-Radar object, which
+        sits tens of meters from the origin. The mirrored corners point in the
+        *opposite* direction from the sensor, so they sample the wrong
+        azimuth/elevation bin of the range image entirely.
+
+        This test places the object far from the origin (x~50m) and sets the
+        range image so the *correct* bin (forward, ~0deg azimuth) shows a
+        close occluder, while the *mirrored* bin (~180deg azimuth, where the
+        buggy corners would land) is left unsampled (0.0 = unknown). A
+        correct implementation must find the occluder; the buggy one reads
+        an unsampled bin and reports zero occlusion / zero confidence.
+        """
+        from kradar_visibility.lidar_visibility import OS2_64_CHANNEL_LUT
+
+        # A point cloud with genuine points inside the bbox, far from the origin.
+        points = np.array([
+            [50.0, 0.0, 0.0],
+            [50.5, 0.2, 0.1],
+        ], dtype=np.float32)
+        bbox = [[49.0, 51.0, -1.0, 1.0, -1.0, 1.0]]  # xmin=49, xmax=51 -- not symmetric about 0
+        fov = [-200.0, 200.0, -200.0, 200.0]
+        range_limit = [0.0, 120.0]
+        expected_density = 10.0  # <=50 -> calculate_lidar_visibility selects OS2_64_CHANNEL_LUT
+
+        channels = OS2_64_CHANNEL_LUT['channels']
+        azimuth_bins = OS2_64_CHANNEL_LUT['azimuth_bins']
+        range_image = np.zeros((channels, azimuth_bins), dtype=np.float32)  # all unsampled
+
+        # Forward direction (x~50, y~0 -> azimuth ~0, elevation ~0) is where
+        # the *correct* corners land. Put a close occluder (5m) at every
+        # elevation channel across a wide azimuth band around 0/360deg, since
+        # the exact bin depends on each corner's precise z (elevation).
+        range_image[:, 0:20] = 5.0
+        range_image[:, azimuth_bins - 20:] = 5.0  # azimuth wraps near 0
+
+        sensor_origin = np.array([0.0, 0.0, 0.0], dtype=np.float32)
+
+        visible, points_count, score = calculate_lidar_visibility(
+            points, bbox, fov, range_limit, expected_density,
+            range_image=range_image, sensor_origin=sensor_origin,
+        )
+
+        assert points_count[0] == 2
+        # With correctly-reconstructed corners, at least one corner should
+        # land on the forward bin (channel range narrow enough that some of
+        # the 8 corners hit mid_channel) and detect the close-range occluder,
+        # discounting the score below the plain density ratio.
+        density_ratio = points_count[0] / expected_density
+        assert score[0] < density_ratio, (
+            "score should be discounted by occlusion -- if it equals the "
+            "raw density ratio, the corners never found the occluder "
+            "(mirrored-corner bug regression)"
+        )
+
+
 class TestRadarWithNoiseFloorMap:
     """Test cases for radar visibility with precomputed noise floor map (Phase 3 Task 3.1)"""
     

@@ -3,6 +3,8 @@ import re
 from pathlib import Path
 from typing import NamedTuple, List, Optional
 
+from .config import DATASET_ROOT as _DEFAULT_DATASET_ROOT
+
 
 class HeaderInfo(NamedTuple):
     """Parsed header line from info_label_rev2/*.txt."""
@@ -130,7 +132,7 @@ def parse_label_file(filepath: Path) -> tuple[HeaderInfo, List[ObjectAnnotation]
 def get_sequence_label_files(sequence_id: str, dataset_root: Optional[Path] = None) -> List[Path]:
     """Get all label files for a sequence."""
     if dataset_root is None:
-        dataset_root = Path("/home/adhish/Productivity/AMSCUP/repos/K-Radar")
+        dataset_root = _DEFAULT_DATASET_ROOT
     label_dir = dataset_root / "data" / sequence_id / "info_label_rev2"
     if not label_dir.exists():
         return []
@@ -143,7 +145,7 @@ def parse_description_txt(sequence_id: str, dataset_root: Optional[Path] = None)
     Returns dict with keys: location, time, weather
     """
     if dataset_root is None:
-        dataset_root = Path("/home/adhish/Productivity/AMSCUP/repos/K-Radar")
+        dataset_root = _DEFAULT_DATASET_ROOT
     else:
         dataset_root = Path(dataset_root)
     desc_path = dataset_root / "data" / sequence_id / "description.txt"

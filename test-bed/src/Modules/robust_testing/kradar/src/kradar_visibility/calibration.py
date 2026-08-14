@@ -5,6 +5,8 @@ from typing import Optional
 import numpy as _np
 import yaml as _yaml
 
+from .config import CALIB_ROOT as _CALIB_ROOT
+
 # Camera mapping: direction -> (cam_number, cam_key)
 # front: 1,2 | right: 3,4 | rear: 5,6 | left: 7,8
 CAMERA_MAP = {
@@ -13,9 +15,6 @@ CAMERA_MAP = {
     'rear': [(5, 'rear0'), (6, 'rear1')],
     'left': [(7, 'left0'), (8, 'left1')],
 }
-
-# Calibration resources base path
-_CALIB_ROOT = '/home/adhish/Productivity/AMSCUP/repos/K-Radar/resources/cam_calib'
 
 
 def _load_dist_coeffs(cam_key: str) -> Optional[_np.ndarray]:
@@ -40,7 +39,7 @@ def _load_dist_coeffs(cam_key: str) -> Optional[_np.ndarray]:
 
 def load_camera_calibration(seq=1):
     """Load T_params_seq pickle for a given sequence. Returns dict of cam_key -> params."""
-    filepath = f'/home/adhish/Productivity/AMSCUP/repos/K-Radar/resources/cam_calib/T_params_seq/{seq}'
+    filepath = _CALIB_ROOT / 'T_params_seq' / str(seq)
     with open(filepath, 'rb') as f:
         data = pickle.load(f)
     return data

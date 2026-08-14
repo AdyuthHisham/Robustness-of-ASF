@@ -12,8 +12,8 @@ tags: [05 Implementation]
 This document provides a comprehensive technical specification of the visibility calculation methodologies implemented in the K-Radar multi-sensor visibility analysis pipeline. The pipeline computes per-object visibility scores for seven sensors across the K-Radar dataset:
 
 - **Radar (R):** REINA-4ST 4D Radar (forward-only, 107° azimuth × 37° elevation, 0–118 m range)
-- **LiDAR 64 (L1):** Ouster OS2-64 (64 channels, 33.2° vertical FOV, 0.35° horizontal resolution)
-- **LiDAR 128 (L2):** Ouster OS1-128 (128 channels, 44.5° vertical FOV, 0.17° horizontal resolution)
+- **LiDAR 64 (L1):** Ouster OS2-64 (64 channels, 22.5° vertical FOV, 0.18° horizontal resolution — corrected from 33.2°/0.35°, see [[../06_Results/lidar128-legacy-remap-visibility-anomaly]])
+- **LiDAR 128 (L2):** Ouster OS1-128 (128 channels, 45° vertical FOV, 0.18° horizontal resolution — corrected from 44.5°/0.17°)
 - **Camera Front (CF):** ZED2i stereo camera (1280×720 per half)
 - **Camera Left (CL):** ZED2i stereo camera (1280×720 per half)
 - **Camera Right (CR):** ZED2i stereo camera (1280×720 per half)
@@ -56,14 +56,14 @@ E = (N_channels × VFOV / 360°) × (360° / HRES)
 
 Where:
 - `N_channels` = number of vertical channels (64 for OS2-64, 128 for OS1-128)
-- `VFOV` = vertical field of view in degrees (33.2° for OS2-64, 44.5° for OS1-128)
-- `HRES` = horizontal angular resolution in degrees (0.35° for OS2-64, 0.17° for OS1-128)
+- `VFOV` = vertical field of view in degrees (22.5° for OS2-64, 45° for OS1-128 — corrected from 33.2°/44.5°)
+- `HRES` = horizontal (azimuth) angular resolution in degrees — 0.18° for both sensors per K-Radar paper Table 7 (corrected from 0.35°/0.17°; those were mis-assigned elevation-resolution values, see [[../06_Results/lidar128-legacy-remap-visibility-anomaly]])
 - `E` = expected point count per cubic meter (points/m³)
 
 **Derived constants (from `config.py`):**
 ```
-_EXPECTED_OS2 = (64 × 33.2 / 360) × (360 / 0.35) ≈ 6,074 points/m³
-_EXPECTED_OS1 = (128 × 44.5 / 360) × (360 / 0.17) ≈ 33,459 points/m³
+_EXPECTED_OS2 = (64 × 22.5 / 360) × (360 / 0.18) ≈ 8,000  points/m³
+_EXPECTED_OS1 = (128 × 45.0 / 360) × (360 / 0.18) ≈ 32,000 points/m³
 ```
 
 #### Sparsity Score (Normalized Visibility)
@@ -381,13 +381,15 @@ The `primary_sensor` selection uses **raw score comparison** across sensors. Thi
 | `DB_HEADROOM` | 20.0 dB | SNR headroom for score=1.0 | `radar_visibility.py` line 16; empirical |
 | **LiDAR** | | | |
 | `OS2_64_CHANNELS` | 64 | Vertical channels | `config.py` |
-| `OS2_64_VFOV_DEG` | 33.2° | Vertical FOV | `config.py` (Ouster OS2-64 spec) |
-| `OS2_64_HRES_DEG` | 0.35° | Horizontal resolution | `config.py` |
+| `OS2_64_VFOV_DEG` | 22.5° | Vertical FOV | `config.py` (K-Radar paper Table 7; corrected from 33.2°) |
+| `OS2_64_HRES_DEG` | 0.18° | Horizontal (azimuth) resolution | `config.py` (corrected from 0.35°) |
+| `OS2_64_MAX_RANGE_M` | 240.0 m | Range limit | `config.py` (new; was shared 120m with OS1-128) |
 | `OS1_128_CHANNELS` | 128 | Vertical channels | `config.py` |
-| `OS1_128_VFOV_DEG` | 44.5° | Vertical FOV | `config.py` (Ouster OS1-128 spec) |
-| `OS1_128_HRES_DEG` | 0.17° | Horizontal resolution | `config.py` |
-| `_LIDAR_FOV` | [-200, 200] m | X/Y FOV limits (effectively none) | `pipeline.py` line 65 |
-| `_LIDAR_RANGE` | [0, 120] m | Range limits | `pipeline.py` line 66 |
+| `OS1_128_VFOV_DEG` | 45.0° | Vertical FOV | `config.py` (corrected from 44.5°) |
+| `OS1_128_HRES_DEG` | 0.18° | Horizontal (azimuth) resolution | `config.py` (corrected from 0.17°) |
+| `OS1_128_MAX_RANGE_M` | 120.0 m | Range limit | `config.py` (new) |
+| `_LIDAR_FOV` | [-200, 200] m | X/Y FOV limits (effectively none) | `pipeline.py` |
+| `_LIDAR_RANGE_OS2` / `_LIDAR_RANGE_OS1` | [0, 240] m / [0, 120] m | Per-sensor range limits | `pipeline.py` (previously one shared `_LIDAR_RANGE=[0,120]`) |
 | Min points for `visible=True` | 1 | Any non-zero count | `lidar_visibility.py` line 102 |
 | **Camera** | | | |
 | `HALF_WIDTH` | 1280 px | Image width per stereo half | `camera_visibility.py` line 17 |

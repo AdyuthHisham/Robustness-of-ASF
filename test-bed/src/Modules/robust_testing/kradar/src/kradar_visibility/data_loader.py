@@ -5,11 +5,13 @@ import numpy as np
 import scipy.io
 import cv2
 
+from .config import DATASET_ROOT as _DEFAULT_DATASET_ROOT
+
 
 def load_radar_cube(sequence_id: str, frame_idx: str, dataset_root: Optional[Path] = None) -> Optional[np.ndarray]:
     """Load radar_zyx_cube .mat file for a given frame."""
     if dataset_root is None:
-        dataset_root = Path("/home/adhish/Productivity/AMSCUP/repos/K-Radar")
+        dataset_root = _DEFAULT_DATASET_ROOT
     
     # Try cube_XXXXX.mat naming
     cube_dir = dataset_root / "data" / sequence_id / "radar_zyx_cube"
@@ -67,7 +69,7 @@ def load_lidar_points(sequence_id: str, frame_idx: str, sensor: str = "os2-64", 
     sensor: 'os2-64' or 'os1-128'
     """
     if dataset_root is None:
-        dataset_root = Path("/home/adhish/Productivity/AMSCUP/repos/K-Radar")
+        dataset_root = _DEFAULT_DATASET_ROOT
     
     pcd_file = dataset_root / "data" / sequence_id / sensor / f"{sensor}_{frame_idx}.pcd"
     if not pcd_file.exists():
@@ -82,7 +84,7 @@ def load_camera_image(sequence_id: str, frame_idx: str, camera: str, dataset_roo
     camera: 'cam-front', 'cam-left', 'cam-right', 'cam-rear'
     """
     if dataset_root is None:
-        dataset_root = Path("/home/adhish/Productivity/AMSCUP/repos/K-Radar")
+        dataset_root = _DEFAULT_DATASET_ROOT
     
     img_file = dataset_root / "data" / sequence_id / camera / f"{camera}_{frame_idx}.png"
     if not img_file.exists():
@@ -98,7 +100,7 @@ def load_camera_image(sequence_id: str, frame_idx: str, camera: str, dataset_roo
 def get_camera_image_path(sequence_id: str, frame_idx: str, camera: str, dataset_root: Optional[Path] = None) -> Optional[Path]:
     """Get path to camera image without loading it."""
     if dataset_root is None:
-        dataset_root = Path("/home/adhish/Productivity/AMSCUP/repos/K-Radar")
+        dataset_root = _DEFAULT_DATASET_ROOT
     
     img_file = dataset_root / "data" / sequence_id / camera / f"{camera}_{frame_idx}.png"
     return img_file if img_file.exists() else None

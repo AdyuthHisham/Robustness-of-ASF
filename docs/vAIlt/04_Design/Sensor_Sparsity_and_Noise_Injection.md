@@ -31,7 +31,7 @@ File: `radar_visibility.py`. Two-stage: per-frame noise-floor map (`prepare_fram
 
 ### LiDAR (OS2-64 and OS1-128) — expected-density-ratio method
 
-File: `lidar_visibility.py`. Same code path (`calculate_lidar_visibility`) called twice by the pipeline, once per sensor, with sensor-specific `expected_density` and channel LUT constants (`OS2_64_CHANNELS=64, OS2_64_VFOV_DEG=33.2, OS2_64_HRES_DEG=0.35`; `OS1_128_CHANNELS=128, OS1_128_VFOV_DEG=44.5, OS1_128_HRES_DEG=0.17` — `config.py`).
+File: `lidar_visibility.py`. Same code path (`calculate_lidar_visibility`) called twice by the pipeline, once per sensor, with sensor-specific `expected_density` and channel LUT constants (`OS2_64_CHANNELS=64, OS2_64_VFOV_DEG=22.5, OS2_64_HRES_DEG=0.18`; `OS1_128_CHANNELS=128, OS1_128_VFOV_DEG=45.0, OS1_128_HRES_DEG=0.18` — `config.py`; corrected from the K-Radar paper Table 7, see [[../06_Results/lidar128-legacy-remap-visibility-anomaly]]).
 
 **Range image (`prepare_frame_lidar`, lines 36–113):**
 - Convert Nx3 points to spherical: `range = sqrt(x²+y²+z²)`, `elevation = arcsin(z/range)`, `azimuth = atan2(y,x)` shifted to `[0,360)`.

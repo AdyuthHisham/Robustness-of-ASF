@@ -27,11 +27,13 @@ This module centralises all tunable parameters for the K‑Radar visibility anal
 | `CAM_W1` | `float` | `0.7` | Area weight for the camera visibility score. |
 | `CAM_W2` | `float` | `0.3` | Centrality weight for the camera visibility score. |
 | `OS2_64_CHANNELS` | `int` | `64` | Number of vertical channels for the OS2‑64 LiDAR sensor (L1). |
-| `OS2_64_VFOV_DEG` | `float` | `33.2` | Vertical field‑of‑view for OS2‑64 LiDAR (degrees). |
-| `OS2_64_HRES_DEG` | `float` | `0.35` | Angular resolution for OS2‑64 LiDAR (degrees per laser line). |
+| `OS2_64_VFOV_DEG` | `float` | `22.5` | Vertical field‑of‑view for OS2‑64 LiDAR (degrees). Corrected from `33.2` to match K-Radar paper Table 7. |
+| `OS2_64_HRES_DEG` | `float` | `0.18` | **Azimuth** angular resolution for OS2‑64 LiDAR (degrees). Corrected from `0.35` — Table 7's resolution row is `[0.1cm range res, 0.18° azimuth res, 0.35° elevation res]`, identical for both LiDARs; `0.35` had been mistakenly used as OS2-64's azimuth res (it's actually the elevation res, already implicit in `OS2_64_VFOV_DEG/OS2_64_CHANNELS`). |
+| `OS2_64_MAX_RANGE_M` | `float` | `240.0` | Max range for OS2-64 (Table 7). Previously shared a single 120m cutoff with OS1-128 via `pipeline.py`'s `_LIDAR_RANGE`. |
 | `OS1_128_CHANNELS` | `int` | `128` | Number of vertical channels for the OS1‑128 LiDAR sensor (L2). |
-| `OS1_128_VFOV_DEG` | `float` | `44.5` | Vertical field‑of‑view for OS1‑128 LiDAR (degrees). |
-| `OS1_128_HRES_DEG` | `float` | `0.17` | Angular resolution for OS1‑128 LiDAR (degrees per laser line). |
+| `OS1_128_VFOV_DEG` | `float` | `45.0` | Vertical field‑of‑view for OS1‑128 LiDAR (degrees). Corrected from `44.5`. |
+| `OS1_128_HRES_DEG` | `float` | `0.18` | **Azimuth** angular resolution for OS1‑128 LiDAR (degrees). Corrected from `0.17` to match Table 7's shared 0.18° azimuth res. |
+| `OS1_128_MAX_RANGE_M` | `float` | `120.0` | Max range for OS1-128 (Table 7). |
 | `ALLOWED_WEATHER` | `set[str]` | `{"clear", "overcast", "fog", "rain", "sleet", "snow"}` | Canonical set of weather labels accepted by the pipeline. |
 | `SMOKE_SEQUENCE_IDS` | `list[str]` | `["1", "2"]` | Sequence IDs used for quick CI / local smoke tests. |
 | `SMOKE_FRAME_LIMIT` | `int` | `20` | Maximum number of frames processed per sequence during smoke tests. |

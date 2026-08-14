@@ -1,10 +1,13 @@
-import pytest
 from pathlib import Path
+
+import pytest
 import polars as pl
+
+from kradar_visibility.config import DATASET_ROOT
 
 @pytest.fixture(scope="session")
 def dataset_root():
-    return Path("/home/adhish/Productivity/AMSCUP/repos/K-Radar")
+    return DATASET_ROOT
 
 @pytest.fixture(scope="session")
 def smoke_sequence_ids():
@@ -17,7 +20,7 @@ def smoke_frame_limit():
 @pytest.fixture(scope="session")
 def output_table():
     """Load the toy-scale visibility parquet table (2 sequences, ≤20 frames)."""
-    parquet_path = Path("/home/adhish/Productivity/AMSCUP/test-bed/src/Modules/robust_testing/kradar/output.parquet")
+    parquet_path = Path(__file__).resolve().parents[1] / "output.parquet"
     if not parquet_path.exists():
         pytest.skip("Parquet output not found — run pipeline first")
     return pl.read_parquet(parquet_path)

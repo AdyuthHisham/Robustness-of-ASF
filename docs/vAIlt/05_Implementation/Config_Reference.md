@@ -17,11 +17,13 @@ tags: [05 Implementation]
 * RADAR_FOV_ELEVATION_DEG: 37.0
 * RADAR_MAX_RANGE_M: 118.0
 * OS2_64_CHANNELS: 64
-* OS2_64_VFOV_DEG: 33.2
-* OS2_64_HRES_DEG: 0.35
+* OS2_64_VFOV_DEG: 22.5 (corrected from 33.2 — see [[../06_Results/lidar128-legacy-remap-visibility-anomaly]])
+* OS2_64_HRES_DEG: 0.18 (corrected from 0.35 — table 7's resolution row is azimuth res 0.18°, elevation res 0.35°, identical for both LiDARs; 0.35 had been mistaken for OS2-64's azimuth res)
+* OS2_64_MAX_RANGE_M: 240.0 (new; previously LiDAR range was a single shared 120m cutoff)
 * OS1_128_CHANNELS: 128
-* OS1_128_VFOV_DEG: 44.5
-* OS1_128_HRES_DEG: 0.17
+* OS1_128_VFOV_DEG: 45.0 (corrected from 44.5)
+* OS1_128_HRES_DEG: 0.18 (corrected from 0.17)
+* OS1_128_MAX_RANGE_M: 120.0 (new)
 
 ### Camera Configuration
 

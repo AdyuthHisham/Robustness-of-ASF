@@ -27,6 +27,7 @@
 - [[bev-plot-axes-explainer|BEV Plot Axes Explainer]]
 - [[rdr_sparse-vs-pc100p-explainer|rdr_sparse vs pc100p Explainer]]
 - [[f14ebce-line-categorization|f14ebce Line Categorization]]
+- [[lidar128-legacy-remap-visibility-anomaly|LiDAR128 Legacy-Remap Visibility Anomaly]]
 
 ## Notes
 

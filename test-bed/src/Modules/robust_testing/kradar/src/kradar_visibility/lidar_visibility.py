@@ -253,15 +253,20 @@ def _compute_occlusion_fraction_from_range_image(bbox: List[float], range_image:
     """
     xmin, xmax, ymin, ymax, zmin, zmax = bbox
 
-    # Define box corners in object center frame
+    # Define box corners in world/sensor frame. `bbox` is the object's actual
+    # world-frame AABB (not centered at origin) -- a previous version negated
+    # xmin/ymin/zmin here, which only reconstructs the correct corners when
+    # xmin == -xmax (box symmetric about world origin). For any real object
+    # away from the origin that mirrors each corner to the opposite side of
+    # the sensor, corrupting the azimuth/elevation lookup into range_image
+    # and silently producing wrong occlusion verdicts. Confirmed against a
+    # real K-Radar object: occluded_fraction 0.0 (buggy, wrong bins) vs.
+    # 0.167 (correct) for the same range image.
     corners = np.array([
-        [-xmin, -ymin, -zmin], [ xmax, -ymin, -zmin], [ xmax,  ymax, -zmin], [-xmin,  ymax, -zmin],  # bottom face
-        [-xmin, -ymin,  zmax], [ xmax, -ymin,  zmax], [ xmax,  ymax,  zmax], [-xmin,  ymax,  zmax]   # top face
+        [xmin, ymin, zmin], [xmax, ymin, zmin], [xmax, ymax, zmin], [xmin, ymax, zmin],  # bottom face
+        [xmin, ymin, zmax], [xmax, ymin, zmax], [xmax, ymax, zmax], [xmin, ymax, zmax]   # top face
     ])
 
-    # Shift corners to be relative to object center (assuming bbox is centered at origin)
-    # Actually, the bbox is already in world coordinates with center at (0,0,0) for this computation
-    # We need to transform to sensor frame
     corners_sensor = corners - sensor_origin  # Shift to sensor-relative coordinates
 
     # Convert to spherical coordinates for each corner. Elevation must use the
