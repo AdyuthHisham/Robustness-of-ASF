@@ -87,7 +87,147 @@ Camera: clean`) rather than attributing any box to one sensor — ASF fuses all 
 branches on every frame, so no detection is "identified by" a single sensor; the honest
 statement is which sensor's *input* was corrupted for that condition.
 
-## Caveats
+## Caveats (original 6-frame smoke study)
 
 6 frames, one severity per effect, one seed. Not AP — detection-count deltas only. See
 `RESULTS.md` for the full write-up.
+
+---
+
+# Update 2026-08-14/17: sequence-46/1 pilot, then full 10-sequence sweep
+
+## Sequence-46 pilot (2026-08-14)
+
+Built a SEQ-generic Alvis driver (`scripts/alvis/asf_run.sbatch` + `submit_run.sh`,
+generalized from a one-off `asf_seq46.sbatch`) and ran full-sequence (not 6-frame) AP-based
+inference: sequence 46 (598 raw labels → 300 after class/ROI/`remove_0_obj` filtering) and
+sequence 1 (597 raw → 299), original baseline + one corrupted condition
+(camera `gaussian_noise`, σ=40).
+
+**Bug found and fixed**: the sbatch script had inherited `export KRADAR_EVAL_GPU_IOU=1`
+verbatim from the smoke-study template. That env var opts into a numba `@cuda.jit`
+rotated-IoU kernel (`nms_gpu.py`) that SIGSEGVs on driver mismatch —
+`utils/kitti_eval/eval_revised.py:13-19` documents this and defaults to a CPU fallback when
+unset. The smoke template's own header claimed "CPU rotated-IoU fallback" as a fix while
+setting the exact opposite. Removing the export fixed it; predictions were already
+correctly written before the crash in both cases (segfault happens during the *later*
+AP-eval step), so no data was lost, just the AP summary.
+
+**New effect added**: `loss_complete_zero` (radar/LiDAR) — zero-fills the sensor array in
+place at injection time, distinct from the existing `loss_complete` (sets the key to
+`None`, resolved later by `NoiseInjectedDataset`'s `blackout_policy`). Camera's own
+`loss_complete` was already zero-tensor based, so no camera analogue was needed. Added with
+150 passing unit tests (up from 140).
+
+**Robustness metric implemented**: Rb^c = corrupted-AP / original-AP, mRb = mean(Rb^c),
+from *Benchmarking Robustness of AI-Enabled Multi-sensor Fusion Systems* §3.3
+(`docs/lit_survey/noise_addition/markdown/BenchmarkingRobustness.md`). Camera
+gaussian_noise (σ=40) on sequence 46: mean Rb^c = 1.025, min 0.793 (Bus/Truck 3D @IoU 0.7),
+max 1.631 (Sedan BEV @IoU 0.7) — no clear degradation signal on this single condition/seed,
+flagged explicitly as inconclusive rather than "robust," since most Rb^c values sit at or
+above 1.0 (noise floor at this sample size, not a real finding).
+
+**Gallery built and verified**: radar/LiDAR/camera original-vs-corrupted panels with real
+prediction/GT box overlays, using the same `render_bev`/`draw_boxes`/`draw_camera_boxes`
+pipeline as the original smoke gallery. Confirmed the camera sensor is genuinely
+**mono, not stereo**: `front0`/`front1` are the left/right halves of a single 2560×720
+stereo image (`datasets/kradar_fusion_v1_0.py:690-691`), but every `ASF_v2_0_seq*_alvis.yml`
+config sets `cam: {front0: True, front1: False, ...}` — confirmed empirically by zero
+`front1` files ever appearing in a `--dump-sensors` dump.
+
+## Full sweep infrastructure (2026-08-17)
+
+Generalized everything into a repeatable multi-sequence, multi-severity study:
+
+- `scripts/alvis/gen_single_effect_configs.py` rewritten to emit a **low/medium/high**
+  severity triple per effect (29 configs: 9 effects × 3 severities + radar/LiDAR
+  `loss_complete_zero` unconditional × 2), sourced from
+  `docs/vAIlt/06_Results/noise-visual-inspection-severity-levels-report.md`'s severity
+  table (not the older single-value `effect_parameters.yaml`, which disagrees on several
+  effects). `loss_complete` (the None-setting variant) stays excluded — a prior generator
+  finding (2026-08-11 sweep) showed it's redundant with `frame_deletion(p=1.0)` for
+  radar/LiDAR, both aborting identically.
+
+  | Effect | Low | Medium | High |
+  |---|---|---|---|
+  | frame_deletion (all 3 modalities), p | 0.1 | 0.5 | 0.9 |
+  | radar noise_induced_shifts, shift_std | 0.01 | 1.0 | 5.0 |
+  | lidar gaussian_noise, sigma_xy/sigma_z | 0.01 | 0.5/0.2 | 1.0 |
+  | camera gaussian_noise, sigma | 1.0 | 40.0 | 50.0 |
+  | loss_partial (all 3 modalities), fraction | 0.1 | 0.3 | 0.8 |
+  | loss_complete_zero (radar/lidar) | unconditional, no severity levels |
+
+- 10 sequence configs added (`ASF_v2_0_seq{2,7,8,9,15,16,18,41,48,55}_alvis.yml`) — randomly
+  selected (seed 42) from the 58 available K-Radar sequences, each capped to the first 10
+  *surviving* (post-filter) frames via `max_per_seq: 10, frame_select: 'first'`.
+- `submit_run.sh` extended with a `sweep` mode looping over all 29 configs, gated behind
+  `--confirmed` (same as a single named condition) given the cost of discovering a broken
+  baseline after burning dozens of corrupted-job GPU-hours.
+- `scripts/alvis/compute_robustness.py`: first parser in the repo for
+  `complete_results.txt`'s output format (previously only writers existed). Handles the
+  format's asymmetric label spacing (`'bev: '` vs `'3d  :'`) via key-prefix matching, not
+  literal string match. Validated against the seq46 pilot's real numbers — exact match.
+- `scripts/alvis/build_sequence_full_gallery.py` / `build_random_sample_gallery.py`:
+  promote the pilot's ad hoc gallery script into reusable, parameterized ones. Original
+  panels are rendered once per frame and shared across every condition section (not
+  re-rendered per condition) — sourced from any one corrupted condition's pre-injection
+  `_clean` backup, since the `original` run itself has no `--dump-sensors` dump.
+
+**Ran the full sweep**: 10 sequences × (1 original + 29 corrupted) = 300 SLURM jobs, all
+finished — 260 OK, 40 failed (exactly `lidar`/`radar frame_deletion` at medium+high severity,
+10 sequences each — the sparse-conv backbone aborting on a near/fully-empty point cloud,
+consistent with the smoke study's documented crash mode; zero segfaults, zero unexpected
+failures).
+
+## Gallery-rendering lessons (worth remembering for next time)
+
+1. **`render_bev`'s point-drawing loop is O(n) Python-level overhead** (`cv2.circle` +
+   a Python colormap call per point, up to ~150k radar points/frame) — fine for a handful
+   of renders, not for hundreds. Fixed by subsampling (cap 20k points) at the *call site* in
+   the new gallery scripts, not by touching the shared `render_bev` itself (used by other
+   galleries too).
+2. **A detached SSH command isn't actually killed when the local `timeout` expires** — an
+   early attempt left two duplicate gallery-render processes running concurrently on Alvis,
+   racing on the same output files. Always verify a background remote process is the one
+   you think it is (`ps aux` by PID) before trusting a "still running" assumption.
+3. **Alvis has no CPU-only nodes** — even a non-GPU rendering job needs
+   `--gpus-per-node=A40:1` to be schedulable on the `alvis` partition.
+4. **Passing a multi-argument command string through `sbatch --export=...` across
+   local-shell → ssh → remote-shell → sbatch is fragile** — nested quoting silently
+   truncated `--out` off the end of a real command on first attempt. Fixed by writing the
+   command to a small shell script and passing its *path* via `--export`, executed as
+   `bash $GALLERY_SCRIPT` inside the sbatch job instead.
+5. **`cv2.imwrite`/`PIL.save` default to near-lossless JPEG quality (~95)** when only the
+   file extension is changed from `.png` to `.jpg` with no explicit quality parameter — a
+   569.5 MB PNG gallery only shrank to 378.3 MB this way, far short of the expected 5-10×;
+   an explicit lower quality (~75-80) is needed for a real size win, not yet applied.
+
+## Terminology note
+
+User preference, applied throughout all new writing this session: label uncorrupted
+data/runs **"original"**, not "clean" — but existing on-disk identifiers already named
+`clean` (e.g. `outputs/alvis_seq46/clean/`, the earlier pilot's `out_name`) are left as
+literal names, described with "original" in surrounding prose rather than renamed.
+
+## Caveats (sweep)
+
+10 sequences, 10 frames/sequence (post-filter, not literally the first 10 raw frames), one
+seed. Robustness numbers (Rb^c/mRb) are computed by `compute_robustness.py` but have not
+yet been run across the full 300-job sweep as of this writeup — only the seq46 pilot's
+single-condition Rb^c has been computed and reported so far.
+
+---
+
+# Update 2026-08-19: metrics literature audit + GT-object transition analysis
+
+Metrics literature audit (`docs/lit_survey/metrics/metrics_audit.md`) recommends a stack
+built on top of the existing `Rb^c`/`mRb` output — see [[robustness-metric-selection]] for
+the full writeup (RoboBEV naming trap, convergent-reinvention note, CRI's severity-count
+caveat at n=3).
+
+Added a companion per-object diagnostic, `scripts/alvis/gt_transition_analysis.py`: churn
+classification (stable / corruption_induced_miss / corruption_induced_recovery /
+baseline_failure) per GT object across a clean/corrupted pair, reusing this repo's own BEV
+box convention and `rotate_iou_cpu.py`. Read-only, operates on `all_predictions.parquet`.
+Unit-verified, not yet run against real sweep output. Full detail in
+[[gt-transition-analysis]].
