@@ -1062,6 +1062,7 @@ version = "0.1.0"
 source = { editable = "src/Modules/robust_testing/kradar" }
 dependencies = [
     { name = "fastapi" },
+    { name = "matplotlib" },
     { name = "numpy" },
     { name = "opencv-python" },
     { name = "opencv-python-headless" },
@@ -1086,6 +1087,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "fastapi", specifier = ">=0.115.0" },
+    { name = "matplotlib", specifier = ">=3.10.8" },
     { name = "numpy", specifier = ">=1.26.4" },
     { name = "opencv-python", specifier = ">=4.11.0.86" },
     { name = "opencv-python-headless", specifier = ">=4.11.0.86" },

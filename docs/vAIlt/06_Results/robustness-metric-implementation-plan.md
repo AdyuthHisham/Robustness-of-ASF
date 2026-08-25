@@ -521,7 +521,7 @@ path, not replaced. `ingest.py` auto-selects between them by file presence.
   `ProcessPoolExecutor`). If that path is delayed, the coordinate fallback
   would need vectorizing before it could run over the full sweep.
 
-### Remaining follow-ups, in priority order
+### Remaining follow-ups, in priority order (superseded — see §7 below)
 
 1. Run `reconstruct_object_ids.py` on Alvis (sbatch), then validate
    `ingest.py`'s trk_id backend against its real output.
@@ -532,3 +532,114 @@ path, not replaced. `ingest.py` auto-selects between them by file presence.
    reason, vectorize it.
 4. Re-run `compute_robustness.py` with CRI across the full 10-sequence/
    29-condition sweep once `original` baselines are all present.
+
+## 7. Status update (2026-08-20) — scale-up, dummy-filter fix, pooled-AP validation
+
+Supersedes §5/§6's numbers where they conflict. Sweep scope corrected: it's
+**all 58 sequences (1-58)**, not the 10-sequence list assumed in §1/§6 (that
+was a stale example list). `all_preds.txt` grew substantially past the
+274,551-line count in §1.1 during this pass (617K → 711K → 743K+ lines as
+inference jobs kept landing) — **always re-check the current line count
+before trusting any cached result**; nothing below should be treated as
+final until that's re-verified.
+
+**Real bug found and fixed**: `ingest.py`'s `_parse_preds_txt` was not
+filtering K-Radar's `dummy` placeholder prediction lines (`cls="dummy"`,
+all-zero box, `score=0`) — K-Radar's own "zero predictions this frame"
+convention, not real predictions. These were being counted as spurious false
+positives: **FP count dropped from 187,896 → 148,332** after the fix (~47K
+phantom FPs removed). Confirmed fixed and in place.
+
+**AP validation, corrected methodology**: macro-averaging AP
+per-sequence-then-averaging badly biases rare classes (`bus`/`Truck` appear
+in only ~29-53 of 58 sequences) — this produced a spurious ~30-point gap vs.
+official numbers on bus AP. Switched `compute_ap_grouped` to **pool across
+sequences, group by class only**, at the official IoU=0.3 BEV threshold
+(confirmed `gt_transition_analysis.py`'s matcher uses BEV IoU only, via
+`_bev_box_array`/`rotate_iou_gpu_eval`) — gap disappeared. Final pooled
+comparison against official benchmark numbers: **Sedan 77.92 (official
+82.5), Bus 67.42 (official 70.2)** — within expected noise for a 58-sequence
+subset vs. the full official split. (The exact-match validation from §5,
+`68.39447680321193` for seq1/`sed`/IoU=0.5, remains the load-bearing
+single-condition correctness check; this pooled comparison is the
+scale-validation on top of it.)
+
+**`original` baseline has no per-directory `complete_results.txt`**: this
+invalidated the §6 run-order assumption that per-directory eval output
+exists for the original condition. Predictions for `original` (like every
+other condition) are merged straight into the flat `all_preds.txt`/
+`all_gts.txt` — `compute_robustness.py`'s `complete_results.txt`-based
+approach (§2.3 option (a)/(b) resolution still stands on methodology, but
+the *data source* assumption doesn't) is superseded by **`run_ap_robustness.py`**
+(new, `scripts/alvis/`): end-to-end driver, `ingest.py` → `ap_metrics.py`
+grouped by `(sequence, condition, cls)` → per-sequence RR/mRR/CRI → JSON
+report.
+
+**Full mAP-per-condition table computed** (58 sequences, coordinate
+backend, dummy-filtered, IoU=0.5): baseline (`original`) mAP=55.41.
+`frame_deletion` on radar/lidar is catastrophic (3.8–12.6 mAP at
+high/medium severity). Camera corruptions are nearly negligible (57.0–57.9,
+~flat vs. baseline). **This fusion model is clearly radar/lidar-dominant** —
+material for the robustness narrative, not just a QA check.
+
+**Data completeness audit** (58 sequences × 31 conditions = 30 corrupted +
+`original`; note `camera_loss_complete` has no `_zero` suffix, inconsistent
+with lidar/radar's `*_loss_complete_zero` naming): 116 missing
+`(sequence, condition)` cells, two distinct patterns:
+- Severity-correlated: `lidar_frame_deletion_{high,medium}` and
+  `radar_frame_deletion_{high,medium,low}` missing for 33/58, 29/58, 30/58,
+  15/58, 5/58 sequences respectively — consistent with the model crashing at
+  high corruption severity, not a data pipeline bug.
+- Isolated: all 4 `radar_loss_partial_*`/`radar_loss_complete_zero`
+  conditions missing for **sequence 12 only** — looks like an
+  infrastructure/job-level failure, not model-related.
+
+**Object-identity backend — still disabled per standing instruction.**
+`reconstruct_object_ids.py`'s Stage B has a real box-format bug: it passes
+7-column 3D boxes (`h,w,l,loc_x,loc_y,loc_z,rot_y`) to
+`bev_box_overlap`, which requires 5-column BEV boxes
+(`loc_x, loc_y, w, l, rot_y`). Fix is straightforward (drop `loc_z`/height
+before calling) but **not applied** — `force_backend="coordinate"` remains
+hardcoded everywhere (`run_ap_robustness.py`, sbatch scripts) until this is
+fixed and re-validated. Do not re-enable without an explicit new
+instruction.
+
+**Frame-index join — still not executed.** `reconstruct_object_ids.py`
+Stage A's `outputs/frame_index_map.txt` byproduct (§6) is coded but has not
+been run — needs Alvis. Two Alvis jobs (`run_ap_robustness` job 6949133,
+and a `reconstruct_object_ids` dry run that had already finished/crashed)
+were cancelled by user request during this pass; all further local work ran
+on this machine instead, via `uv run --with polars --with numpy` (ephemeral
+deps, no host installs — consistent with the no-host-installs constraint
+for Alvis, applied here defensively even though this was local).
+
+**Enrichment parquet coverage — still thin.**
+`output_with_env_density.parquet` (49 columns — grew from the 44-column
+`kradar_test_split_full.parquet` referenced in §1.2/§1.4, same role) covers
+only 5/58 sequences (`1, 9, 13, 23, 38`), not the full sweep.
+
+**Persisted artifacts from this pass** (`scripts/alvis/outputs/robustness_reports/`):
+- `row_table.parquet` — IoU=0.5, **pre**-dummy-fix. Stale, do not use.
+- `row_table_iou03.parquet` — IoU=0.3, **post**-dummy-fix. Current row-level
+  table.
+- `ap_robustness_local.json` — IoU=0.5, post-dummy-fix, full 58-sequence
+  run. Latest full JSON report as of this writing, but predates the last
+  `all_preds.txt` growth — re-verify line count before treating as final
+  (see top of this section).
+
+### Remaining follow-ups (current, supersedes the list above)
+
+1. Fix `reconstruct_object_ids.py` Stage B's box-format bug (drop
+   `loc_z`/height, pass `[loc_x, loc_y, w, l, rot_y]` to `bev_box_overlap`),
+   then re-enable and validate the trk_id backend.
+2. Run `reconstruct_object_ids.py` Stage A on Alvis to produce
+   `frame_index_map.txt`; wire it into `ingest.py`'s distance/weather
+   enrichment step.
+3. Regenerate `output_with_env_density.parquet` at full 58-sequence scale
+   (or explicitly scope every stratified figure to the 5 covered sequences
+   in the meantime).
+4. Re-verify `all_preds.txt`'s current line count and re-run
+   `run_ap_robustness.py` if it has grown since `ap_robustness_local.json`
+   was produced.
+5. Item 7 of the visualization plan (zero-sensor ablation) needs new
+   inference runs (radar=0/lidar=0/camera=0) that don't exist yet.

@@ -199,3 +199,5 @@ repos/AI-MSF-Benchmark/
 .claude/worktrees/
 
 *.parquet
+output/
+outputs/

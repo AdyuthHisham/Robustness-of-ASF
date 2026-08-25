@@ -2,12 +2,12 @@
 	"nodes":[
 		{"id":"3dc8973fe52e1bf2","type":"group","x":-1360,"y":-2400,"width":2480,"height":2480,"label":"Sensor Fusion"},
 		{"id":"4fa9a394b5ff4737","type":"group","x":3370,"y":-1160,"width":2055,"height":1480,"color":"2","label":"Unified Testing"},
-		{"id":"a93c965b00a9c484","type":"group","x":3370,"y":-2560,"width":2165,"height":1280,"color":"6","label":"Data Flow"},
-		{"id":"5a9b6689f141b8ca","type":"group","x":1495,"y":-2300,"width":1810,"height":860,"color":"6","label":"Phase 2"},
-		{"id":"ee6223b13224ae19","type":"group","x":1960,"y":-2620,"width":880,"height":220,"color":"2","label":"Phase 1"},
 		{"id":"1b356151793d5ed2","type":"group","x":4585,"y":-760,"width":403,"height":480,"label":"Processing"},
 		{"id":"74dac17ba9131184","type":"group","x":4625,"y":-680,"width":300,"height":290,"color":"4","label":"Regenerate Data"},
 		{"id":"1e7fae1080d7f03b","type":"group","x":5085,"y":-520,"width":300,"height":190,"label":"Processed"},
+		{"id":"a93c965b00a9c484","type":"group","x":3370,"y":-2560,"width":2165,"height":1280,"color":"6","label":"Data Flow"},
+		{"id":"5a9b6689f141b8ca","type":"group","x":1495,"y":-2300,"width":1810,"height":860,"color":"6","label":"Phase 2"},
+		{"id":"ee6223b13224ae19","type":"group","x":1960,"y":-2620,"width":880,"height":220,"color":"2","label":"Phase 1"},
 		{"id":"5ccc582e9a327a72","type":"group","x":5035,"y":-1080,"width":300,"height":190,"label":"NATIVE"},
 		{"id":"307d725d4afc9ece","type":"group","x":-1292,"y":-2280,"width":2345,"height":1303,"color":"2","label":"Nuscenes"},
 		{"id":"2d6ee5647020e53f","type":"group","x":-1292,"y":-873,"width":1952,"height":893,"color":"4","label":"Kradar"},
@@ -840,16 +840,6 @@
 		{"id":"427fb5321fcf2ce6","type":"text","text":"1. Uses seperate backbones to extract multi-level features from RT(Range-Time) radar maps and images.\n2. No heavy processing of Radar data; so has access to relatively dense radar cloud\n3. Cross attention -\n\t1. “This azimuth corresponds to exactly one image column.”\n\t2. “This range corresponds to a specific row in the RT map.”","x":-1160,"y":-853,"width":450,"height":283},
 		{"id":"1d0200ea15f54141","type":"text","text":"EADF: Force the depth map to respect sharp discontinuities at object edges instead of blurring them.","x":-1272,"y":-1483,"width":290,"height":120},
 		{
-			"id":"2fbb939bb9e7202a",
-			"type":"text",
-			"text":"| Sensor Type | nuScenes Quantity     | K-Radar Quantity                             |\n| ----------- | --------------------- | -------------------------------------------- |\n| Camera      | 6 (RGB cameras)       | 4 (Stereo cameras, providing 8 total images) |\n| Lidar       | 1 (Spinning, 32-beam) | 2 (One 64-channel and one 128-channel)       |\n| Radar       | 5 (Conventional FMCW) | 1 (4D Radar sensor)                          |\n| GPS         | 1 (Integrated suite)  | 1 (RTK-GPS)                                  |\n| IMU         | Included in GPS suite | 2 (Built into the Lidars)                    |",
-			"styleAttributes":{},
-			"x":3493,
-			"y":20,
-			"width":795,
-			"height":320
-		},
-		{
 			"id":"4c1c0d7fa09f6896",
 			"type":"text",
 			"text":"**utils/util_config.py**",
@@ -1310,6 +1300,46 @@
 			"height":60
 		},
 		{
+			"id":"743ecb9b79a1ed32",
+			"type":"text",
+			"text":"Upscale/Downscale Camera",
+			"styleAttributes":{},
+			"x":4653,
+			"y":-670,
+			"width":260,
+			"height":60
+		},
+		{
+			"id":"09f9ffb77a0a65a4",
+			"type":"text",
+			"text":"Toggle: NuScenes or KRADAR",
+			"styleAttributes":{},
+			"x":3843,
+			"y":-550,
+			"width":260,
+			"height":60
+		},
+		{
+			"id":"ec889da9fe68b790",
+			"type":"text",
+			"text":"Convert DATASET A to DATASET B",
+			"styleAttributes":{},
+			"x":4125,
+			"y":-610,
+			"width":260,
+			"height":60
+		},
+		{
+			"id":"a4346e915141728c",
+			"type":"text",
+			"text":"Remove/Generate channels",
+			"styleAttributes":{},
+			"x":4653,
+			"y":-580,
+			"width":260,
+			"height":60
+		},
+		{
 			"id":"bc3d76f67b4a3ab6",
 			"type":"text",
 			"text":"4D/3D to 3D/4D (?)",
@@ -1330,12 +1360,23 @@
 			"height":60
 		},
 		{
-			"id":"743ecb9b79a1ed32",
+			"id":"2fbb939bb9e7202a",
 			"type":"text",
-			"text":"Upscale/Downscale Camera",
+			"text":"| Sensor Type | nuScenes Quantity     | K-Radar Quantity                             |\n| ----------- | --------------------- | -------------------------------------------- |\n| Camera      | 6 (RGB cameras)       | 4 (Stereo cameras, providing 8 total images) |\n| Lidar       | 1 (Spinning, 32-beam) | 2 (One 64-channel and one 128-channel)       |\n| Radar       | 5 (Conventional FMCW) | 1 (4D Radar sensor)                          |\n| GPS         | 1 (Integrated suite)  | 1 (RTK-GPS)                                  |\n| IMU         | Included in GPS suite | 2 (Built into the Lidars)                    |",
 			"styleAttributes":{},
-			"x":4653,
-			"y":-670,
+			"x":3493,
+			"y":20,
+			"width":795,
+			"height":320
+		},
+		{"id":"8bf7378dab076bad","type":"file","file":"Pasted image 20260504133918.png","x":3888,"y":-300,"width":400,"height":224},
+		{
+			"id":"42a419cbf76458ef",
+			"type":"text",
+			"text":"NuScenes",
+			"styleAttributes":{},
+			"x":3973,
+			"y":-420,
 			"width":260,
 			"height":60
 		},
@@ -1369,48 +1410,7 @@
 			"width":260,
 			"height":60
 		},
-		{"id":"8bf7378dab076bad","type":"file","file":"Pasted image 20260504133918.png","x":3888,"y":-300,"width":400,"height":224},
-		{
-			"id":"42a419cbf76458ef",
-			"type":"text",
-			"text":"NuScenes",
-			"styleAttributes":{},
-			"x":3973,
-			"y":-420,
-			"width":260,
-			"height":60
-		},
-		{"id":"a5d3db020b81f802","type":"file","file":"Pasted image 20260504133839.png","x":3425,"y":-306,"width":400,"height":230},
-		{
-			"id":"09f9ffb77a0a65a4",
-			"type":"text",
-			"text":"Toggle: NuScenes or KRADAR",
-			"styleAttributes":{},
-			"x":3843,
-			"y":-550,
-			"width":260,
-			"height":60
-		},
-		{
-			"id":"ec889da9fe68b790",
-			"type":"text",
-			"text":"Convert DATASET A to DATASET B",
-			"styleAttributes":{},
-			"x":4125,
-			"y":-610,
-			"width":260,
-			"height":60
-		},
-		{
-			"id":"a4346e915141728c",
-			"type":"text",
-			"text":"Remove/Generate channels",
-			"styleAttributes":{},
-			"x":4653,
-			"y":-580,
-			"width":260,
-			"height":60
-		}
+		{"id":"a5d3db020b81f802","type":"file","file":"Pasted image 20260504133839.png","x":3425,"y":-306,"width":400,"height":230}
 	],
 	"edges":[
 		{"id":"40def0bbb9e0ee92","fromNode":"cc753e1cb3c71aab","fromSide":"bottom","toNode":"ae7d0ffc1cc283dd","toSide":"right","label":"NDS=74.4"},

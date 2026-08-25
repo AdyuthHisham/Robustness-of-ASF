@@ -11,17 +11,14 @@
             "id": "f8e69edafe54cac2",
             "type": "leaf",
             "state": {
-              "type": "canvas",
+              "type": "markdown",
               "state": {
-                "file": "Canvas.canvas",
-                "viewState": {
-                  "x": 4500.024376030725,
-                  "y": 251.02148070907185,
-                  "zoom": -0.5540446136191663
-                }
+                "file": "Projects/K-Radar/robustness-radar-charts.md",
+                "mode": "source",
+                "source": false
               },
-              "icon": "lucide-layout-dashboard",
-              "title": "Canvas"
+              "icon": "lucide-file",
+              "title": "robustness-radar-charts"
             }
           },
           {
@@ -72,7 +69,9 @@
               "type": "file-explorer",
               "state": {
                 "sortOrder": "alphabetical",
-                "autoReveal": false
+                "autoReveal": false,
+                "showSearch": false,
+                "searchQuery": ""
               },
               "icon": "lucide-folder-closed",
               "title": "Files"
@@ -109,8 +108,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300,
-    "collapsed": true
+    "width": 300
   },
   "right": {
     "id": "09bf09362ada1f1e",
@@ -231,9 +229,16 @@
   },
   "active": "f8e69edafe54cac2",
   "lastOpenFiles": [
+    "Projects/K-Radar/robustness-radar-charts.md.tmp.2778601.02e8e1fd336d",
+    "Pasted image 20260504133839.png",
+    "lu3831289ll5r6.tmp",
+    "FinalTerm_Presentation_Claude.pptx",
+    "lu3831289ll1kr.tmp",
+    "lu3831289ll1i8.tmp",
+    "lu3831289lkso7.tmp",
+    "Canvas.canvas",
     "Literature Review - Automatic Multi-Sensor Calibration and Unified Perception.md",
     "Methodology - Automatic Multi-Sensor Calibration and Unified Perception.md",
-    "Canvas.canvas",
     "Admin-ish/Daily Notes.md",
     "lu245352209n.tmp",
     "lu117175a8b59.tmp",
@@ -242,14 +247,11 @@
     "lu11578ihdy.tmp",
     "LitSurvey/LitSurvey.md",
     "MidTerm_Presentation.pptx",
-    "lu11578icgk.tmp",
     "Pasted image 20260504133918.png",
-    "Pasted image 20260504133839.png",
     "Admin-ish/General.md",
     "Canvas Notes.md",
     "Excalidraw/Drawing 2026-04-13 14.45.35.excalidraw.md",
     "Notes.md",
-    "Excalidraw",
     "Images/IMG_20260220_163239570_AE.jpg",
     "Images/IMG_20260223_162122895_AE.jpg",
     "Meeting Notes.md",
@@ -263,9 +265,6 @@
     "Untitled Kanban.md",
     "LitSurvey/lyuCameraLiDARIMU2025.md",
     "LitSurvey/shiRadarCameraFusion2024.md",
-    "Images",
-    "Markwhen/Timeline chart.mw",
-    "Markwhen",
     "LitSurvey/weiOnlineLiDARcameraExtrinsic2024.md",
     "LitSurvey/liAutomaticTargetlessLiDAR2023.md",
     "LitSurvey/liuAWARDistillAdaptiveRobust2025.md",

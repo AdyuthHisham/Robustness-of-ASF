@@ -4,21 +4,21 @@
     "type": "split",
     "children": [
       {
-        "id": "c8509015630b3ec2",
+        "id": "1701d7ae3f13329e",
         "type": "tabs",
         "children": [
           {
-            "id": "bcc5bd69e8fccc4b",
+            "id": "db56987b42efa1e2",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "07_Writing/LaTeX_Report_Structure.md",
+                "file": "06_Results/robustness-visualization-results-2026-08-20.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "LaTeX_Report_Structure"
+              "title": "robustness-visualization-results-2026-08-20"
             }
           }
         ]
@@ -41,7 +41,9 @@
               "type": "file-explorer",
               "state": {
                 "sortOrder": "alphabetical",
-                "autoReveal": false
+                "autoReveal": false,
+                "showSearch": false,
+                "searchQuery": ""
               },
               "icon": "lucide-folder-closed",
               "title": "Files"
@@ -53,7 +55,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "",
+                "query": "robustness_radar",
                 "matchingCase": false,
                 "explainSearch": false,
                 "collapseAll": false,
@@ -183,12 +185,36 @@
       "bases:Create new base": false
     }
   },
-  "active": "bcc5bd69e8fccc4b",
+  "active": "027471fbf8456163",
   "lastOpenFiles": [
+    "06_Results/robustness-visualization-results-2026-08-20.md.tmp.3064943.cbd02a1ef1be",
+    "06_Results/robustness-visualization-results-2026-08-20.md.tmp.3064943.8484b54b97ed",
+    "06_Results/robustness_figures/item7_zero_ablation_bar.png",
+    "06_Results/robustness-visualization-results-2026-08-20.md",
+    "06_Results/robustness-visualization-results-2026-08-20.md.tmp.3064943.8e3c7a29014e",
+    "06_Results/robustness-visualization-standalone-prompt.md",
+    "06_Results/robustness-visualization-results-2026-08-20.md.tmp.3064943.3bbde5a6bcb4",
+    "06_Results/robustness_figures/item8_ate_vs_ase_scatter.png",
+    "06_Results/robustness_figures/item8_ate_ase_bars.png",
+    "06_Results/robustness_figures/item6_churn_stacked_bar.png",
+    "06_Results/robustness_figures/item4_pr_curves.png",
+    "06_Results/robustness_figures/item4_fp_fn_stacked.png",
+    "06_Results/robustness_figures/item3_rce_heatmap.png",
+    "06_Results/robustness_figures/item2_recall_vs_density_line.png",
+    "06_Results/robustness_figures/item2_recall_boxplot_tercile.png",
+    "06_Results/robustness_figures/item1_map_vs_severity.png",
+    "06_Results/robustness_figures",
+    "06_Results/robustness-visualization-plan.md",
+    "06_Results/robustness-visualization-standalone-prompt.md.tmp.3064943.3b3a7d229b69",
+    "06_Results/robustness-visualization-generation-prompt.md.tmp.3030409.e1893f85c82d",
+    "06_Results/robustness-visualization-generation-prompt.md.tmp.3030409.6cb2af7192ea",
+    "06_Results/robustness-metric-implementation-plan.md.tmp.3030409.3997b846ca89",
+    "06_Results/full_codebase_audit_2026-08-20.md",
+    "06_Results/kradar-effects-audit.md",
+    "07_Writing/LaTeX_Report_Structure.md",
     "04_Design/Sensor_Sparsity_and_Noise_Injection.md.tmp.3675799.44e4ad44cb74",
     "04_Design/Sensor_Sparsity_and_Noise_Injection.md",
     "04_Design/Sensor_Sparsity_and_Noise_Injection.md.tmp.3675799.13a141bb400d",
-    "06_Results/Verification_Report.md.tmp.3152291.a0342aa257b9",
     "03_Theory/phase_2.md",
     "03_Theory/Annotations.md",
     "03_Theory/03 Theory.md",
@@ -206,30 +232,6 @@
     "00_Inbox/Excalidraw_Data.md",
     "00_Inbox/Dedup_Map.md",
     "00_Inbox/00 Inbox.md",
-    "_assets/noise_visual_inspection/v2_regeneration_confirmation.md",
-    "_assets/noise_visual_inspection/frame_deletion_severity_log.md",
-    "00_Inbox/Migration_Changelog.md.tmp.3152291.f1e98e3033d6",
-    "00_MOC.md.tmp.3152291.2ecfc7b00250",
-    "08_Resources/08 Resources.md",
-    "07_Writing/07 Writing.md.tmp.3152291.ec28973fcb2d",
-    "07_Writing/Vault_to_Thesis_Mapping.md",
-    "07_Writing/Vault_to_Thesis_Mapping.md.tmp.3152291.889124116e8f",
-    "07_Writing/LaTeX_Report_Structure.md",
-    "07_Writing/LaTeX_Report_Structure.md.tmp.3152291.20a214d439e0",
-    "07_Writing/07 Writing.md.tmp.3152291.bbe80d230434",
-    "07_Writing/Introduction.md",
-    "07_Writing/Introduction.md.tmp.3152291.628bdf021992",
-    "06_Results/06 Results.md.tmp.3152291.985792412fc3",
-    "noise-visual-inspection-report.md",
-    "_assets/noise_visual_inspection/loss_partial_zeroout_diagnostic/frame_seq048_rdr035/radar_loss_partial_FIXED_after.png",
-    "_assets/noise_visual_inspection/loss_partial_zeroout_diagnostic/frame_seq048_rdr035/lidar_loss_partial_FIXED_after.png",
-    "_assets/noise_visual_inspection/loss_partial_zeroout_diagnostic/frame_seq048_rdr035/lidar_loss_partial_DEFAULT_before.png",
-    "_assets/noise_visual_inspection/loss_partial_zeroout_diagnostic/frame_seq048_rdr035/lidar_clean.png",
-    "_assets/noise_visual_inspection/loss_partial_zeroout_diagnostic/frame_seq048_rdr035/radar_loss_partial_DEFAULT_before.png",
-    "_assets/noise_visual_inspection/loss_partial_zeroout_diagnostic/frame_seq048_rdr035/radar_clean.png",
-    "_assets/noise_visual_inspection/loss_partial_zeroout_diagnostic/frame_seq048_rdr035/camera_clean_vs_loss_partial_vs_loss_complete.png",
-    "_assets/noise_visual_inspection/loss_partial_zeroout_diagnostic/frame_seq021_rdr015/lidar_loss_partial_FIXED_after.png",
-    "_assets/noise_visual_inspection/loss_partial_zeroout_diagnostic/frame_seq021_rdr015/lidar_loss_partial_DEFAULT_before.png",
-    "_assets/noise_visual_inspection/loss_partial_zeroout_diagnostic/frame_seq021_rdr015/lidar_clean.png"
+    "_assets/noise_visual_inspection/v2_regeneration_confirmation.md"
   ]
 }
