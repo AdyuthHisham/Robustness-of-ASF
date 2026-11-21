@@ -6,7 +6,6 @@ Benchmarks used to report multi-sensor fusion performance for autonomous driving
 
 ![Evaluation pipeline: dataset, corruption injection and ASF inference run once per condition; the outputs are consolidated into one Parquet table, then metrics and stratified robustness analysis](docs/figures/thesis/eval_pipeline.svg)
 
-*Evaluation workflow. The figure's box says "36 conditions": the nominal grid of 3 modalities x 4 effects x 3 severities. Complete loss has a single level, so 30 corrupted conditions exist (clean run not counted): 21 evaluable plus 9 frame-deletion. Checked against `configs/noise/single/` (30 files) and `row_table_iou03.parquet` (30 corrupted conditions plus `original`).*
 
 ## Key results
 
