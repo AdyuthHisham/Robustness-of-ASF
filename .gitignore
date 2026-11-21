@@ -34,7 +34,6 @@ __pycache__/
 # Data / large files
 # =====================================
 # Avoid large datasets (KITTI, images, videos)
-data/
 datasets/
 *.zip
 *.tar
@@ -201,3 +200,24 @@ repos/AI-MSF-Benchmark/
 *.parquet
 output/
 outputs/
+
+# =====================================
+# AMSCUP layout (restructure 2026-11)
+# =====================================
+# data/ holds datasets and generated results: shared via drive link, never tracked.
+data/*
+!data/README.md
+!data/DATA.md
+# Misc/ holds everything moved out of the main tree (nothing was deleted). Only its index is tracked.
+Misc/*
+!Misc/README.md
+!Misc/MANIFEST.txt
+# Presentations are large binaries; shared via drive link.
+*.odp
+*.odp.bak
+*.pptx
+# Local tooling
+graphify-out/cache/
+.mypy_cache/
+.ruff_cache/
+graphify-out/
