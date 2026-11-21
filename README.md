@@ -74,7 +74,7 @@ Misc/              everything moved out of the main tree during the restructure 
 ```bash
 git clone <repo-url> && cd <repo-dir>      # no submodules; nothing to --recurse
 uv sync                                    # installs the single project (Python >= 3.12)
-# download the data bundle (link below) and unpack it so that data/results/ exists
+# download the data bundle from the Drive link under "Data and reproducibility" and unzip it into data/
 uv run python -c "import sys; sys.path.insert(0, 'scripts/analysis'); \
   import master_metrics_table as m; print(m.build_all_tables(out_dir=__import__('pathlib').Path('/tmp/mmt')))"
 uv run pytest tests/test_smoke.py          # needs the K-Radar dataset (see below)
@@ -85,7 +85,7 @@ uv run pytest tests/test_smoke.py          # needs the K-Radar dataset (see belo
 ## Data and reproducibility
 
 - **Tracked:** code, configs, docs, and the small tables and figures in `results/`.
-- **Not tracked (`data/`):** generated tables (`row_table_iou03.parquet`, `full_denormalized_table_*.parquet`, `crossproduct*/`), figures and visibility Parquets. About 13 GB in total. Shared through a drive link: **TODO: add link**. Details in [`data/DATA.md`](data/DATA.md).
+- **Not tracked (`data/`):** generated tables (`row_table_iou03.parquet`, `full_denormalized_table_*.parquet`, `crossproduct*/`), figures and visibility Parquets. About 13 GB in total. Shared through a drive link: [Google Drive folder](https://drive.google.com/drive/folders/1nT_dYkrQZNL7Rrki5DV-52CU7V-rsoHE?usp=sharing). Details in [`data/DATA.md`](data/DATA.md).
 - **Not included at all:** the K-Radar dataset itself. Obtain it from its authors and set `KRADAR_DATASET_ROOT` (default `data/KRadar`).
 - **What can be regenerated:** every downstream table and figure, from the Parquet row tables, with the scripts in `scripts/analysis/`.
 - **What cannot be regenerated:** the ASF predictions. They were produced on the Chalmers Alvis cluster (NVIDIA A40 GPUs, SLURM array jobs), and that compute is permanently unavailable. The files in `scripts/cluster_historical/` and the `*_alvis.yml` configs document how the sweep ran; they are for reference, not a current workflow. The local data is the ceiling for any further analysis.

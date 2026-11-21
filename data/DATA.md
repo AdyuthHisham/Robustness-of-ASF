@@ -1,6 +1,6 @@
 # Data catalogue
 
-Everything under `data/` except this file is **gitignored**. It is shared as a drive bundle (**TODO: add link**) and unpacked into `data/`. Paths are defined once in [`src/amscup_paths.py`](../src/amscup_paths.py); override with `AMSCUP_DATA_DIR` and `KRADAR_DATASET_ROOT`.
+Everything under `data/` except this file is **gitignored**. It is shared as a drive bundle ([Google Drive folder](https://drive.google.com/drive/folders/1nT_dYkrQZNL7Rrki5DV-52CU7V-rsoHE?usp=sharing)) and unpacked into `data/`. Paths are defined once in [`src/amscup_paths.py`](../src/amscup_paths.py); override with `AMSCUP_DATA_DIR` and `KRADAR_DATASET_ROOT`.
 
 | Path (under `data/`) | What | Size | Format / schema | Produced by | Regenerable now? |
 |---|---|---|---|---|---|
