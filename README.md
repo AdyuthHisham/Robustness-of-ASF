@@ -90,23 +90,6 @@ uv run pytest tests/test_smoke.py          # needs the K-Radar dataset (see belo
 - **What can be regenerated:** every downstream table and figure, from the Parquet row tables, with the scripts in `scripts/analysis/`.
 - **What cannot be regenerated:** the ASF predictions. They were produced on the Chalmers Alvis cluster (NVIDIA A40 GPUs, SLURM array jobs), and that compute is permanently unavailable. The files in `scripts/cluster_historical/` and the `*_alvis.yml` configs document how the sweep ran; they are for reference, not a current workflow. The local data is the ceiling for any further analysis.
 
-
-## References
-
-Repositories this work builds on or uses:
-
-- **K-Radar** (KAIST AVELab), dataset and benchmark code: <https://github.com/kaist-avelab/K-Radar>
-- **K-Radar fork** used for the evaluation code, corruption definitions and ASF configs vendored into `src/` and `configs/`: <https://github.com/AdyuthHisham/K-Radar>
-- **AMSCUP_PLUS**, cluster job and data-extraction tooling (historical): <https://github.com/AdyuthHisham/AMSCUP_PLUS>
-- **AMSCUP_LATEX**, written report source: <https://github.com/AdyuthHisham/AMSCUP_LATEX>
-- **AI-MSF-Benchmark**, multi-sensor-fusion corruption benchmark (kept in `Misc/`, not used by the code here): <https://github.com/MSFTest/AI-MSF-Benchmark>
-- **OpenPCDet** (MMLAB): <https://github.com/open-mmlab/OpenPCDet>
-- **Rotated_IoU** (lilanxiao): <https://github.com/lilanxiao/Rotated_IoU>
-- **kitti-object-eval-python** (traveller59): <https://github.com/traveller59/kitti-object-eval-python>
-- **ASF** (Availability-aware Sensor Fusion), official release by the K-Radar authors: repository link to be added.
-
-OpenPCDet, Rotated_IoU and kitti-object-eval-python are the sources K-Radar acknowledges for its evaluation code, which `src/robustness/` reuses.
-
 ## License
 
 TODO. No top-level license file exists in this repo.
