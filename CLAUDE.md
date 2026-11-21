@@ -55,7 +55,7 @@ The Obsidian vaults (`obsidianVault/`, `docs/vAIlt/`) and the LaTeX report are n
 
 ## What this repo is
 
-AMSCUP is a single-repo research project on the robustness of camera / LiDAR / 4D-radar fusion (ASF, official checkpoint) under synthetic sensor corruption, evaluated on the K-Radar test split. There are no submodules and no nested git repos. See `README.md` for results and limitations.
+This is a single-repo research project (Robustness of Availability-Aware Sensor Fusion Under Synthetic Sensor Corruption) on the robustness of camera / LiDAR / 4D-radar fusion (ASF, official checkpoint) under synthetic sensor corruption, evaluated on the K-Radar test split. There are no submodules and no nested git repos. See `README.md` for results and limitations.
 
 ## Repo layout
 
