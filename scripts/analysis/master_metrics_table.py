@@ -108,6 +108,31 @@ def compute_map_by(row_table: pl.DataFrame, group_cols: list[str]) -> dict[tuple
     return {k: float(np.mean(v)) for k, v in by_key.items() if v}
 
 
+SUMMARY_FULL_DENSITY_PATH = REPORTS_DIR / "crossproduct_v2" / "summary_full_density.parquet"
+
+
+def compute_aggregated_map_by(group_cols: list[str]) -> dict[tuple, float]:
+    """{group_key: aggregated mAP}: the num_gt-weighted mean of the cell-level
+    `ap_restricted_range` over the full-grain cells (cls x weather x time_of_day x
+    environment x distance_bucket x frame_density) of
+    crossproduct_v2/summary_full_density.parquet, pooled over both classes. This is
+    the thesis's "pooled" mAP (clean = 73.99); it is NOT the mean of the two
+    per-class APs (`compute_map_by`, clean = 72.89). `group_cols` must be columns of
+    that summary (`condition`, `weather`, `time_of_day`, `environment`)."""
+    if not SUMMARY_FULL_DENSITY_PATH.exists():
+        raise FileNotFoundError(
+            f"{SUMMARY_FULL_DENSITY_PATH} not found; build it with scripts/analysis/crossproduct/run_analysis.py "
+            "or unpack the data bundle (see data/DATA.md)."
+        )
+    cells = pl.read_parquet(SUMMARY_FULL_DENSITY_PATH).filter(
+        pl.col("ap_restricted_range").is_not_null() & pl.col("condition").is_in(CONDITIONS)
+    )
+    agg = cells.group_by(group_cols).agg(
+        ((pl.col("ap_restricted_range") * pl.col("num_gt")).sum() / pl.col("num_gt").sum()).alias("map")
+    )
+    return {tuple(r[c] for c in group_cols): float(r["map"]) for r in agg.iter_rows(named=True) if r["map"] is not None}
+
+
 def compute_rce_by(row_table: pl.DataFrame, group_cols: list[str], orig_ap_by_cls: dict[str, float]) -> dict[tuple, float]:
     """{group_key: RCE%} = mean over classes of (orig_ap - ap)/orig_ap*100,
     Dong et al.'s convention (RCE = (AP_clean - AP_corrupted)/AP_clean, positive =
@@ -176,7 +201,7 @@ def compute_rb(values_by_condition: dict[str, float]) -> dict[str, float]:
 def build_master_table(row_table: pl.DataFrame) -> pl.DataFrame:
     row_table = row_table.filter(pl.col("condition").is_in(CONDITIONS))
 
-    map_by_cond = compute_map_by(row_table, ["condition"])
+    map_by_cond = compute_aggregated_map_by(["condition"])
     ate_by_cond, ase_by_cond, aoe_by_cond = compute_ate_ase_aoe_by(row_table, ["condition"])
     mrr_by_cond = compute_rb({cond: v for (cond,), v in map_by_cond.items()})
     coverage = compute_condition_coverage(row_table)
@@ -209,7 +234,7 @@ def build_context_table(row_table: pl.DataFrame, dimension: str) -> pl.DataFrame
     row_table = row_table.filter(pl.col("condition").is_in(CONDITIONS))
     group_cols = ["condition", dimension]
 
-    map_by = compute_map_by(row_table, group_cols)
+    map_by = compute_aggregated_map_by(group_cols)
     ate_by, ase_by, aoe_by = compute_ate_ase_aoe_by(row_table, group_cols)
     coverage = compute_condition_coverage(row_table)  # condition-level only; buckets don't get their own coverage denominator
 
@@ -302,15 +327,11 @@ def build_all_tables(out_dir: Path = DEFAULT_OUT_DIR) -> dict[str, Path]:
     written: dict[str, Path] = {}
 
     master = build_master_table(row_table)
-    # Baseline updated 2026-08-28: 69.27 was the pre-frame-identifier-fix
-    # sweep's number. The fix's exception-handling correction (dict_out
-    # reassignment in eval loops) changed which frames get scored on
-    # inference failures, not just frame labels, which explains the shift.
-    # 72.89 verified against the official eval_revised.py KITTI-eval tool
-    # directly (see /home/adhish/official_benchmakr_kradar.txt: BEV
-    # AP@IoU=0.3 sed=77.86/bus=67.93 -> mAP=72.89, matches to the hundredths
-    # place) -- not just re-derived from this same row_table.
-    EXPECTED_ORIGINAL_MAP = 72.89
+    # mAP is the thesis's aggregated (pooled) mAP: clean baseline 73.99 (see
+    # compute_aggregated_map_by). The earlier per-class mean was 72.89
+    # ((77.86 + 67.93) / 2, the official eval_revised.py BEV AP@IoU=0.3 per class);
+    # that is the class-mean, not the aggregate, and is no longer what this table reports.
+    EXPECTED_ORIGINAL_MAP = 73.99
     orig_map = master.filter(pl.col("Condition") == CLEAN_CONDITION)["mAP"][0]
     if orig_map is not None and abs(orig_map - EXPECTED_ORIGINAL_MAP) > 0.01:
         print(f"WARNING: original mAP = {orig_map:.4f}, expected {EXPECTED_ORIGINAL_MAP} (verified clean baseline) -- investigate before trusting this table.", file=sys.stderr)
@@ -322,9 +343,8 @@ def build_all_tables(out_dir: Path = DEFAULT_OUT_DIR) -> dict[str, Path]:
         "# Master metrics table -- ASF / K-Radar robustness sweep\n\n"
         f"22 rows: `original` + 21 severity-specific corrupted conditions (`frame_deletion` excluded -- "
         "crashed-run coverage artifact, see robustness-metrics-tables.md). mFR omitted (not implemented). "
-        f"Original mAP = {orig_map:.2f} (verified clean baseline: 72.89 -- see /home/adhish/official_benchmakr_kradar.txt "
-        "cross-check against the official eval_revised.py KITTI-eval tool; supersedes the earlier pre-frame-identifier-fix "
-        "sweep's 69.27, see [[frame-identifier-bug]]).\n\n"
+        f"mAP is the aggregated mAP (num_gt-weighted over both classes and all stratum cells, from `crossproduct_v2/summary_full_density.parquet`): "
+        f"original = {orig_map:.2f}. It is not the mean of the two per-class APs (72.89). RCE is still computed per class.\n\n"
         + to_markdown(master)
         + "\n"
     )

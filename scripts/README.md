@@ -71,7 +71,7 @@ Run everything from the repo root with `uv run python <path>`. Paths resolve thr
 | `visibility/validate_precomputation.py` | Validation script for precomputation outputs (Phase 3 Task 3.2). | see script | `uv run python scripts/visibility/validate_precomputation.py` |
 | `visibility/verify_cfar_fix.py` | Standalone verification: CFAR fix produces valid [0,1] radar scores on real data. | see script | library, imported by other scripts (no CLI) |
 
-`analysis/crossproduct/run_analysis.py` is the orchestrator for the other files in that folder. Several outputs depend on which cross-product result tree is canonical (`crossproduct`, `crossproduct_v2`, `crossproduct_v3_weather_corrected`); this is an open item (see `data/DATA.md`).
+`analysis/master_metrics_table.py` reports the aggregated mAP (read from `crossproduct_v2/summary_full_density.parquet`); other chart scripts that import `compute_map_by` or compute mAP themselves still use the per-class mean. `analysis/crossproduct/run_analysis.py` is the orchestrator for the other files in that folder. The thesis's pooled mAP comes from the `crossproduct_v2` tree (see `data/DATA.md`).
 
 ## `data_transfer/` and `cluster_historical/`
 

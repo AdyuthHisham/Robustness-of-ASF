@@ -4,11 +4,11 @@ AMSCUP is the code, configuration and analysis behind a Chalmers MSc thesis that
 
 ![Evaluation pipeline: dataset, corruption injection and ASF inference run once per condition; the outputs are consolidated into one Parquet table, then metrics and stratified robustness analysis](docs/figures/thesis/eval_pipeline.svg)
 
-*Workflow (thesis Figure "Overview of the evaluation pipeline", Methods chapter). The figure's box says "36 conditions"; the configs and `row_table_iou03.parquet` contain 30 corrupted conditions (21 evaluable + 9 frame-deletion) plus the clean run, 31 in total. The discrepancy is in the thesis figure, not checked further.*
+*Workflow (thesis Figure "Overview of the evaluation pipeline", Methods chapter). The figure's box says "36 conditions". That is the nominal grid in the thesis Methods chapter (3 modalities x 4 effects x 3 severities); complete loss has a single tier, so 30 corrupted conditions actually exist (clean run not counted): 21 evaluable plus 9 frame-deletion. Verified against `configs/noise/single/` (30 files) and `row_table_iou03.parquet` (30 corrupted conditions plus `original`).*
 
 ## Key results
 
-All numbers below are from the thesis (Results chapter). The figure files are tracked copies; the table or figure each number comes from is named. Scope: one model checkpoint, one dataset (K-Radar test split: 58 sequences, 13,727 baseline frames, 35,456 sedan and bus/truck ground-truth objects), 22 evaluable conditions plus the frame-deletion conditions, which could not be evaluated.
+All numbers below are from the thesis (Results chapter). The figure files are tracked copies; the table or figure each number comes from is named. Scope: one model checkpoint, one dataset (K-Radar test split: 58 sequences, 13,727 baseline frames, 35,456 sedan and bus/truck ground-truth objects), 30 corrupted conditions (clean run not counted): 21 evaluable, including the 3 `loss_complete_zero` conditions, and 9 frame-deletion conditions that could not be evaluated. (The thesis text says "22 evaluable"; that count includes the clean run.)
 
 ![Pooled robustness metrics per corruption condition](results/figures/metrics_table.png)
 
@@ -30,8 +30,8 @@ All numbers below are from the thesis (Results chapter). The figure files are tr
 - The re-run baseline sits 3.2 to 5.6% below the numbers in the ASF paper (sedan BEV AP 77.86 vs 82.5; bus/truck BEV AP 67.93 vs 70.2; same checkpoint, IoU 0.3, official evaluation code). The thesis reports the gap but does not explain it.
 - Several weather and environment categories rest on 2 to 7 sequences or few objects; the thesis flags them rather than treating them as general findings.
 - mATE, mASE and mAOE are computed over true positives only, so at the collapsed conditions they describe a smaller, easier surviving population. Their apparent improvement there is a survivorship artefact.
-- The mFR metric is excluded from the metrics stack (decision of 2026-09-01); it is not implemented here.
-- Two aggregations of clean mAP appear in this repo. The thesis figure gives 73.99 (LiDAR noise medium 18.54, high 17.45); `results/tables/master_metrics_table.md` regenerates to 72.89 / 23.71 / 21.56. The thesis figure's FP/FN counts (4,900 / 8,287 clean; 1,175 / 29,214 LiDAR noise medium) match `row_table_iou03.parquet` exactly, so both use the same data. 72.89 is the mean of the thesis's two per-class BEV APs ((77.86 + 67.93) / 2), which suggests the table averages per class while the figure pools both labels. I did not recompute a pooled AP to confirm. The README quotes the thesis figure. See [`results/RESULTS.md`](results/RESULTS.md).
+- The mFR metric is excluded from the metrics stack: no frame-level flip/consistency computation exists in this pipeline (`scripts/analysis/master_metrics_table.py` docstring).
+- mAP throughout is the **aggregated** mAP: the num_gt-weighted mean of the cell-level restricted-range AP over both classes and all stratum cells in `crossproduct_v2/summary_full_density.parquet` (clean = 73.99). It is not the mean of the two per-class APs (72.89). `results/tables/master_metrics_table.md` was regenerated on that definition and reproduces every mAP and R_b^c in the thesis figure to the printed precision. mASE differs slightly between the two (clean 0.236 in the table, 0.239 in the thesis figure; LiDAR noise medium 0.201 vs 0.204): the repo has two mASE implementations (an earlier audit found `crossproduct.py` uses a different formula), and which one the thesis figure used was not traced. RCE is still computed per class. Other chart scripts (`heatmaps.py`, `bar_charts.py`, ...) still use the per-class mean mAP. See [`results/RESULTS.md`](results/RESULTS.md).
 
 ## Repository map
 

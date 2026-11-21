@@ -7,11 +7,11 @@
 **Done this session:** `README.md` rewritten (workflow figure, thesis numbers with sources), `data/DATA.md`, `results/RESULTS.md`, `scripts/README.md`, `docs/README.md`, `Misc/README.md`, CLAUDE.md layout/commands, `.gitignore` exceptions for tracked figures, thesis figures copied to `docs/figures/thesis/`.
 
 **Findings:**
-- Thesis pooled metrics (clean mAP 73.99; LiDAR noise medium/high 18.54 / 17.45) differ from `results/tables/master_metrics_table.md`, which regenerates exactly from the local row table (72.89 / 23.71 / 21.56). Cause not traced.
+- Aggregated mAP: the thesis figure's mAP is the num_gt-weighted mean of `ap_restricted_range` over `crossproduct_v2/summary_full_density.parquet` (clean 73.99). `master_metrics_table.py` previously averaged the two per-class APs (72.89); changed to the aggregated definition, regenerated, tracked copy updated, old outputs in `data/results/robustness_reports/pre_aggmap_backup_20261121/`. All 22 rows match the thesis figure; mASE differs slightly (0.2362 vs 0.239 clean), cause not traced.
 - `src/kradar_visibility/viewer/server.py` is missing everywhere.
 - Fixed: `scripts/visibility/run_all_sequences.py` wrote its parquet and logs to `data/figures/` (the restructure mapped it to `FIGURES_DIR`); now `data/visibility/`.
-- Thesis vs table mAP: FP/FN totals match the row table exactly, 72.89 equals the class mean of the thesis per-class BEV APs; pooled AP not recomputed.
 - `camera_frame_deletion`: 102 / 1,674 / 276 rows (high / low / medium) vs about 40,000 per normal condition; lidar and radar frame-deletion have 38,000 to 40,000 rows each.
 - `tests/test_smoke.py`: 9 passed, 11 failed. 10 failures read `data/KRadar/` and fail without the dataset. SMK-21 fails in the merged environment but passes in the pre-snapshot nested project, including with numpy 2.4.6 forced in; `lidar_visibility.py`, `pipeline.py` and the test are identical, `conftest.py` differs only in a path. Cause not identified (not numpy alone). The merged `pyproject.toml` did move the visibility code from numpy 1.26.4 to 2.4.6 without the user having been shown that change.
 - The pre-restructure environment was not otherwise compared; there is no pre-move smoke baseline (the baseline run was taken on the already-restructured tree).
-- Which of `crossproduct`, `crossproduct_v2`, `crossproduct_v3_weather_corrected` the thesis uses is not recorded.
+- The thesis metrics figure reproduces from `crossproduct_v2`, which answers which tree the thesis uses.
+- Conditions: 30 corrupted (21 evaluable + 9 frame-deletion), clean run not counted; the thesis figure's "36" is the nominal 3 x 4 x 3 grid.
