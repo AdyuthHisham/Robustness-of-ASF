@@ -221,3 +221,9 @@ graphify-out/cache/
 .mypy_cache/
 .ruff_cache/
 graphify-out/
+# Curated, tracked figures (README / thesis visuals). The blanket image rules above would hide these.
+!docs/figures/thesis/
+!docs/figures/thesis/*.png
+!docs/figures/thesis/*.svg
+!results/figures/*.png
+!results/tables/*.csv

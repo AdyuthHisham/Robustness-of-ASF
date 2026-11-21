@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="264.585mm" height="124.355mm" viewBox="0 0 1000.0 470.0" version="1.1">
+<defs><marker id="arrowEnd" orient="auto" refX="5.2" refY="2.5" markerWidth="6" markerHeight="5" markerUnits="userSpaceOnUse"><path d="M 0,0 L 5.8,2.5 L 0,5 z" style="fill:#42464b;stroke:none" /></marker></defs>
+<rect x="14.0" y="11" width="352.0" height="448.0" rx="5" ry="5" style="fill:none;stroke:#858b91;stroke-width:1.25;stroke-linejoin:round;stroke-dasharray:5,3.4" />
+<text x="190.0" y="36" style="font-family:'Noto Sans';font-size:17.40px;font-weight:600;fill:#42464b;text-anchor:middle">Run once per corruption condition</text>
+<rect x="40.0" y="52.0" width="300.0" height="104.0" rx="5" ry="5" style="fill:#bfd5e3;stroke:#638da8;stroke-width:1.5;stroke-linejoin:round" />
+<text x="190.0" y="105.0" style="font-family:'Noto Sans';font-size:20.00px;font-weight:600;fill:#42464b;text-anchor:middle">Dataset</text>
+<text x="190.0" y="130.0" style="font-family:'Noto Sans';font-size:14.00px;font-weight:400;fill:#42464b;text-anchor:middle">K-Radar, 58-seq. test split</text>
+<rect x="40.0" y="198.0" width="300.0" height="104.0" rx="5" ry="5" style="fill:#ebc4a4;stroke:#c98252;stroke-width:1.5;stroke-linejoin:round" />
+<text x="190.0" y="251.0" style="font-family:'Noto Sans';font-size:20.00px;font-weight:600;fill:#42464b;text-anchor:middle">Corruption Injection</text>
+<text x="190.0" y="276.0" style="font-family:'Noto Sans';font-size:14.00px;font-weight:400;fill:#42464b;text-anchor:middle">36 conditions</text>
+<rect x="40.0" y="344.0" width="300.0" height="104.0" rx="5" ry="5" style="fill:#c4d6c2;stroke:#71966f;stroke-width:1.5;stroke-linejoin:round" />
+<text x="190.0" y="388.0" style="font-family:'Noto Sans';font-size:20.00px;font-weight:600;fill:#42464b;text-anchor:middle">Prediction</text>
+<text x="190.0" y="413.0" style="font-family:'Noto Sans';font-size:14.00px;font-weight:400;fill:#42464b;text-anchor:middle">ASF inference, official checkpoint</text>
+<text x="190.0" y="431.0" style="font-family:'Noto Sans';font-size:14.00px;font-weight:400;fill:#42464b;text-anchor:middle">→ KITTI-format predictions / GT</text>
+<rect x="580.0" y="52.0" width="300.0" height="104.0" rx="5" ry="5" style="fill:#d0d3d6;stroke:#858b91;stroke-width:1.5;stroke-linejoin:round" />
+<text x="730.0" y="96.0" style="font-family:'Noto Sans';font-size:20.00px;font-weight:600;fill:#42464b;text-anchor:middle">Consolidation</text>
+<text x="730.0" y="121.0" style="font-family:'Noto Sans';font-size:14.00px;font-weight:400;fill:#42464b;text-anchor:middle">~1M KITTI text files</text>
+<text x="730.0" y="139.0" style="font-family:'Noto Sans';font-size:14.00px;font-weight:400;fill:#42464b;text-anchor:middle">→ single Parquet table</text>
+<rect x="580.0" y="198.0" width="300.0" height="104.0" rx="5" ry="5" style="fill:#d0d3d6;stroke:#858b91;stroke-width:1.5;stroke-linejoin:round" />
+<text x="730.0" y="251.0" style="font-family:'Noto Sans';font-size:20.00px;font-weight:600;fill:#42464b;text-anchor:middle">Metrics Generation</text>
+<text x="730.0" y="276.0" style="font-family:'Noto Sans';font-size:14.00px;font-weight:400;fill:#42464b;text-anchor:middle">AP, retention, CRI, churn</text>
+<rect x="580.0" y="344.0" width="300.0" height="104.0" rx="5" ry="5" style="fill:#d0d3d6;stroke:#858b91;stroke-width:1.5;stroke-linejoin:round" />
+<text x="730.0" y="388.0" style="font-family:'Noto Sans';font-size:20.00px;font-weight:600;fill:#42464b;text-anchor:middle">Robustness Analysis</text>
+<text x="730.0" y="413.0" style="font-family:'Noto Sans';font-size:14.00px;font-weight:400;fill:#42464b;text-anchor:middle">per-condition, per-stratum</text>
+<text x="730.0" y="431.0" style="font-family:'Noto Sans';font-size:14.00px;font-weight:400;fill:#42464b;text-anchor:middle">breakdown</text>
+<path d="M 190.0,156.0 L 190.0,193.0" style="fill:none;stroke:#42464b;stroke-width:1.6" marker-end="url(#arrowEnd)" />
+<path d="M 730.0,156.0 L 730.0,193.0" style="fill:none;stroke:#42464b;stroke-width:1.6" marker-end="url(#arrowEnd)" />
+<path d="M 190.0,302.0 L 190.0,339.0" style="fill:none;stroke:#42464b;stroke-width:1.6" marker-end="url(#arrowEnd)" />
+<path d="M 730.0,302.0 L 730.0,339.0" style="fill:none;stroke:#42464b;stroke-width:1.6" marker-end="url(#arrowEnd)" />
+<path d="M 366.0,235.0 H 473.0 V 104.0 L 575.0,104.0" style="fill:none;stroke:#42464b;stroke-width:1.6" marker-end="url(#arrowEnd)" />
+</svg>
