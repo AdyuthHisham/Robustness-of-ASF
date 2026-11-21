@@ -1,0 +1,163 @@
+# Metrics coverage audit — `crossproduct_trends_and_anomalies.md`
+
+Audits `docs/crossproduct_trends_and_anomalies.md` (the only copy of this
+document in the repo — no `/mnt/user-data/uploads` counterpart exists)
+against the project's agreed metrics stack: mAP, mRR, RCE, mATE/mASE/mAOE,
+mFR, CRI, and the GT-object transition metrics. Does not modify the audited
+document. See [[robustness-metric-selection]] for the metric-family
+definitions this audit checks against, and
+`docs/vAIlt/06_Results/exhaustive-crossproduct-phase1-audit-20260831.md` for
+prior-session status on mFR/CRI that this audit confirms is still current.
+
+## Coverage table
+
+| Metric | Status in original doc | Action taken | Where numbers now live |
+|---|---|---|---|
+| mAP | present-complete | none needed | doc §B.2, §B.8, `q2_*.csv` |
+| mRR / retention | present-complete (as "AP retention") | none needed — formula verified to match | doc §B.1/B.3/B.5/B.6/A.1, `deltas_*.parquet:ap_restricted_range_retention`, `master_metrics_table.csv:mRR` |
+| RCE | **absent from doc text**; data existed but stale | computed from existing pipeline — reran `master_metrics_table.py` against the post-fix `row_table_iou03.parquet` | `repos/K-Radar/outputs/robustness_reports/master_metrics_table.csv` (regenerated below) |
+| mATE/mASE/mAOE | present-partial (only best/worst rows per class in §B.8; trend discussion in §A.2) | computed full table from existing data — same regenerated `master_metrics_table.csv` gives all 22 conditions, not just extremes | `master_metrics_table.csv` |
+| mFR | absent | **excluded by project decision (2026-09-01) — not part of the metrics stack** | n/a |
+| CRI | flagged blocked in doc's own Limitations section | **correction (post-audit, 2026-09-01): not actually blocked** — computed directly from `row_table_iou03.parquet` via the existing `compute_ap_grouped()` helper; the cited `ap_robustness_local.json` cross-source dependency was stale reasoning, unrevisited since that helper landed | `obsidianVault/Knowledge/cri-computed-from-row-table.md` |
+| GT-transition: churn, recovery | present-complete | none needed | doc §A.4/§B.7, `q5_*.csv` |
+| GT-transition: stable-detection rate, net retention | **absent from doc text**; already computed as columns | pulled from existing `q5_*.csv` (presentation gap, not a data gap) | table below |
+
+## mRR formula verification
+
+The doc's "AP retention" language (§B.1, B.3, B.5, B.6) and the literal
+`mRR` column in `master_metrics_table.py` are the same quantity. Confirmed
+two ways:
+
+1. `master_metrics_table.py`'s own docstring: "mRR is `compute_rb` applied to
+   mAP" — `compute_rb` is the RR/mRR retention-ratio formula per
+   [[robustness-metric-selection]] (`corrupted_score/clean_score`, no second
+   baseline model needed).
+2. Numerically: doc §B.1 cites LiDAR retention "as low as 0.296 at
+   `gaussian_noise_high`" — the regenerated `master_metrics_table.csv` gives
+   `lidar_gaussian_noise_high` mRR = 0.29580, matching to 3 decimals.
+
+No gap here — this is the same metric under an informal name, not a
+different or ad hoc computation.
+
+## RCE — computed (was stale, now current)
+
+`master_metrics_table.py` already implements RCE (Dong et al.'s convention,
+`(AP_clean - AP_corrupted) / AP_clean * 100`, per-class then averaged,
+computed at every severity) but the doc never cites it, and the CSV on disk
+predated the 2026-09-01 frame-key/reliability-floor fix (file mtime
+2026-08-28, while `row_table_iou03.parquet` — its only input — was rebuilt
+2026-09-01). Reran `uv run python scripts/analysis/master_metrics_table.py`
+in `test-bed/src/Modules/robust_testing/kradar/` against the current row
+table; `original` mAP came out at 72.893, matching the pipeline's own
+verified-clean-baseline check (72.89, no warning printed), confirming the
+refresh used post-fix data.
+
+Selected RCE(%) values (positive = degradation, lower is better),
+post-refresh:
+
+| Condition | mAP | RCE (%) | mRR |
+|---|---|---|---|
+| `lidar_gaussian_noise_high` | 21.56 | 69.77 | 0.2958 |
+| `lidar_gaussian_noise_medium` | 23.71 | 66.77 | 0.3252 |
+| `lidar_loss_complete_zero` | 42.16 | 42.22 | 0.5784 |
+| `radar_gaussian_noise_high` | 54.03 | 25.98 | 0.7412 |
+| `lidar_loss_partial_high` | 67.90 | 7.12 | 0.9316 |
+| `camera_gaussian_noise_high` | 71.18 | 2.29 | 0.9764 |
+| `lidar_loss_partial_medium` | 73.04 | -0.18 | 1.0020 |
+| `radar_loss_partial_low` | 72.95 | -0.08 | 1.0008 |
+
+RCE and mRR agree ordinally everywhere (RCE is just `(1 - mRR) * 100` up to
+per-class-vs-pooled averaging differences), so RCE adds no new *ranking*
+information beyond what the doc's retention numbers already show — but it is
+a distinct, independently-reported quantity the doc's stated metric stack
+calls for, and it wasn't previously surfaced anywhere in the doc's text or
+tables. Full table (all 22 conditions, plus mATE/mASE/mAOE) is in
+`repos/K-Radar/outputs/robustness_reports/master_metrics_table.csv` /
+`.md`, regenerated by this audit.
+
+## mATE/mASE/mAOE — full coverage now available
+
+The doc's §B.8 only reports best/worst per class; §A.2 only discusses two
+specific conditions. The regenerated `master_metrics_table.csv` gives
+mATE/mASE/mAOE for **all 22 conditions** (pooled over class), closing the
+partial-coverage gap without any new computation — the pipeline already
+computes this per-condition, it just wasn't tabulated in the doc.
+
+## mFR — excluded by project decision, naming collision moot
+
+Two different things are called "mFR" in this repo:
+
+1. `master_metrics_table.py`'s docstring: **mFR is deliberately omitted** —
+   "no frame-level flip/consistency computation exists anywhere in this
+   pipeline (spec'd in `robustness-visualization-plan.md`, never
+   implemented) — silently dropped rather than filled with a blocked
+   placeholder in every cell, per 2026-08-28 decision." Matches
+   [[robustness-metric-selection]]'s frame-level flip/consistency family
+   (adapted from Hendrycks' Flip Rate).
+2. `scripts/analysis/box_plots.py` independently computes and plots
+   something it also calls `mFR`, defined as **miss rate = FN/(TP+FN)**
+   (`box_mfr.svg`) — a different, already-implemented quantity unrelated to
+   frame-level flip/consistency.
+
+**Resolved (2026-09-01, user decision): mFR is not to be used.** Not part
+of the agreed metrics stack going forward — the naming collision between
+(1) and (2) is moot since neither is being adopted. `box_plots.py`'s
+`box_mfr.svg` output should not be read as filling this metric slot; if
+that plot remains in use for other reasons it should be relabeled to avoid
+the "mFR" collision with the (excluded) flip/consistency metric.
+
+## CRI — correction: not blocked, computed 2026-09-01
+
+The doc's Limitations section and prior audits (`exhaustive-crossproduct-phase1-audit-20260831.md`)
+stated CRI needs raw AP across severity tiers from `ap_robustness_local.json`,
+a source outside `row_table_iou03.parquet`, and treated that cross-source
+join as an unresolved blocker. This was checked again during this audit and
+found stale: `row_table_iou03.parquet`'s `condition` column already encodes
+severity per corruption effect (`camera_gaussian_noise_low/medium/high`,
+etc.), and `compute_ap_grouped(row_table, ["condition", "cls"])` — the same
+helper `master_metrics_table.py` already calls for mAP and RCE — gives
+exactly the raw per-severity AP CRI's formula (`compute_robustness.py:120`,
+RoHOI Eq. 2) needs. No `ap_robustness_local.json` join required.
+
+Computed CRI for all 6 effects (gaussian_noise, loss_partial, frame_deletion
+x camera/lidar/radar) x 2 classes (sed, bus — the row table's current class
+coverage); `loss_complete_zero` conditions correctly return `None`
+(single-tier, formula requires >=2 severity tiers). Lowest scores:
+`lidar_gaussian_noise` (CRI 0.11-0.15 — largest mean-AP collapse plus
+largest variance). Full table, formula detail, and one flagged anomaly
+(near-identical `radar_frame_deletion`/`lidar_frame_deletion` AP values,
+not yet investigated) in
+[[cri-computed-from-row-table]]`obsidianVault/Knowledge/cri-computed-from-row-table.md`.
+The original doc's Limitations section is now out of date and should be
+corrected to remove CRI from its blocked-items list — flagging here rather
+than editing the audited doc directly, per this file's own scope.
+
+## GT-transition metrics: stable-detection rate and net retention
+
+Already computed as columns in `crossproduct_v2/reports/q5_*.csv` (same
+source the doc's churn/recovery numbers in §A.4/§B.7 come from) — this was a
+presentation gap, not a data gap. Pulled directly, no new computation:
+
+| Condition | stable_detection_rate | net_retention | churn_rate | reliability |
+|---|---|---|---|---|
+| `lidar_gaussian_noise_high` (max churn) | 0.2061 | 0.2071 | 60.92% | reliable |
+| `radar_loss_partial_low` (min churn) | 0.9930 | 0.9998 | 1.05% | reliable |
+| `lidar_loss_partial_high` (flagged suspicious recovery) | 0.9105 | 0.9579 | 10.48% | reliable |
+| `lidar_loss_partial_medium` (flagged suspicious recovery) | 0.9738 | 1.0166 | 5.29% | reliable |
+
+Note `net_retention` exceeding 1.0 for `lidar_loss_partial_medium` is the
+documented, non-bug behavior of the formula
+(`(N_stable+N_recover)/(N_stable+N_miss)`, numerator and denominator over
+different populations — see [[gt-transition-analysis]]) — not a new finding,
+just now attached to a number instead of only being described qualitatively
+as "recovery rate ≥ miss rate" in the doc's §A.4.
+
+## Summary
+
+Of the 8 stack items, 4 needed no action (mAP, mRR, churn, recovery), 4 were
+closeable from existing data with no new computation (RCE — refresh a stale
+CSV; mATE/mASE/mAOE full coverage — same refreshed CSV; stable-detection
+rate / net retention — already-computed q5 columns; CRI — computed directly
+from `row_table_iou03.parquet`, correcting a stale "blocked" status), and 1
+(mFR) is excluded from the stack by explicit project decision (2026-09-01) —
+the two in-repo definitions are both out of scope, not adopted.

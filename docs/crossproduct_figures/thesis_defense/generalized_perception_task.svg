@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1988.6318861729296 464" width="1988.6318861729296" height="464">
+<rect x="0" y="0" width="1988.6318861729296" height="464" fill="white"/>
+<text x="123.0" y="120.0" font-family="DejaVu Sans" font-weight="bold" font-size="24" fill="#638DA8" text-anchor="middle" dominant-baseline="middle">Sensor 1</text>
+<text x="123.0" y="240.0" font-family="DejaVu Sans" font-weight="bold" font-size="24" fill="#C98252" text-anchor="middle" dominant-baseline="middle">Sensor 2</text>
+<text x="123.0" y="360.0" font-family="DejaVu Sans" font-weight="bold" font-size="24" fill="#71966F" text-anchor="middle" dominant-baseline="middle">Sensor 3</text>
+<rect x="30" y="20" width="186" height="414" rx="18" ry="18" fill="none" stroke="#858B91" stroke-width="2" stroke-dasharray="8,6"/><text x="123.0" y="48" font-family="DejaVu Sans" font-weight="bold" font-size="21" fill="#42464B" text-anchor="middle">Data</text>
+<line x1="206" y1="120.0" x2="740.3159430864649" y2="120.0" stroke="#638DA8" stroke-width="3"/>
+<line x1="206" y1="240.0" x2="740.3159430864649" y2="240.0" stroke="#C98252" stroke-width="3"/>
+<line x1="206" y1="360.0" x2="740.3159430864649" y2="360.0" stroke="#71966F" stroke-width="3"/>
+<line x1="740.3159430864649" y1="120.0" x2="740.3159430864649" y2="360.0" stroke="#42464B" stroke-width="3"/>
+<line x1="740.3159430864649" y1="240.0" x2="770.3159430864649" y2="240.0" stroke="#42464B" stroke-width="3"/><polygon points="770.3159430864649,240.0 755.8358308152738,247.91052138696935 755.8358308152738,232.08947861303065" fill="#42464B"/>
+<rect x="770.3159430864649" y="170.0" width="300" height="140" rx="14" ry="14" fill="#D0D3D6" stroke="#858B91" stroke-width="2.5"/><text x="920.3159430864649" y="225.6" font-family="DejaVu Sans" font-weight="bold" font-size="24" fill="#42464B" text-anchor="middle" dominant-baseline="middle">Perception</text><text x="920.3159430864649" y="255.6" font-family="DejaVu Sans" font-weight="bold" font-size="24" fill="#42464B" text-anchor="middle" dominant-baseline="middle">Model</text>
+<rect x="736.3159430864649" y="20" width="368" height="414" rx="18" ry="18" fill="none" stroke="#858B91" stroke-width="2" stroke-dasharray="8,6"/><text x="920.3159430864649" y="48" font-family="DejaVu Sans" font-weight="bold" font-size="21" fill="#42464B" text-anchor="middle">Model</text>
+<line x1="1070.3159430864648" y1="240.0" x2="1594.6318861729296" y2="240.0" stroke="#42464B" stroke-width="3"/>
+<line x1="1594.6318861729296" y1="120.0" x2="1594.6318861729296" y2="360.0" stroke="#42464B" stroke-width="3"/>
+<line x1="1594.6318861729296" y1="120.0" x2="1624.6318861729296" y2="120.0" stroke="#42464B" stroke-width="3"/><polygon points="1624.6318861729296,120.0 1610.1517739017386,127.91052138696935 1610.1517739017386,112.08947861303065" fill="#42464B"/>
+<line x1="1594.6318861729296" y1="240.0" x2="1624.6318861729296" y2="240.0" stroke="#42464B" stroke-width="3"/><polygon points="1624.6318861729296,240.0 1610.1517739017386,247.91052138696935 1610.1517739017386,232.08947861303065" fill="#42464B"/>
+<line x1="1594.6318861729296" y1="360.0" x2="1624.6318861729296" y2="360.0" stroke="#42464B" stroke-width="3"/><polygon points="1624.6318861729296,360.0 1610.1517739017386,367.9105213869693 1610.1517739017386,352.0894786130307" fill="#42464B"/>
+<rect x="1624.6318861729296" y="72" width="300" height="96" rx="14" ry="14" fill="#D0D3D6" stroke="#858B91" stroke-width="2.5"/><text x="1774.6318861729296" y="120.0" font-family="DejaVu Sans" font-weight="bold" font-size="18" fill="#42464B" text-anchor="middle" dominant-baseline="middle">Object Detection</text>
+<rect x="1624.6318861729296" y="192" width="300" height="96" rx="14" ry="14" fill="#D0D3D6" stroke="#858B91" stroke-width="2.5"/><text x="1774.6318861729296" y="240.0" font-family="DejaVu Sans" font-weight="bold" font-size="18" fill="#42464B" text-anchor="middle" dominant-baseline="middle">Semantic Segmentation</text>
+<rect x="1624.6318861729296" y="312" width="300" height="96" rx="14" ry="14" fill="#D0D3D6" stroke="#858B91" stroke-width="2.5"/><text x="1774.6318861729296" y="360.0" font-family="DejaVu Sans" font-weight="bold" font-size="18" fill="#42464B" text-anchor="middle" dominant-baseline="middle">Trajectory Planning</text>
+<rect x="1590.6318861729296" y="20" width="368" height="414" rx="18" ry="18" fill="none" stroke="#858B91" stroke-width="2" stroke-dasharray="8,6"/><text x="1774.6318861729296" y="48" font-family="DejaVu Sans" font-weight="bold" font-size="21" fill="#42464B" text-anchor="middle">Output</text>
+</svg>

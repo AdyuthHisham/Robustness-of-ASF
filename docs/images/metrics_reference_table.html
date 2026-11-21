@@ -1,0 +1,140 @@
+<title>Robustness Metrics</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --ink:#16325c;
+  --label-bg:#dfe3ea;
+  --row-a:#eef0f4;
+  --row-b:#ffffff;
+  --border:#16325c;
+  --text:#1c2733;
+  --bg:#f4f5f7;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ink:#9fc3ff;
+    --label-bg:#1c2a3f;
+    --row-a:#182231;
+    --row-b:#111a27;
+    --border:#3a5a8c;
+    --text:#dfe6f0;
+    --bg:#0d1520;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --ink:#9fc3ff;
+  --label-bg:#1c2a3f;
+  --row-a:#182231;
+  --row-b:#111a27;
+  --border:#3a5a8c;
+  --text:#dfe6f0;
+  --bg:#0d1520;
+  color-scheme: dark;
+}
+
+body{
+  margin:0;
+  background:var(--bg);
+  font-family:"Noto Sans", Arial, sans-serif;
+  color:var(--text);
+  padding: 24px 16px;
+}
+
+.wrap{
+  max-width: 1080px;
+  margin: 0 auto;
+  overflow-x: auto;
+}
+
+table{
+  width:100%;
+  border-collapse: collapse;
+  font-size: 15px;
+  min-width: 760px;
+}
+
+th, td{
+  border: 2px solid var(--border);
+  padding: 14px 18px;
+  text-align: left;
+  vertical-align: top;
+  line-height: 1.45;
+}
+
+thead th{
+  background: var(--label-bg);
+  color: var(--ink);
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+tbody th{
+  background: var(--label-bg);
+  color: var(--ink);
+  font-weight: 700;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+tbody tr:nth-child(odd) td{ background: var(--row-a); }
+tbody tr:nth-child(even) td{ background: var(--row-b); }
+
+.dir{
+  font-weight: 700;
+  color: var(--ink);
+}
+</style>
+
+<div class="wrap">
+<table>
+  <thead>
+    <tr>
+      <th>METRIC</th>
+      <th>WHAT IT MEASURES</th>
+      <th>WHAT THE IDEAL VALUE MEANS</th>
+      <th>IDEAL: HIGHER OR LOWER</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>AP (mAP)</th>
+      <td>Detection accuracy (41-pt recall-interpolated, IoU = 0.3)</td>
+      <td>Model finds objects reliably with few false alarms or misses</td>
+      <td class="dir">Higher</td>
+    </tr>
+    <tr>
+      <th>mATE</th>
+      <td>Center-position error (true-positive matches only)</td>
+      <td>Detected boxes sit right on top of the true position</td>
+      <td class="dir">Lower</td>
+    </tr>
+    <tr>
+      <th>mASE</th>
+      <td>Size/shape error, 1 &minus; IoU (true-positive matches only)</td>
+      <td>Detected boxes match the true size and shape</td>
+      <td class="dir">Lower</td>
+    </tr>
+    <tr>
+      <th>mAOE</th>
+      <td>Yaw/orientation error (true-positive matches only)</td>
+      <td>Detected boxes point the right way</td>
+      <td class="dir">Lower</td>
+    </tr>
+    <tr>
+      <th>Retention R<sub>b</sub><sup>c</sup></th>
+      <td>Ratio of corrupted metric to clean-baseline metric, same stratum</td>
+      <td>Model kept its clean-baseline accuracy under corruption</td>
+      <td class="dir">Higher</td>
+    </tr>
+    <tr>
+      <th>CRI</th>
+      <td>Mean retention across severities, discounted by variance between them</td>
+      <td>Robustness is both strong and consistent across severity</td>
+      <td class="dir">Higher</td>
+    </tr>
+  </tbody>
+</table>
+</div>

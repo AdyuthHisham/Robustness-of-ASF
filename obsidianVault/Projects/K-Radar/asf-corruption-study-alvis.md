@@ -434,3 +434,39 @@ angle (direct ablation vs. noise-injection degradation curves).
 
 **Not yet done**: `compute_robustness.py` has still only ever been run on the single seq46
 pilot condition, never across the full 58-sequence merged dataset.
+
+---
+
+# Update 2026-08-25: checkpoint provenance — locally-trained, not the official weights
+
+The ASF checkpoint this whole sweep runs against —
+`exp_260506_135737_A2FUSION_rlc_l1d256_l2p2t32d256g_l2g_scl_mha16/models/model_10.pt`
+(hardcoded `CKPT` in `repos/K-Radar/scripts/alvis/asf_run.sbatch`, `asf_smoke.sbatch`,
+`asf_seq46.sbatch`) is **locally/self-trained**, not the officially published
+`pretrained/ASF_v2_0_final_10.pt` (KAIST weights, downloaded via the Google Drive link in
+`docs/sensor_fusion.md`). Same architecture/epoch count (both are epoch-10 checkpoints
+of an `OPTIMIZER.MAX_EPOCH: 11` run, `INTERVAL_EPOCH_MODEL: 1`), confirmed different
+weights — same file size, different MD5 (self-trained `805ac29a...` vs. official
+`2ae9105d...`, per `asf_official_benchmark.sbatch`'s header comment).
+
+Searched exhaustively for the training job that produced it — not found. No training
+sbatch/script exists in `repos/K-Radar` or `repos/AMSCUP_PLUS` git history; no commit
+message in either repo documents it; the vault and `docs/vAIlt/` have no prior mention.
+`AMSCUP_PLUS/FIXES.md:118-119` treats the two checkpoints as interchangeable ("work the
+same way") without explaining why the self-trained one was chosen. Conclusion: it was
+trained outside both repos' tracked tooling (a manual/untracked Alvis run), and the
+reasoning behind that choice is not recoverable from the codebase — tribal knowledge only.
+
+**Practical consequence**: every AP/mAP number in this sweep (e.g. `original` mAP=69.27
+above) reflects this self-trained checkpoint, not the paper's published benchmark
+checkpoint. Don't compare sweep numbers directly against `docs/sensor_fusion.md`'s
+official table (Sedan 79.3/Bus 60.4 AP3D@0.3) without accounting for this — the gap is
+checkpoint identity, not eval methodology (both use the same `eval_revised.py` code path).
+See [[robustness-metrics-tables]] for the three-way comparison (official / self-trained
+sweep / `exp_260820_155158_A2FUSION` official-checkpoint rerun).
+
+**2026-08-26 update:** re-ran the full 58-sequence baseline (`original` condition only) with the
+official checkpoint, plus fixed the batch-sweep infrastructure (and found/fixed a real data-loss
+bug in it along the way). Full writeup: [[official-checkpoint-rerun-2026-08-26]]. The
+33-condition corruption sweep itself with the official checkpoint has not been re-run yet —
+deferred by a mid-session plan change in favor of validating the clean baseline first.

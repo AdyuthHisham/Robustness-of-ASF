@@ -39,7 +39,7 @@ import polars as pl
 HERE = Path(__file__).resolve()
 AMSCUP_ROOT = HERE.parents[7]
 AP_METRICS_DIR = AMSCUP_ROOT / "repos" / "K-Radar" / "scripts" / "alvis"
-ROW_TABLE_PATH = AP_METRICS_DIR / "outputs" / "robustness_reports" / "row_table_iou03.parquet"
+ROW_TABLE_PATH = AMSCUP_ROOT / "repos" / "K-Radar" / "outputs" / "robustness_reports" / "row_table_iou03.parquet"
 
 sys.path.insert(0, str(AP_METRICS_DIR))
 from ap_metrics import compute_ap_grouped  # noqa: E402
@@ -61,7 +61,11 @@ for _sensor in SENSORS:
 
 CLASS_LABEL = {"sed": "Car (sed)", "bus": "Bus"}
 
-AXIS_ORDER = [(s, e) for s in SENSORS for e in EFFECTS]  # 9 severity-tiered axes, fixed order for all charts
+# frame_deletion excluded from radar chart axes per user request (2026-08-25)
+# -- still present in EFFECTS/box_plots.py's CONDITION_ORDER, this only trims
+# the radar charts' axis set, not the underlying effect sweep.
+RADAR_AXIS_EFFECTS = [e for e in EFFECTS if e != "frame_deletion"]
+AXIS_ORDER = [(s, e) for s in SENSORS for e in RADAR_AXIS_EFFECTS]  # 6 severity-tiered axes, fixed order for all charts
 
 
 ALL_SEQUENCES = "all"

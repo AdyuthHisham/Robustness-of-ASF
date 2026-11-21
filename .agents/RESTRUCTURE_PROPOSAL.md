@@ -1,0 +1,54 @@
+# AMSCUP Restructure Proposal (2026-09-19 pass)
+
+Based on `.agents/MASTER_AUDIT.md` (7 chunks, 2 reviewer lenses, ~40 findings). Proposals only — no files moved, no code edited. Supersedes `.agents/prior_audit_20260909/RESTRUCTURE_PROPOSAL.md` (kept for reference; most of its structural findings independently reconfirmed here, several new ones found).
+
+## 1. Single-source-of-truth failures — the dominant pattern
+
+Every chunk kept surfacing the same shape of problem: one fact typed out by hand in 2+ places, each copy drifting independently. Four concrete instances, in order of how much they've actually corrupted downstream numbers:
+
+**a. `crossproduct/` vs `crossproduct_v2/` path split (A-7-01, confirmed independently across chunks 3/5/7).** `crossproduct.py:32`'s `SUMMARY_OUT_DIR` and `plots.py:26`'s `FIG_OUT_DIR` both still hardcode the superseded `repos/K-Radar/outputs/robustness_reports/crossproduct/`. Every current doc (`docs/crossproduct_trends_and_anomalies.md`) cites `crossproduct_v2/` as canonical, which was touched as recently as today (Sep 18) — the two trees have diverged (`crossproduct_v2/` has a `summary_full_density_lidar_relabel.parquet` family the old tree lacks). Rerunning `run_analysis.py` today silently writes the wrong directory, no error. **This is the single highest-value fix in the whole audit** — one constant, three call sites, currently wrong in all three.
+*Proposal:* define the output root in exactly one place (e.g. `crossproduct/config.py`, imported by `run_analysis.py`, `queries.py`, `plots.py`), and resolve whether `_v2` is permanent naming or should be renamed back to `crossproduct/` with the old tree archived — a data-provenance call for whoever last trusted a `_v2` output, not a code-layout call.
+
+**b. The mASE formula has two silently different implementations (A-3-01).** `heatmaps.py:111-121` and `master_metrics_table.py:138-148` compute the correct union-based 3D-IoU scale error; `crossproduct.py:130-144` computes a different min-product/max-product formula that gives a different number (0.75 vs. 0.667 on the audit's worked example) on any TP row where predicted/GT box dimensions differ across more than one axis. `master_metrics_table.py`'s own docstring claims parity with `heatmaps.py` — true for that pair, false for `crossproduct.py`. This has been silently biasing `crossproduct/`'s mASE low (and feeding `anomaly.py`'s peer-group scoring) since the module was written.
+*Proposal:* one `ase(pred_dims, gt_dims) -> float` function in a shared metrics module, imported by all three analysis scripts. This is a correctness fix, not just organization — flag to the user as needing an actual code change, not merely a restructure.
+
+**c. `config.OUTPUT_SCHEMA`'s 50 columns are hand-copied in at least 4 places, each wrong differently (B-1-01, and cross-chunk).** `architecture.md`'s schema table, `docs/vAIlt/05_Implementation/KRadar_configpy_Reference.md`, and `docs/vAIlt/05_Implementation/Config_Reference.md` each independently omit `lidar64_visible_confirmed`, `lidar128_visible_confirmed`, `ghost_flag`, `occluded` — the same 4 columns, three separate places, presumably because whoever wrote each doc copied from an earlier draft of `config.py` rather than the current one and none of them regenerate against it.
+*Proposal:* every doc that needs the column list should say "generated from `config.OUTPUT_SCHEMA` as of `<date>`, see `config.py` for current authoritative list" instead of reproducing a static count — a doc that states "N columns" invites exactly this drift the moment N changes. If any of these three docs is actually just a legacy artifact of an earlier `config.py` version, retire it rather than maintain it in parallel.
+
+**d. The `AXIS_ORDER`/"9 vs 6 axes" radar-chart claim propagated into 3 independent places (B-3-01, B-6-01, A-6-01).** `radar_charts.py`'s own two docstrings, `obsidianVault/Projects/K-Radar/robustness-radar-charts.md`'s design-decision section, all still say "9 severity-tiered axes" when the code (and the same file's own inline comments) has said 6 since the 2026-08-25 `frame_deletion`-exclusion decision. The vault doc's later section even *correctly* describes the exclusion without ever going back to fix the earlier "10 axes" line — internally inconsistent, not just doc-vs-code inconsistent.
+*Proposal:* fix the two stale docstrings in `radar_charts.py` (cheap, high-value — they're the nearest source of truth) and the vault doc's design-decision paragraph in the same pass, since both cite the same wrong number and both are one edit.
+
+## 2. Test coverage has a shape: bugs found in chunk 1 are all untested with production-realistic inputs
+
+Chunk 2 found a specific, repeating pattern rather than scattered gaps: SMK-15, VER-27/28/33 (LiDAR LUT selection, A-1-03) and SMK-14, VER-29/30 (radar off-by-one slicing, A-1-02) are the *only* tests that touch the exact code paths those bugs live in, and every one of them was written with hand-picked inputs that happen to avoid the buggy branch — `expected_density=10.0` instead of the real 8000/32000 pipeline values; ordinary exclusive-style bbox dicts instead of the pipeline's actual inclusive-max convention. Separately, VER-31/32 and SMK-16/05 (A-2-04 through A-2-07) assert bounds (`0<=score<=1`) instead of the comparative/differential claim their own docstring makes ("center > edge", "with distortion != without").
+
+*Proposal (test-architecture, not layout):* this isn't a file-organization problem, it's a test-authoring pattern worth calling out explicitly to whoever maintains `test_smoke.py`/`test_verify.py`: a test that exercises a threshold/LUT/branch-selection function should include at least one case built from the actual production constant (`pipeline.py`'s `_EXPECTED_OS2`/`_EXPECTED_OS1`, `_bbox_voxels_from_annotation`'s inclusive convention), and a test whose docstring claims "A > B" or "X differs from Y" should assert that comparison, not just that both values are individually in-range. Also: `validate_precomputation.py` reimplements `pipeline.py`'s `radar_visible` formula inline rather than importing it (chunk 1 prior-pass note, re-confirmed relevant here) — a validator that recomputes the same buggy formula from the same source will always agree with itself by construction.
+
+## 3. Dead / superseded infrastructure — archive candidates
+
+Alvis is permanently gone (2026-09-01, ground truth). Confirmed via chunk 7's call-site trace:
+
+- **`repos/AMSCUP_PLUS`** — zero functional references from `test-bed/` (one comment citing its sbatch pattern as precedent, not a dependency). Last commit 2026-08-10, predates the Alvis cutoff.
+- **`test-bed/src/Modules/robust_testing/kradar/scripts/alvis/*`** — targets a cluster that no longer exists; self-consistent internally, no runtime target.
+- **`repos/K-Radar/scripts/alvis/compute_robustness.py`** — a live example of dead-but-undocumented-as-dead code *inside* the K-Radar submodule (A-7-02): its own sibling script `run_ap_robustness.py` documents that `compute_robustness.py`'s directory-based approach cannot work against the actual output layout (no "original" entry survives the merge step, confirmed empirically by that script's own author) and was written to replace it. `obsidianVault/Knowledge/robustness-metric-selection.md` still cites `compute_robustness.py` as "the" implementation without naming its working successor. This is inside a submodule so its internals aren't ours to restructure, but the *vault note pointing at the wrong one of two siblings* is ours to fix.
+- **`repos/AI-MSF-Benchmark`** — zero functional references from `test-bed/` (new finding this pass, not just re-confirmed ground truth) — may still be referenced conceptually in `docs/vAIlt/06_Results/aimsf-benchmark-comparison.md` as a methodology comparison point, not re-verified. Needs a decision (see §5), not a recommendation.
+
+*Proposal:* move `repos/AMSCUP_PLUS`'s pointer removal, `scripts/alvis/*`, and `docs/ALVIS_MIGRATION_PLAN.md` into a single top-level `archive/alvis/`. Don't delete — the walltime/chunking design decisions in `ALVIS_MIGRATION_PLAN.md` have reuse value if this project gets different HPC access later. Update `robustness-metric-selection.md` to name `run_ap_robustness.py` as the working RR/mRR implementation.
+
+## 4. A permanent, not temporary, data limitation
+
+`weather`/`environment`/`time_of_day` columns can never be populated locally: their source `description.txt` files only ever lived on Alvis and don't exist in the local `repos/K-Radar` checkout (prior-pass finding, re-flagged as still relevant since `.agents/prior_audit_20260909/findings/B-chunk7.md` isn't cross-linked from this pass's `MASTER_AUDIT.md`). This directly explains why VER-25/26 are permanently skipped.
+
+*Proposal:* `architecture.md`'s schema table should state plainly that these three columns are permanently fallback-only in this environment, not frame it as a temporary gap — so a future contributor doesn't chase data that structurally cannot exist locally.
+
+## 5. Decisions needed from the user (not recommendations)
+
+- **`docs/delete_/`, `backups/`, `alvis_archive_2026-08-28/`** — probable intentional in-progress state per ground truth; needs confirmation before any of it is touched.
+- **Whether `crossproduct/` or `crossproduct_v2/` is the directory to keep** (§1a) — data-provenance call. Whoever last trusted a `crossproduct_v2/` output should confirm it's authoritative before the code constant is repointed or the old tree deleted.
+- **`repos/AI-MSF-Benchmark`** — zero code references found under `test-bed/`; needs confirmation whether it's still cited methodologically in `docs/vAIlt` before deciding archive-candidate status.
+- **The mASE formula fix (§1b)** — this is a correctness bug with real downstream impact (systematically low mASE in `crossproduct/`'s summary tables), not a structural one; flagging here because fixing it changes historical numbers in every `crossproduct/summary_*.parquet` ever produced, which is a decision about whether/how to re-run and republish, not just a code edit.
+- **Several modified-but-uncommitted tracked files** (`docs/Latex_Report`, both `.obsidian/workspace.json`, the four obsidianVault docs already flagged doc-drift above, `repos/K-Radar` submodule pointer, `radar_charts.py`) — probable in-progress work; the doc-drift fixes in §1d and the commit could reasonably be the same pass.
+
+## 6. What this document deliberately does not propose
+
+Per ground truth: no restructuring `repos/K-Radar`, `repos/AMSCUP_PLUS`, or `repos/AI-MSF-Benchmark` internals; no merging `docs/vAIlt/` and `obsidianVault/`; no top-level build/test/lint command (the monorepo's lack of one is by design). Submodule boundaries, the two-vault split, and the absence of a unified build system are settled architecture, not findings.

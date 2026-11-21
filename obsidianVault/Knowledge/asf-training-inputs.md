@@ -2,7 +2,9 @@
 
 Investigation completed: mapped the exact LiDAR (`ldr64`), Radar (`rdr_sparse`), and Camera (`front0`) inputs consumed during ASF training, traced end-to-end from dataset `__getitem__` through encoders to fuser.
 
-Key findings documented at: `/home/adhish/Productivity/AMSCUP/docs/vAIlt/asf-training-inputs.md`
+Key findings documented at: `/home/adhish/Productivity/AMSCUP/docs/vAIlt/asf-training-inputs.md`.
+See [[asf-map-eval-mechanics]] for how the trained model's outputs are turned into the mAP
+number reported by the sweep.
 
 - LiDAR: pre-calibrated ldr64 point cloud, 5 cols [x,y,z,intensity,ring], voxelized → SECONDNet → `spatial_features_2d` (512ch)
 - Radar: pre-sampled rdr_sparse points, 4 cols [x,y,z,power], voxelized + PointNet → sparse 3D backbone → `bev_feat` (768ch)

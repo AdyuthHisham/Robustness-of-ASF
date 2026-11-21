@@ -4,7 +4,9 @@ Evergreen reference for choosing/reporting robustness metrics when there's no
 second reference/baseline architecture and no downstream planner — i.e.
 exactly AMSCUP's ASF/K-Radar constraint. Full per-paper extraction lives in
 `docs/lit_survey/metrics/metrics_audit.md` (checked-in project doc, not this
-vault); this note is the durable takeaway, not a duplicate of that audit.
+vault); this note is the durable takeaway, not a duplicate of that audit. See
+[[asf-map-eval-mechanics]] for how the underlying per-condition AP that Rb^c
+divides is itself computed.
 
 ## The central finding: most corruption-robustness metrics need a second model
 

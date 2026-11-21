@@ -56,7 +56,15 @@ OS2_64_MAX_RANGE_M = 240.0
 OS1_128_MAX_RANGE_M = 120.0
 
 # Allowed weather labels
-ALLOWED_WEATHER = {"clear", "overcast", "fog", "rain", "sleet", "snow", "normal"}
+# "lightsnow"/"heavysnow" added 2026-09-23: the original set omitted these two
+# raw K-Radar weather tokens (confirmed verbatim in K-Radar's own
+# tools/tag_generator/tag_generation.py and scripts/main_fusion_eval_0.py),
+# so sequences 42/43/48/49 (lightsnow) and 46/47/54/55/56/57/58 (heavysnow)
+# were silently falling back to "normal" -- see ingest.py's mirrored constant.
+ALLOWED_WEATHER = {
+    "clear", "overcast", "fog", "rain", "sleet", "snow", "normal",
+    "lightsnow", "heavysnow",
+}
 
 # Camera occlusion parameters (NEW: Phase 4 - k-radar-sensor-visibility-metrics.md §4.3)
 DEPTH_MARGIN = 0.1       # meters, for camera depth-buffer comparison
@@ -161,4 +169,4 @@ OUTPUT_SCHEMA = [
 ]
 
 # Weather labels: the allowed weather conditions (excluding "normal" as per api_contracts.md example)
-WEATHER_LABELS = ["clear", "overcast", "fog", "rain", "sleet", "snow"]
+WEATHER_LABELS = ["clear", "overcast", "fog", "rain", "sleet", "snow", "lightsnow", "heavysnow"]

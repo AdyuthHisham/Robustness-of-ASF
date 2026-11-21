@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "06_Results/robustness-visualization-results-2026-08-20.md",
+                "file": "06_Results/manual-code-vetting-checklist.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "robustness-visualization-results-2026-08-20"
+              "title": "manual-code-vetting-checklist"
             }
           }
         ]
@@ -185,15 +185,29 @@
       "bases:Create new base": false
     }
   },
-  "active": "027471fbf8456163",
+  "active": "db56987b42efa1e2",
   "lastOpenFiles": [
-    "06_Results/robustness-visualization-results-2026-08-20.md.tmp.3064943.cbd02a1ef1be",
-    "06_Results/robustness-visualization-results-2026-08-20.md.tmp.3064943.8484b54b97ed",
-    "06_Results/robustness_figures/item7_zero_ablation_bar.png",
+    "06_Results/exhaustive-crossproduct-phase1-audit-20260831.md.tmp.3278348.9319c882169a",
+    "06_Results/exhaustive-crossproduct-phase1-audit-20260831.md.tmp.3278348.cd2867757687",
+    "06_Results/crossproduct-rebuild-20260901.md.tmp.3278348.86869293a999",
+    "06_Results/crossproduct-rebuild-20260901.md.tmp.3278348.65531fd9b8fe",
+    "06_Results/crossproduct-rebuild-20260901.md.tmp.3278348.43d36c8584e0",
+    "06_Results/crossproduct-rebuild-20260901.md",
+    "06_Results/exhaustive-crossproduct-phase1-audit-20260831.md.tmp.4066379.aa117851eca0",
+    "06_Results/exhaustive-crossproduct-phase1-audit-20260831.md",
+    "06_Results/row-table-integrity-audit-2026-08-31-corrected.md.tmp.2106977.c43298bba4c4",
+    "06_Results/row-table-integrity-audit-2026-08-31-corrected.md",
+    "06_Results/row-table-integrity-audit-2026-08-31.md",
+    "06_Results/robustness-pipeline-audit-phase1-2026-08-31.md",
+    "06_Results/robustness-pipeline-bug-audit-2026-08-31.md.tmp.2106977.e0ec8237014f",
+    "06_Results/robustness-pipeline-bug-audit-2026-08-31.md",
+    "06_Results/robustness-pipeline-bug-audit-2026-08-31.md.tmp.2106977.7a8e131ab3f8",
+    "06_Results/manual-code-vetting-checklist.md.tmp.1903086.3f98588c3bd6",
+    "06_Results/manual-code-vetting-checklist.md.tmp.1903086.0579809c9a86",
     "06_Results/robustness-visualization-results-2026-08-20.md",
-    "06_Results/robustness-visualization-results-2026-08-20.md.tmp.3064943.8e3c7a29014e",
+    "noise-injection-smoke-test-report.md",
+    "06_Results/robustness_figures/item7_zero_ablation_bar.png",
     "06_Results/robustness-visualization-standalone-prompt.md",
-    "06_Results/robustness-visualization-results-2026-08-20.md.tmp.3064943.3bbde5a6bcb4",
     "06_Results/robustness_figures/item8_ate_vs_ase_scatter.png",
     "06_Results/robustness_figures/item8_ate_ase_bars.png",
     "06_Results/robustness_figures/item6_churn_stacked_bar.png",
@@ -203,18 +217,11 @@
     "06_Results/robustness_figures/item2_recall_vs_density_line.png",
     "06_Results/robustness_figures/item2_recall_boxplot_tercile.png",
     "06_Results/robustness_figures/item1_map_vs_severity.png",
-    "06_Results/robustness_figures",
     "06_Results/robustness-visualization-plan.md",
-    "06_Results/robustness-visualization-standalone-prompt.md.tmp.3064943.3b3a7d229b69",
-    "06_Results/robustness-visualization-generation-prompt.md.tmp.3030409.e1893f85c82d",
-    "06_Results/robustness-visualization-generation-prompt.md.tmp.3030409.6cb2af7192ea",
-    "06_Results/robustness-metric-implementation-plan.md.tmp.3030409.3997b846ca89",
     "06_Results/full_codebase_audit_2026-08-20.md",
     "06_Results/kradar-effects-audit.md",
     "07_Writing/LaTeX_Report_Structure.md",
-    "04_Design/Sensor_Sparsity_and_Noise_Injection.md.tmp.3675799.44e4ad44cb74",
     "04_Design/Sensor_Sparsity_and_Noise_Injection.md",
-    "04_Design/Sensor_Sparsity_and_Noise_Injection.md.tmp.3675799.13a141bb400d",
     "03_Theory/phase_2.md",
     "03_Theory/Annotations.md",
     "03_Theory/03 Theory.md",
@@ -225,13 +232,6 @@
     "02_Literature/QA_Report_for_task_t_c872701f_QA_review_aggregated_datamd_completeness.md",
     "02_Literature/4D_mmWave_Radar_Adverse_Environments_Survey.md",
     "02_Literature/02 Literature.md",
-    "01_Project_Management/March_23.md",
-    "01_Project_Management/01 Project Management.md",
-    "00_Inbox/Migration_Changelog.md",
-    "00_Inbox/KRADAR.md",
-    "00_Inbox/Excalidraw_Data.md",
-    "00_Inbox/Dedup_Map.md",
-    "00_Inbox/00 Inbox.md",
-    "_assets/noise_visual_inspection/v2_regeneration_confirmation.md"
+    "01_Project_Management/March_23.md"
   ]
 }
