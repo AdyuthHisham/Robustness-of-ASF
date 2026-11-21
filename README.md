@@ -1,404 +1,102 @@
-# AMSCUP
+# AMSCUP: robustness of camera / LiDAR / 4D-radar fusion under sensor corruption
 
-A comprehensive research repository for autonomous vehicle perception development, focusing on multi-sensor fusion (camera, LiDAR, and 4D radar) and robust object detection across various weather conditions.
+AMSCUP is the code, configuration and analysis behind a Chalmers MSc thesis that asks how a multi-sensor 3D detector behaves when its sensors are noisy, partly lost or absent. The model under test is Availability-aware Sensor Fusion (ASF, camera + LiDAR + 4D radar). It is run **unmodified, from its officially released checkpoint**, on the 58-sequence K-Radar test split. Twelve synthetic corruption effects (Gaussian noise, partial loss, complete loss, frame deletion; applied to each sensor separately at three severities) are injected, and the detections are compared with the clean run. The repo holds the corruption definitions, the metric and analysis code, a per-object visibility pipeline, and the small result tables and figures. Large data is shared separately (see [Data and reproducibility](#data-and-reproducibility)).
 
-## Overview
+![Evaluation pipeline: dataset, corruption injection and ASF inference run once per condition; the outputs are consolidated into one Parquet table, then metrics and stratified robustness analysis](docs/figures/thesis/eval_pipeline.svg)
 
-AMSCUP serves as a development platform and testbed for evaluating and integrating autonomous vehicle (AV) sensor fusion pipelines. The project emphasizes working with multi-modal autonomous driving datasets (Waymo, nuScenes, K-Radar) and state-of-the-art object detection models to build robust perception systems that perform consistently across diverse environmental conditions.
+*Workflow (thesis Figure "Overview of the evaluation pipeline", Methods chapter). The "36 conditions" are 12 effects x 3 severities.*
 
-## Project Purpose
+## Key results
 
-This repository consolidates:
-- **Data pipeline development**: Integration and preprocessing of multiple autonomous vehicle datasets
-- **Model evaluation**: Testing state-of-the-art scene flow (SF) and 3D object detection models
-- **Sensor fusion research**: Camera, LiDAR, and 4D radar integration for improved detection robustness
-- **Testbed infrastructure**: Local and distributed testing environments for algorithm validation
+All numbers below are from the thesis (Results chapter). The figure files are tracked copies; the table or figure each number comes from is named. Scope: one model checkpoint, one dataset (K-Radar test split: 58 sequences, 13,727 baseline frames, 35,456 sedan and bus/truck ground-truth objects), 22 evaluable conditions plus the frame-deletion conditions, which could not be evaluated.
 
-## Key Features
+![Pooled robustness metrics per corruption condition](results/figures/metrics_table.png)
 
-- **Multi-dataset support**: Waymo, nuScenes, K-Radar, and NVIDIA autonomous driving datasets
-- **Sensor fusion pipelines**: Integration of camera, LiDAR, and 4D radar data
-- **4D Radar object detection**: Full support for K-Radar's RAED (Range–Azimuth–Elevation–Doppler) tensor data
-- **Scene flow model evaluation**: Testing and validation of SF models on multiple datasets
-- **Docker containerization**: Pre-configured environments for K-Radar and other models
-- **Robust testing modules**: Modules for evaluating system behavior under degraded sensor conditions and adverse weather
+*Pooled metrics per condition (thesis Fig. "metrics_table"; same file as [`results/figures/metrics_table.png`](results/figures/metrics_table.png)). R_b^c is corrupted mAP divided by clean mAP.*
 
-## Directory Structure
+1. **LiDAR Gaussian noise causes the largest drop, and it is a step, not a slope.** Pooled mAP goes from 73.99 (clean) to 69.59 at low severity, then 18.54 (medium) and 17.45 (high); R_b^c is 0.251 and 0.236. False negatives rise from 8,287 to 29,214 / 29,829 while false positives fall from 4,900 to 1,175 / 842, so the drop comes from missed detections rather than spurious ones. Source: pooled metrics figure above.
+2. **Complete LiDAR loss (zero-filled) is less damaging than medium or high LiDAR noise.** mAP 44.05, R_b^c 0.595. A noisy-but-present LiDAR hurts more than an absent one in this sweep. Source: same figure. Note that the sweep never tells ASF's availability mechanism that a sensor is absent (thesis, discussion of cause); this result describes zero-filled input, not declared exclusion.
+3. **Camera corruption barely moves the output.** Every camera condition stays between mAP 72.64 and 73.35 (R_b^c >= 0.982). Source: same figure. Composite Robustness Index (CRI, 1 = AP stays high and stable across severities): camera loss-partial 0.936 / 0.929 (sedan / bus-truck), camera Gaussian noise 0.915 / 0.842, versus LiDAR Gaussian noise 0.106 / 0.153. Source: thesis CRI table.
+4. **Radar sits in between.** Radar Gaussian noise gives mAP 62.94 (medium) and 57.18 (high); radar loss-partial at low and medium severity stays close to baseline. CRI for radar Gaussian noise is 0.272 for both classes. Source: pooled metrics figure and CRI table.
+5. **LiDAR Gaussian noise is the worst single cell in 9 of the 10 axis-class pairs** (weather, environment, time of day, distance, point density; sedan and bus/truck), always at medium or high severity. The exception is bus/truck in rain, where complete LiDAR loss gives R_b^c = 0.000 (N = 120). Sedan examples: 0.114 in the densest point-density bin, 0.154 at 0 to 20 m. Source: thesis table "single worst cell per diversity axis and class" (cells with N > 30).
+6. **Frame deletion crashed the pipeline for all three sensors.** ASF's sparse-convolution backbone raises a `RuntimeError` on the empty input (radar, LiDAR) and the camera case also crashes, so none of the nine frame-deletion conditions has a metric. Source: thesis, frame-deletion section.
+
+![R_b^c by modality across corruption families and severities](results/figures/modality_map_trend_single.png)
+
+*Retention by modality (same data as the table; thesis draft figure). Marker size scales with the sample count N.*
+
+**Limitations.**
+- One checkpoint and one dataset; nothing here says how other fusion models behave.
+- The re-run baseline sits 3.2 to 5.6% below the numbers in the ASF paper (sedan BEV AP 77.86 vs 82.5; bus/truck BEV AP 67.93 vs 70.2; same checkpoint, IoU 0.3, official evaluation code). The thesis reports the gap but does not explain it.
+- Several weather and environment categories rest on 2 to 7 sequences or few objects; the thesis flags them rather than treating them as general findings.
+- mATE, mASE and mAOE are computed over true positives only, so at the collapsed conditions they describe a smaller, easier surviving population. Their apparent improvement there is a survivorship artefact.
+- The mFR metric is excluded from the metrics stack (decision of 2026-09-01); it is not implemented here.
+- `master_metrics_table.md` in `results/tables/` is regenerated from the local row table and gives a clean mAP of 72.89 (LiDAR noise medium 23.71, high 21.56), not the thesis's 73.99 / 18.54 / 17.45. Both come from this repo's data; the pooling that explains the difference was not traced. Treat the thesis figure as the reported result. See [`results/RESULTS.md`](results/RESULTS.md).
+
+## Repository map
 
 ```
-AMSCUP/
-├── test-bed/                          # Main development testbed
-│   ├── src/
-│   │   ├── Modules/
-│   │   │   └── robust_testing/        # Robustness evaluation modules
-│   │   │       ├── Dataset_Module.ipynb  # Dataset loading and exploration
-│   │   │       ├── nuscenes/          # nuScenes dataset integration
-│   │   │       ├── kradar/            # K-Radar dataset integration
-│   │   │       └── example/           # Example scripts and configurations
-│   │   ├── SFModels/                  # Scene flow models (ignored in git)
-│   │   │   └── CenterPoint/           # CenterPoint detection model with Docker
-│   │   └── Datasets/                  # Local dataset storage (ignored in git)
-│   ├── main.py                        # Testbed entry point
-│   ├── pyproject.toml                 # Python project configuration with dependencies
-│   ├── uv.lock                        # Dependency lock file (uv package manager)
-│   └── .python-version                # Python version specification (3.12)
-├── repos/                             # Third-party repositories and integrations
-│   ├── K-Radar/                       # K-Radar dataset & benchmark implementation
-│   │   ├── configs/                   # Model configurations
-│   │   ├── models/                    # Detection and segmentation models
-│   │   ├── pipelines/                 # Data processing and training pipelines
-│   │   ├── utils/                     # Utility functions and evaluation tools
-│   │   ├── scripts/                   # Processing and evaluation scripts
-│   │   ├── Dockerfile                 # Docker image for K-Radar environment
-│   │   ├── docker-compose.yml         # Docker compose configuration
-│   │   ├── requirements.txt           # Python dependencies
-│   │   └── readme.md                  # K-Radar specific documentation
-│   └── .gitignore                     # Third-party repo ignore patterns
-├── tools/                             # Utility tools and helper scripts
-│   └── data_transfer_kradar/          # K-Radar data transfer utilities
-├── groupL/                            # Group learning materials
-│   ├── pdfs/                          # Academic papers and references
-│   └── ppts/                          # Presentations and slides
-├── obsidianVault/                     # Research notes and documentation vault
-├── notes.txt                          # Development status and TODO items
-└── .pre-commit-config.yaml            # Pre-commit hooks configuration
+README.md          this file
+CLAUDE.md          instructions for the Claude Code agent working in this repo
+pyproject.toml     one uv project for everything (Python >= 3.12)
+src/               first-party packages (import with `uv run`; paths come from src/amscup_paths.py)
+  kradar_visibility/   per-object radar / LiDAR / camera visibility scores -> Parquet;
+  robustness/          prediction ingest, AP, retention, CRI, churn (vendored from the K-Radar fork)
+  effects/             the corruption (noise) definitions and their visualisation
+  amscup_paths.py      single source of truth for every filesystem path
+configs/           ASF configs (final run + per-sequence), noise-effect configs, camera calibration, train/test split
+scripts/           runnable entry points, by purpose: visibility/, analysis/, data_transfer/, cluster_historical/
+tests/             smoke tests (SMK-*) and verification tests (VER-*)
+results/           tracked, curated tables and figures (index: results/RESULTS.md)
+data/              NOT tracked: datasets and generated tables (catalogue: data/DATA.md)
+docs/              methodology, reports, presentation material, figures (index: docs/README.md)
+Misc/              everything moved out of the main tree during the restructure (nothing deleted; not tracked)
 ```
 
-## Supported Datasets
+## How to navigate
 
-### Dataset Comparison
+| I want to... | Go to |
+|---|---|
+| Understand the method | `docs/methodology/` (start with `ASF_pipeline_cheatsheet.md`, `04_visibility_methodology.md`) |
+| See the results | this README, then [`results/RESULTS.md`](results/RESULTS.md) |
+| See where every table and figure comes from | [`data/DATA.md`](data/DATA.md) and [`scripts/README.md`](scripts/README.md) |
+| Reproduce a table or figure | [Quickstart](#quickstart), then `scripts/analysis/` |
+| Run the visibility pipeline | `scripts/visibility/run_pipeline.py` (needs the K-Radar dataset) |
+| See how corruptions are defined | `src/effects/noise_injection.py`, `configs/noise/` |
+| See how ASF was configured | `configs/asf/` (`ASF_v2_0_final.yml` matches the released `ASF_v2_0_final_10.pt` checkpoint; `ASF_v2_0_seq<N>_alvis.yml` are the per-sequence cluster configs; I did not verify which file each run used) |
+| Read the audits and verification reports | `docs/reports/`, `docs/methodology/verification_report.md` |
+| Contribute | `CLAUDE.md` (conventions), `tests/`, `scripts/README.md` |
 
-| Dataset | Cameras | LiDAR | Radar | Time/Scene | Total Time | Scenes |
-|---------|---------|-------|-------|-----------|-----------|--------|
-| **Waymo** | 5 | 5 | — | 20s | 333 min | 1000 |
-| **nuScenes** | 6 | 1 | 5 | 20s | 330 min | 1000 |
-| **K-Radar** | Multiple | Yes | ✓ (4D) | — | — | — |
-
-**K-Radar Uniqueness**: Provides complete 4D radar tensor data (full RAED dimensions) – a world-first for public autonomous driving datasets. Unlike most datasets that provide sparse point clouds, K-Radar offers raw 4D tensor representations for superior object detection performance.
-
-## Installation
-
-### Prerequisites
-
-- **Python 3.10+** (verified with Python 3.12)
-- **pip** or **uv** package manager (uv recommended for faster dependency resolution)
-- **Git** (for cloning repositories)
-- **Docker** (optional, for containerized environments)
-
-### Setup
-
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/AdyuthHisham/AMSCUP.git
-   cd AMSCUP
-   ```
-
-2. **Navigate to testbed:**
-   ```bash
-   cd test-bed
-   ```
-
-3. **Install dependencies using uv (recommended):**
-   ```bash
-   uv sync
-   ```
-   
-   Or using pip:
-   ```bash
-   pip install -r requirements.txt
-   ```
-   
-   For development dependencies:
-   ```bash
-   uv sync --all-groups
-   ```
-
-4. **Verify installation:**
-   ```bash
-   python main.py
-   ```
-   Expected output: `"Hello from test-bed!"`
-
-## Dependencies
-
-### Core Dependencies
-
-- **hdbscan** (≥0.8.42) – Hierarchical density-based clustering
-- **marimo** (≥0.20.4) – Interactive notebooks and reactive programming
-- **numpy** (<2.0.0) – Numerical computing
-- **nuscenes-devkit** (≥1.2.0) �� nuScenes dataset SDK
-- **pandas** (≥2.3.3) – Data manipulation
-- **polars** (≥1.39.3) – High-performance data frames
-- **pyarrow** (≥23.0.1) – Arrow data format support
-- **sentence-transformers** (≥5.4.1) – Text embeddings and semantic search
-- **umap-learn** (≥0.5.12) – Dimensionality reduction
-- **visidata** (≥3.3) – Interactive data analysis
-- **python-lsp-server** (≥1.14.0) – LSP for code editors
-- **ruff** (≥0.15.5) – Fast Python linter
-
-### K-Radar Dependencies
-
-- **open3d** (0.15.1) – 3D data processing
-- **torch** with **spconv-cu113** – PyTorch with sparse convolution (CUDA 11.3)
-- **opencv-python** (4.2.0.32) – Computer vision
-- **tensorboard** – Training visualization
-- **PyQt5** – GUI framework
-- **scikit-image** – Image processing
-- **numba** – JIT compilation for performance
-- **einops** – Tensor operations
-
-### Development Dependencies
-
-- **basedpyright** (≥1.38.2) – Static type checker
-- **ipykernel** (≥7.2.0) – Jupyter notebook kernel
-- **pre-commit** (≥4.5.1) – Git hooks framework
-- **uv** (≥0.10.7) – Fast Python package manager
-
-## Usage
-
-### Quick Start
-
-1. **Run the testbed:**
-   ```bash
-   cd test-bed
-   python main.py
-   ```
-
-2. **Launch interactive notebooks:**
-   ```bash
-   # Dataset exploration module
-   jupyter notebook src/Modules/robust_testing/Dataset_Module.ipynb
-   ```
-
-### Working with Datasets
-
-#### Load nuScenes Dataset
-```python
-from nuscenes import NuScenes
-
-nusc = NuScenes(version='v1.0-mini', dataroot='/path/to/nuscenes')
-# Explore scenes and sensor data
-```
-
-#### Load K-Radar Dataset
-Navigate to `repos/K-Radar` for dataset-specific code:
-```bash
-cd repos/K-Radar
-python test.py  # Run diagnostic tests
-```
-
-### K-Radar Setup
-
-#### Using Docker
-
-1. **Build the Docker image:**
-   ```bash
-   cd repos/K-Radar
-   docker build -f Dockerfile -t kradar:latest .
-   ```
-
-2. **Run using Docker Compose:**
-   ```bash
-   docker-compose up -d
-   ```
-
-3. **Access the container:**
-   ```bash
-   docker-compose exec kradar bash
-   ```
-
-#### Manual Installation (K-Radar)
+## Quickstart
 
 ```bash
-cd repos/K-Radar
-pip install -r requirements.txt
+git clone <repo-url> && cd AMSCUP          # no submodules; nothing to --recurse
+uv sync                                    # installs the single project (Python >= 3.12)
+# download the data bundle (link below) and unpack it so that data/results/ exists
+uv run python -c "import sys; sys.path.insert(0, 'scripts/analysis'); \
+  import master_metrics_table as m; print(m.build_all_tables(out_dir=__import__('pathlib').Path('/tmp/mmt')))"
+uv run pytest tests/test_smoke.py          # needs the K-Radar dataset (see below)
 ```
 
-### Model Evaluation
+The regeneration command was run on the full local bundle (about 18 s) and reproduced `results/tables/master_metrics_table.md` exactly. `scripts/analysis/master_metrics_table.py` also runs standalone with `uv run python scripts/analysis/master_metrics_table.py`, but that overwrites the copy in `data/results/robustness_reports/`, so the snippet above writes elsewhere.
 
-The testbed includes integration with multiple state-of-the-art models:
+**Smoke tests need the K-Radar dataset, which is not in this repo or the bundle.** Without it `tests/test_smoke.py` fails at the first test (file not found under `data/KRadar/`). Point `KRADAR_DATASET_ROOT` at your copy of the dataset to run them. Current state of `tests/test_smoke.py` on the restructured tree: 9 passed, 11 failed. Ten of the failures are missing-dataset errors; **SMK-21 (LiDAR range-image float32 bin boundary) is a real failure under the locked `numpy 2.4.6`**. The same code and test pass in the pre-restructure project, which ran `numpy 1.26.4`. The cause is probably numpy 2 scalar-promotion changes; the fix (pin `numpy<2`, or make the binning dtype-explicit) is an open decision.
 
-- **CenterPoint**: 3D object detection model (Docker support provided)
-- **Scene Flow Models**: Multiple SF models for motion estimation
-- **K-Radar Detection Pipelines**: 4D radar-specific detection models
+## Data and reproducibility
 
-### Running Model Inference
+- **Tracked:** code, configs, docs, and the small tables and figures in `results/`.
+- **Not tracked (`data/`):** generated tables (`row_table_iou03.parquet`, `full_denormalized_table_*.parquet`, `crossproduct*/`), figures and visibility Parquets. About 13 GB in total. Shared through a drive link: **TODO: add link**. Details in [`data/DATA.md`](data/DATA.md).
+- **Not included at all:** the K-Radar dataset itself. Obtain it from its authors and set `KRADAR_DATASET_ROOT` (default `data/KRadar`).
+- **What can be regenerated:** every downstream table and figure, from the Parquet row tables, with the scripts in `scripts/analysis/`.
+- **What cannot be regenerated:** the ASF predictions. They were produced on the Chalmers Alvis cluster (NVIDIA A40 GPUs, SLURM array jobs), and that compute is permanently unavailable. The files in `scripts/cluster_historical/` and the `*_alvis.yml` configs document how the sweep ran; they are for reference, not a current workflow. The local data is the ceiling for any further analysis.
+- Known, expected gap: `camera_frame_deletion` rows are missing from `row_table_iou03.parquet`, because that sweep crashed (result 6 above).
 
-#### K-Radar 4D Radar Detection
-```bash
-cd repos/K-Radar
-python models/inference.py --config configs/detector.yaml --checkpoint model.pth
-```
+## Third-party code (no submodules)
 
-#### Sensor Fusion Pipeline
-Refer to `repos/K-Radar/pipelines/` for sensor fusion integration examples.
+This repo used to carry K-Radar, AMSCUP_PLUS and the LaTeX report as submodules. They are gone. The pieces the results depend on were copied into `src/` and `configs/`: the AP/robustness scripts (`src/robustness/`, from the K-Radar fork), the corruption definitions (`src/effects/`), and the ASF configs (`configs/asf/`). The K-Radar dataset, the ASF model code and the cluster tooling are not included. Upstream: K-Radar (KAIST) and the ASF authors' release; `src/robustness/LICENSE` (MIT) covers the vendored evaluation code.
 
-## Project Structure Details
+## Citation, license, contact
 
-### Test-Bed (`test-bed/`)
-
-**Purpose**: Isolated development and testing environment for algorithm validation.
-
-**Key Components**:
-- **Dataset_Module.ipynb**: Interactive notebook for dataset loading, exploration, and visualization
-- **Robust Testing Modules**: Performance evaluation under adverse conditions
-- **pyproject.toml**: Centralized dependency management with uv
-
-### K-Radar Repository (`repos/K-Radar/`)
-
-**Purpose**: Official K-Radar dataset implementation and benchmark models.
-
-**Structure**:
-- **models/**: Neural network architectures for detection and segmentation
-- **pipelines/**: Data loading, preprocessing, and training pipelines
-- **utils/**: Helper functions for data processing and evaluation
-- **configs/**: Configuration files for model training
-- **docs/**: Dataset documentation and pipeline guides
-- **scripts/**: Utility scripts for data processing and analysis
-
-### Tools (`tools/`)
-
-**Purpose**: Utility scripts for dataset manipulation and transfer.
-
-- **data_transfer_kradar/**: Scripts for downloading and transferring K-Radar data
-
-## Configuration
-
-### Python Version
-
-Specified in `test-bed/.python-version`:
-```
-3.12
-```
-
-### Development Tools
-
-#### Pre-commit Hooks
-Configuration in `.pre-commit-config.yaml`:
-```bash
-pre-commit install
-pre-commit run --all-files
-```
-
-#### Code Formatting
-```bash
-cd test-bed
-uv run black .  # Format code with black
-uv run ruff check .  # Lint with ruff
-```
-
-## Important Notes
-
-### Current Development Status
-
-As noted in `notes.txt`:
-- Docker containerization for CenterPoint is in progress
-- Training capability on local devices is limited due to computational requirements
-- Full model training recommended on cluster environment
-- Data manipulation and sensor calibration are ongoing work areas
-
-### Key Uncertainties
-
-1. **Group Storage**: Documentation needed for group storage access patterns
-2. **Full Dataset Integration**: Some dataset features not yet fully integrated
-3. **Autocalibration**: Sensor extrinsic calibration tools are under development
-4. **Cluster Deployment**: Timeline for full cluster testbed support is in progress
-
-## Dependencies Management
-
-### Using `uv` (Recommended)
-
-```bash
-# Install dependencies
-uv sync
-
-# Add new dependency
-uv add package-name
-
-# Add development dependency
-uv add --dev package-name
-
-# Update lock file
-uv sync --refresh
-```
-
-### Using pip
-
-```bash
-# Standard installation
-pip install -e .
-
-# With development dependencies
-pip install -e ".[dev]"
-
-# Or from requirements
-pip install -r requirements.txt
-```
-
-## Troubleshooting
-
-### CUDA/GPU Issues (K-Radar)
-
-The `repos/K-Radar/test.py` provides diagnostic utilities for GPU/CUDA configuration:
-```bash
-python test.py  # Diagnose libcuda, PTX compiler, and Numba GPU access
-```
-
-### Missing Dependencies
-
-If encountering import errors:
-```bash
-cd test-bed
-uv sync --refresh  # Refresh all dependencies
-```
-
-### Dataset Access
-
-Datasets are ignored in git (see `.gitignore`). Ensure datasets are placed in:
-- `test-bed/src/Datasets/` for local testing
-- Refer to dataset documentation for download links
-
-## Related Resources
-
-- **K-Radar Paper**: [arXiv:2206.08171](https://arxiv.org/abs/2206.08171)
-- **4D Radar Detection Network**: [arXiv:2303.06342](https://arxiv.org/abs/2303.06342)
-- **K-Radar Repository**: [KAIST AVELab K-Radar](https://github.com/kaist-avelab/K-Radar_auto-labeling)
-- **nuScenes Dataset**: [nuScenes Official](https://www.nuscenes.org/)
-- **Waymo Open Dataset**: [Waymo Official](https://waymo.com/open/)
-
-## Contributing
-
-For development work:
-
-1. Create a feature branch
-2. Make changes and run pre-commit hooks
-3. Test thoroughly in the testbed environment
-4. Submit pull request with detailed description
-
-## License
-
-*To be specified by repository owner*
-
----
-
-## Quick Reference Commands
-
-```bash
-# Setup
-cd test-bed && uv sync
-
-# Run testbed
-python main.py
-
-# Format code
-uv run black .
-
-# Lint code
-uv run ruff check .
-
-# Run diagnostics (K-Radar)
-cd repos/K-Radar && python test.py
-
-# Build Docker image (K-Radar)
-docker build -f Dockerfile -t kradar:latest .
-```
+- **License:** TODO. No top-level license file exists in this repo.
+- **Citation:** TODO. Add the thesis reference once it is published.
+- **Contact:** TODO.

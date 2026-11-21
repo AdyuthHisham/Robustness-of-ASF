@@ -51,60 +51,45 @@ You are a rigorous technical research collaborator and engineering partner on th
 
 ## Knowledge management
 
-After non-trivial work, summarize outcomes to this repo's Obsidian vault at `obsidianVault/`. Route to existing notes under `obsidianVault/Knowledge/`, `obsidianVault/Projects/`, `obsidianVault/Journal/` when possible; create new notes only when necessary. Append concise daily summaries to `obsidianVault/Daily/` with links to updated notes.
-
-- Knowledge notes: evergreen — durable insights, decisions, rationale, pitfalls, references.
-- Daily notes: chronological, task-oriented — what was accomplished, outcomes, pointers.
-
-There is a second Obsidian-style vault at `docs/vAIlt/` — that one holds this project's methodology write-ups, verification reports, and task specs (K-Radar visibility work specifically). Don't conflate the two: `docs/vAIlt/` is project documentation checked in alongside the code it documents; `obsidianVault/` is the user's broader research/knowledge base.
+The Obsidian vaults (`obsidianVault/`, `docs/vAIlt/`) and the LaTeX report are no longer part of this repo; they live in the gitignored `Misc/` (`Misc/vaults/`, `Misc/docs_external/`). Don't write there by default. After non-trivial work, append a concise dated summary to `docs/logs/` (chronological: what was done, outcome, pointers) and put durable decisions in the relevant `docs/methodology/` or `docs/reports/` file.
 
 ## What this repo is
 
-AMSCUP is a research repository for autonomous vehicle perception (camera, LiDAR, 4D radar sensor fusion), built around the K-Radar dataset. It is a monorepo of loosely-coupled parts, not a single application — each subdirectory has its own environment and toolchain. Always check which subproject you're in before running commands; there is no single top-level build/test/lint command.
+AMSCUP is a single-repo research project on the robustness of camera / LiDAR / 4D-radar fusion (ASF, official checkpoint) under synthetic sensor corruption, evaluated on the K-Radar test split. There are no submodules and no nested git repos. See `README.md` for results and limitations.
 
 ## Repo layout
 
-- `test-bed/` — main Python development testbed (uv-managed, Python 3.10+/3.12). Contains `src/Modules/robust_testing/` with per-dataset integration code (`kradar/`, `nuscenes/`, `example/`).
-- `test-bed/src/Modules/robust_testing/kradar/` — the actively-developed piece: `kradar_visibility`, a CPU-only pipeline that computes per-object multi-sensor (radar/LiDAR×2/camera×4) visibility scores from K-Radar and writes a Parquet table. This has its own `pyproject.toml`, `uv.lock`, and git repo nested inside test-bed — treat it as a separate uv project. See its `AGENTS.md` and `architecture.md` for full detail before touching it.
-- `repos/K-Radar/` — git submodule: the K-Radar dataset/benchmark implementation (models, pipelines, configs). Read-only dataset root referenced by the kradar_visibility pipeline.
-- `repos/AMSCUP_PLUS/` — git submodule: cluster/sbatch job scripts, sensor-data extraction and replay/verification tooling (Slurm-based, separate from the local testbed).
-- `repos/AI-MSF-Benchmark/` — vendored multi-sensor-fusion benchmark/corruption toolkit.
-- `docs/vAIlt/` and `obsidianVault/` — Obsidian research vaults (see Knowledge management above for the split between them). `docs/Latex_Report` is a submodule for the written report.
-- `groupL/` — reference papers/slides (not code).
-- `tools/data_transfer_kradar/` — scripts for moving K-Radar data around.
+- `src/` — first-party packages: `kradar_visibility/` (per-object visibility pipeline + FastAPI viewer), `robustness/` (ingest, AP, retention, CRI, churn; vendored from the K-Radar fork), `effects/` (corruption definitions), `amscup_paths.py` (single source of truth for paths; always import paths from here, never compute them from `__file__` depth).
+- `configs/` — ASF configs, noise-effect configs, camera calibration, train/test split.
+- `scripts/` — `visibility/`, `analysis/`, `data_transfer/`, `cluster_historical/` (reference only). Index: `scripts/README.md`.
+- `tests/` — `test_smoke.py`, `test_verify.py`, `test_parallel_smoke.py`.
+- `results/` — tracked, curated tables and figures. `data/` — gitignored datasets and generated tables, catalogue in `data/DATA.md`. `docs/` — index in `docs/README.md`.
+- `Misc/` — everything moved out during the restructure (vaults, former submodules, backups, legacy layouts). Gitignored; never delete from it.
 
-## Working in `test-bed/` (general)
+Constraints: Alvis cluster compute is permanently unavailable (predictions cannot be regenerated; cluster scripts are reference only). The K-Radar dataset is not in the repo (`KRADAR_DATASET_ROOT`, default `data/KRadar`). mFR is excluded from the metrics stack. `camera_frame_deletion` rows missing from `row_table_iou03.parquet` is expected.
+
+## Commands
 
 ```bash
-cd test-bed
-uv sync                    # install deps
-python main.py             # entry point ("Hello from test-bed!")
-uv run black .              # format
-uv run ruff check .         # lint (excludes repos/K-Radar/**)
+uv sync                                   # one project, Python >= 3.12
+uv run pytest tests/test_smoke.py         # SMK-*, needs the K-Radar dataset
+uv run pytest tests/test_verify.py        # VER-*, full-dataset checks, only after smoke passes
+uv run python scripts/analysis/<name>.py  # analysis scripts, need data/results/ (see data/DATA.md)
 ```
 
-Datasets live under `test-bed/src/Datasets/` and are git-ignored; they must be present locally to run most pipelines.
+Python rules: `uv` only, Polars over pandas, annotate public signatures.
 
-## Working in `kradar_visibility` (`test-bed/src/Modules/robust_testing/kradar/`)
+## Working in `src/kradar_visibility/`
 
-This subproject has stricter, explicit rules in its own `AGENTS.md` — read it before making changes. Key points:
+Read `docs/methodology/kradar_visibility/AGENTS.md` and `architecture.md` before changing it. Key points:
 
-- Vectorize per-frame/per-object computation — don't loop per-object in pure Python where the methodology calls for array ops.
+- Vectorize per-frame/per-object computation; don't loop per-object in pure Python where array ops fit.
 - `radar_zyx_cube/` is the default radar input; never load the full `radar_tesseract/` (4DRT) unless explicitly opted in.
-- Missing sensor files must degrade to `visible=False, score=0.0` — never raise on a missing frame; log and continue.
-- Don't change the output schema (`config.OUTPUT_SCHEMA`) without flagging it — downstream queries depend on exact column names.
+- Missing sensor files must degrade to `visible=False, score=0.0`; log and continue, never raise.
+- Don't change `config.OUTPUT_SCHEMA` without flagging it; downstream queries depend on exact column names.
+- Test IDs in docstrings (`SMK-01`, `VER-12`) map to spec docs in `docs/methodology/`; keep them in sync.
 
-### Tests
-
-```bash
-uv run pytest                       # all tests
-uv run pytest tests/test_smoke.py   # SMK-01..17, fast (<5 min on 1-2 sequences), run first
-uv run pytest tests/test_verify.py  # VER-01..26, full-dataset correctness checks, run only after smoke passes
-```
-
-Test IDs in docstrings (`SMK-01`, `VER-12`, etc.) map back to spec docs in `docs/` / `docs/vAIlt/` — keep them in sync when adding tests.
-
-### Architecture (data flow)
+Data flow:
 
 ```
 parser.parse_label_file()        → (HeaderInfo, List[ObjectAnnotation])   [info_label_rev2/*.txt]
@@ -115,20 +100,9 @@ pipeline.compute_visibility_for_frame() → List[dict]
                 → polars.DataFrame → parquet
 ```
 
-Module responsibilities (`src/kradar_visibility/`): `config.py` (all tunable constants, schema — single source of truth, no logic), `parser.py` (label file I/O), `calibration.py` (camera calib pickles), `data_loader.py` (lazy per-frame sensor loading, returns `None` on missing files), `radar_visibility.py` (SNR-weighted power density score), `lidar_visibility.py` (point-in-box count / expected-density ratio), `camera_visibility.py` (8-corner projection → area+centrality score), `pipeline.py` (orchestration, includes `run()` as the main entry point and internal `_world_to_voxel`/`_radar_fov_check`/`_obj_corners` helpers).
+Viewer: `src/kradar_visibility/viewer/` holds only `static/` (HTML/JS); its FastAPI `server.py` is not in the repo or in `Misc/` (it was already missing before the restructure), so the viewer does not run. The `fastapi`/`uvicorn` dependencies are kept for when it is restored.
 
-A FastAPI + static HTML/JS viewer (`src/kradar_visibility/viewer/`) reuses `config.py`, `data_loader.py`, `calibration.py`, and `pipeline.compute_visibility_for_frame()` to serve sensor data/annotations for visual inspection:
-
-```bash
-cd src/kradar_visibility/viewer
-uv run uvicorn server:app --reload --port 8000
-```
-
-Full module-by-module reference, output schema table, and error-handling strategy are in `architecture.md` in that directory — consult it for anything beyond a surface-level change.
-
-## Submodules
-
-`repos/K-Radar`, `repos/AMSCUP_PLUS`, and `docs/Latex_Report` are git submodules. Changes inside them are separate commits in their own repos — `cd` into the submodule to commit there, and remember to bump the parent repo's pointer separately.
+Vendored code (`src/robustness/`, `src/effects/`) came from the K-Radar fork (commit 48ee57d); `src/effects` needs torch (`uv sync --group effects`) and is reference-only.
 
 ## graphify
 
