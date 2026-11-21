@@ -19,6 +19,6 @@ Everything under `data/` except this file is **gitignored**. It is shared as a d
 | `visibility/output_with_env_density.parquet` | Per-object radar / LiDAR / camera visibility scores plus weather, environment, density | 37 MB total in `visibility/` | Parquet, schema in `src/kradar_visibility/config.py` (`OUTPUT_SCHEMA`) | `scripts/visibility/run_all_sequences.py` | Needs the K-Radar dataset |
 | `figures/` | Charts written by `scripts/analysis/*` (bar, box, heatmap, radar, line, dumbbell, distributions) | 170 MB | PNG | `scripts/analysis/*` | Yes, from the tables above |
 
-Known, expected gap: `camera_frame_deletion` rows are missing from `row_table_iou03.parquet` because that sweep crashed. Do not treat as a new bug.
+Known, expected gap: `camera_frame_deletion` is only partly present in `row_table_iou03.parquet` (102 / 1,674 / 276 rows for high / low / medium vs about 40,000 for a normal condition) because that sweep crashed. Do not treat as a new bug. All nine frame-deletion conditions are excluded from the thesis metrics.
 
 Tracked, small outputs live in [`results/`](../results/RESULTS.md).

@@ -14,7 +14,7 @@ Usage
   uv run python scripts/run_all_sequences.py --workers 8
 """
 
-from amscup_paths import FIGURES_DIR  # noqa: E402
+from amscup_paths import VISIBILITY_DIR  # noqa: E402
 import argparse
 import logging
 import os
@@ -41,9 +41,9 @@ from kradar_visibility.config import DATASET_ROOT, ALLOWED_WEATHER
 log = logging.getLogger(__name__)
 
 SEQUENCE_IDS = [str(i) for i in range(1, 59)]
-OUTPUT_PATH = (FIGURES_DIR / "output_with_env_density.parquet")
-ERROR_LOG = (FIGURES_DIR / "output_with_env_density.errors.log")
-PROGRESS_LOG = (FIGURES_DIR / "output_with_env_density.progress.log")
+OUTPUT_PATH = (VISIBILITY_DIR / "output_with_env_density.parquet")
+ERROR_LOG = (VISIBILITY_DIR / "output_with_env_density.errors.log")
+PROGRESS_LOG = (VISIBILITY_DIR / "output_with_env_density.progress.log")
 
 # K-Radar info_label_rev2 class strings (exact, case-sensitive) for "sedans
 # or buses" — the dataset labels buses/trucks jointly as "Bus or Truck",

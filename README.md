@@ -4,7 +4,7 @@ AMSCUP is the code, configuration and analysis behind a Chalmers MSc thesis that
 
 ![Evaluation pipeline: dataset, corruption injection and ASF inference run once per condition; the outputs are consolidated into one Parquet table, then metrics and stratified robustness analysis](docs/figures/thesis/eval_pipeline.svg)
 
-*Workflow (thesis Figure "Overview of the evaluation pipeline", Methods chapter). The "36 conditions" are 12 effects x 3 severities.*
+*Workflow (thesis Figure "Overview of the evaluation pipeline", Methods chapter). The figure's box says "36 conditions"; the configs and `row_table_iou03.parquet` contain 30 corrupted conditions (21 evaluable + 9 frame-deletion) plus the clean run, 31 in total. The discrepancy is in the thesis figure, not checked further.*
 
 ## Key results
 
@@ -31,7 +31,7 @@ All numbers below are from the thesis (Results chapter). The figure files are tr
 - Several weather and environment categories rest on 2 to 7 sequences or few objects; the thesis flags them rather than treating them as general findings.
 - mATE, mASE and mAOE are computed over true positives only, so at the collapsed conditions they describe a smaller, easier surviving population. Their apparent improvement there is a survivorship artefact.
 - The mFR metric is excluded from the metrics stack (decision of 2026-09-01); it is not implemented here.
-- `master_metrics_table.md` in `results/tables/` is regenerated from the local row table and gives a clean mAP of 72.89 (LiDAR noise medium 23.71, high 21.56), not the thesis's 73.99 / 18.54 / 17.45. Both come from this repo's data; the pooling that explains the difference was not traced. Treat the thesis figure as the reported result. See [`results/RESULTS.md`](results/RESULTS.md).
+- Two aggregations of clean mAP appear in this repo. The thesis figure gives 73.99 (LiDAR noise medium 18.54, high 17.45); `results/tables/master_metrics_table.md` regenerates to 72.89 / 23.71 / 21.56. The thesis figure's FP/FN counts (4,900 / 8,287 clean; 1,175 / 29,214 LiDAR noise medium) match `row_table_iou03.parquet` exactly, so both use the same data. 72.89 is the mean of the thesis's two per-class BEV APs ((77.86 + 67.93) / 2), which suggests the table averages per class while the figure pools both labels. I did not recompute a pooled AP to confirm. The README quotes the thesis figure. See [`results/RESULTS.md`](results/RESULTS.md).
 
 ## Repository map
 
@@ -63,7 +63,7 @@ Misc/              everything moved out of the main tree during the restructure 
 | Reproduce a table or figure | [Quickstart](#quickstart), then `scripts/analysis/` |
 | Run the visibility pipeline | `scripts/visibility/run_pipeline.py` (needs the K-Radar dataset) |
 | See how corruptions are defined | `src/effects/noise_injection.py`, `configs/noise/` |
-| See how ASF was configured | `configs/asf/` (`ASF_v2_0_final.yml` matches the released `ASF_v2_0_final_10.pt` checkpoint; `ASF_v2_0_seq<N>_alvis.yml` are the per-sequence cluster configs; I did not verify which file each run used) |
+| See how ASF was configured | [`configs/README.md`](configs/README.md) |
 | Read the audits and verification reports | `docs/reports/`, `docs/methodology/verification_report.md` |
 | Contribute | `CLAUDE.md` (conventions), `tests/`, `scripts/README.md` |
 
@@ -80,7 +80,7 @@ uv run pytest tests/test_smoke.py          # needs the K-Radar dataset (see belo
 
 The regeneration command was run on the full local bundle (about 18 s) and reproduced `results/tables/master_metrics_table.md` exactly. `scripts/analysis/master_metrics_table.py` also runs standalone with `uv run python scripts/analysis/master_metrics_table.py`, but that overwrites the copy in `data/results/robustness_reports/`, so the snippet above writes elsewhere.
 
-**Smoke tests need the K-Radar dataset, which is not in this repo or the bundle.** Without it `tests/test_smoke.py` fails at the first test (file not found under `data/KRadar/`). Point `KRADAR_DATASET_ROOT` at your copy of the dataset to run them. Current state of `tests/test_smoke.py` on the restructured tree: 9 passed, 11 failed. Ten of the failures are missing-dataset errors; **SMK-21 (LiDAR range-image float32 bin boundary) is a real failure under the locked `numpy 2.4.6`**. The same code and test pass in the pre-restructure project, which ran `numpy 1.26.4`. The cause is probably numpy 2 scalar-promotion changes; the fix (pin `numpy<2`, or make the binning dtype-explicit) is an open decision.
+**Smoke tests need the K-Radar dataset, which is not in this repo or the bundle.** Without it `tests/test_smoke.py` fails at the first test (file not found under `data/KRadar/`). Point `KRADAR_DATASET_ROOT` at your copy of the dataset to run them. Current state of `tests/test_smoke.py` on the restructured tree: 9 passed, 11 failed. Ten of the failures read files under `data/KRadar/` and fail without the dataset. **SMK-21 (LiDAR range-image float32 bin boundary) fails for another reason**: it passes in the pre-restructure project (numpy 1.26.4, and also with numpy 2.4.6 forced in) but fails in the merged environment, with identical `lidar_visibility.py` and test code. The cause is not identified; see `docs/logs/2026-11-21_restructure_summary.md`.
 
 ## Data and reproducibility
 
@@ -89,7 +89,7 @@ The regeneration command was run on the full local bundle (about 18 s) and repro
 - **Not included at all:** the K-Radar dataset itself. Obtain it from its authors and set `KRADAR_DATASET_ROOT` (default `data/KRadar`).
 - **What can be regenerated:** every downstream table and figure, from the Parquet row tables, with the scripts in `scripts/analysis/`.
 - **What cannot be regenerated:** the ASF predictions. They were produced on the Chalmers Alvis cluster (NVIDIA A40 GPUs, SLURM array jobs), and that compute is permanently unavailable. The files in `scripts/cluster_historical/` and the `*_alvis.yml` configs document how the sweep ran; they are for reference, not a current workflow. The local data is the ceiling for any further analysis.
-- Known, expected gap: `camera_frame_deletion` rows are missing from `row_table_iou03.parquet`, because that sweep crashed (result 6 above).
+- Known, expected gap: `camera_frame_deletion` is only partly present in `row_table_iou03.parquet` (102 / 1,674 / 276 rows for high / low / medium, against about 40,000 for a normal condition), because that sweep crashed (result 6 above). The lidar and radar frame-deletion conditions have about 38,000 to 40,000 rows each; the thesis excludes all nine frame-deletion conditions from every metric regardless.
 
 ## Third-party code (no submodules)
 

@@ -1,6 +1,6 @@
 # Scripts
 
-Run everything from the repo root with `uv run python <path>`. Paths resolve through `src/amscup_paths.py`; nothing here hard-codes a location. "Output" lists the destinations the script names in its code, under `data/figures/` (charts), `data/results/robustness_reports/` (tables) or `data/visibility/`; "see script" means it prints or takes paths as arguments. Inputs for `analysis/` are the tables in `data/results/robustness_reports/` (mostly `row_table_iou03.parquet`); inputs for `visibility/` are the K-Radar dataset (`KRADAR_DATASET_ROOT`) plus `configs/`. I checked descriptions against each script's own docstring; I ran only `analysis/master_metrics_table.py` end to end.
+Run everything from the repo root with `uv run python <path>`. Paths resolve through `src/amscup_paths.py`. The exceptions are reference-only: `data_transfer/` and `cluster_historical/` carry old absolute paths, and a few `src/effects/` scripts do too. "Output" lists the destinations the script names in its code, under `data/figures/` (charts), `data/results/robustness_reports/` (tables) or `data/visibility/`; "see script" means it prints or takes paths as arguments. Inputs for `analysis/` are the tables in `data/results/robustness_reports/` (mostly `row_table_iou03.parquet`); inputs for `visibility/` are the K-Radar dataset (`KRADAR_DATASET_ROOT`) plus `configs/`. Descriptions are each script's own docstring (first line). I ran only `analysis/master_metrics_table.py` end to end; the other scripts were parsed and their imports of `amscup_paths` names checked, not run.
 
 | Directory | Purpose | Runnable now? |
 |---|---|---|
@@ -25,9 +25,9 @@ Run everything from the repo root with `uv run python <path>`. Paths resolve thr
 | `analysis/distance_line_charts_by_modality.py` | Line charts of mAP / mATE / mASE vs. distance from ego, same data and | `distance_line_charts_by_modality` | `uv run python scripts/analysis/distance_line_charts_by_modality.py` |
 | `analysis/distance_robustness_charts.py` | Line charts of the Rb robustness ratio (Gao et al.; == RR/mRR/RS -- see | `distance_robustness_charts` | `uv run python scripts/analysis/distance_robustness_charts.py` |
 | `analysis/exploratory_passes.py` | Passes 1-3 of the full-granularity exploratory pass (see | `exploratory` | `uv run python scripts/analysis/exploratory_passes.py` |
-| `analysis/fpfn_table.py` | FP/FN table: one row per severity-specific corruption condition (21 | `robustness_reports` | `uv run python scripts/analysis/fpfn_table.py` |
+| `analysis/fpfn_table.py` | FP/FN table: one row per severity-specific corruption condition (21 | `data/results/robustness_reports/fpfn_table*.{csv,md}` | `uv run python scripts/analysis/fpfn_table.py` |
 | `analysis/heatmaps.py` | Heatmaps of mAP/mATE/mASE (raw values), plus their Rb robustness-ratio | `heatmaps` | `uv run python scripts/analysis/heatmaps.py` |
-| `analysis/master_metrics_table.py` | Master metrics table: one row per severity-specific corruption condition | `robustness_reports` | `uv run python scripts/analysis/master_metrics_table.py` |
+| `analysis/master_metrics_table.py` | Master metrics table: one row per severity-specific corruption condition | `data/results/robustness_reports/master_metrics_table*.{csv,md}` | `uv run python scripts/analysis/master_metrics_table.py` |
 | `analysis/merge_churn.py` | Merges gt_transition_analysis.py's churn output into Pass 1 (condition | `churn_by_condition.json`, `exploratory` | `uv run python scripts/analysis/merge_churn.py` |
 | `analysis/pass4_stratifier_charts.py` | Pass 4 of the exploratory pass: distance_from_ego / frame_density as | `exploratory` | `uv run python scripts/analysis/pass4_stratifier_charts.py` |
 | `analysis/radar_charts.py` | Radar (spider) charts of per-class AP by condition, for a single K-Radar | `radar_charts` | `uv run python scripts/analysis/radar_charts.py` |
@@ -62,7 +62,7 @@ Run everything from the repo root with `uv run python <path>`. Paths resolve thr
 | `visibility/cfar_evidence_c.py` | Part 2: Per-object scoring on real multi-object frames (sequence 2). | see script | library, imported by other scripts (no CLI) |
 | `visibility/cfar_evidence_gathering.py` | Evidence-gathering: numerical equivalence, benchmarks, per-object scores on real K-Radar data. | see script | library, imported by other scripts (no CLI) |
 | `visibility/project_bbox_to_camera.py` | K-Radar 3D Bounding Box to Camera Image Projection | see script | `uv run python scripts/visibility/project_bbox_to_camera.py` |
-| `visibility/run_all_sequences.py` | scripts/run_all_sequences.py — Regenerate output_with_env_density.parquet | `output_with_env_density.errors.log`, `output_with_env_density.parquet`, `output_with_env_density.progress.log` | `uv run python scripts/visibility/run_all_sequences.py` |
+| `visibility/run_all_sequences.py` | scripts/run_all_sequences.py — Regenerate output_with_env_density.parquet | `data/visibility/output_with_env_density.parquet` | `uv run python scripts/visibility/run_all_sequences.py` |
 | `visibility/run_full_sequence.py` | scripts/run_full_sequence.py — Run kradar_visibility pipeline against one FULL real sequence. | see script | `uv run python scripts/visibility/run_full_sequence.py` |
 | `visibility/run_pipeline.py` | scripts/run_pipeline.py — CLI entry point for the kradar_visibility pipeline. | see script | `uv run python scripts/visibility/run_pipeline.py` |
 | `visibility/run_split.py` | scripts/run_split.py — Run kradar_visibility over a K-Radar dataset split | see script | `uv run python scripts/visibility/run_split.py` |
